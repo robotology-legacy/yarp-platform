@@ -234,8 +234,8 @@ void remoteOutput(double signal) {
   if (signal>sig_top) sig_top = signal;
   if (signal<sig_bot) sig_bot = signal;
   if (at%100000==0) {
-    fprintf(stderr,"%g\n", signal);
-    fprintf(stderr,"At %ld    (input %g to %g) (output %ld to %ld)\n", at, sig_bot, sig_top, bot, top);
+    //fprintf(stderr,"%g\n", signal);
+    //fprintf(stderr,"At %ld    (input %g to %g) (output %ld to %ld)\n", at, sig_bot, sig_top, bot, top);
     top = -1;
     bot = 256;
     sig_top = -1e32;

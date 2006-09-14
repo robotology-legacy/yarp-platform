@@ -79,7 +79,7 @@ void port_audio(unsigned char *sample, int len) {
   double dt = target-(now-first);
   if (dt>0) {
     Time::delay(dt);
-    printf("wait for %g\n", dt);
+    //printf("wait for %g\n", dt);
   }
 }
 
