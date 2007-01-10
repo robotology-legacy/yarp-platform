@@ -30,6 +30,7 @@ int main(int argc, char *argv[]) {
     printf("Could not open device.\n");
     printf("Usage example:\n");
     printf("./track_tongue --device ffmpeg_grabber --source /scratch/tongue.avi --noloop\n");
+    printf("can also add --saver ffmpeg_writer to save output\n");
 
     exit(1);
   }
@@ -40,6 +41,14 @@ int main(int argc, char *argv[]) {
     device.close();
     exit(1);
   }
+
+  PolyDriver saver;
+  if (p.check("saver")) {
+    Value v = p.check("saver",Value(0));
+    saver.open(v);
+  }
+  IFrameWriterImage *imageSink;
+  saver.view(imageSink);
 
   int ct = 0;
   double peak = 0;
@@ -78,7 +87,8 @@ int main(int argc, char *argv[]) {
     double top = 0.01;
     int tx = -1, ty = -1;
     IMGFOR(work,x,y) {
-      if (work(x,y)>top && y<work.height()*0.75) {
+      if (work(x,y)>top && y<work.height()*0.75 && 
+	  y>work.height()*0.2) {
 	top = work(x,y);
 	tx = x;
 	ty = y;
@@ -90,37 +100,65 @@ int main(int argc, char *argv[]) {
 	work(x,y) = 255;
       }
     }
-    out.copy(work);
-    for (int j=-1; j<=1; j+=2) {
-      double rx = tx;
-      double ry = ty;
-      double pdx = j;
-      double pdy = 0;
-      double odx = 0;
-      double ody = 0;
-      for (int i=0; i<50; i++) {      
-	addCircle(out,PixelRgb(0,255,0),(int)rx,(int)ry,3);
-	double ndx = dx.safePixel((int)rx,(int)ry);
-	double ndy = dy.safePixel((int)rx,(int)ry);
-	if (pdx*ndx+pdy*ndy<0) {
-	  ndx *= -1;
-	  ndy *= -1;
+    out.copy(part);
+    ImageOf<PixelFloat> mask;
+    mask.resize(out);
+    mask.zero();
+    for (int vx=-2; vx<=2; vx++) {
+      for (int j=-1; j<=1; j+=2) {
+	double rx = tx+vx;
+	double ry = ty;
+	double pdx = j;
+	double pdy = 0;
+	double odx = 0;
+	double ody = 0;
+	for (int i=0; i<50; i++) {      
+	  int dd = 5;
+	  for (int xx=-dd;xx<=dd; xx++) {
+	    for (int yy=-dd;yy<=dd; yy++) {
+	      PixelFloat& pix = mask.safePixel((int)rx+xx,(int)ry+yy);
+	      pix = 1;
+	    }
+	  }
+	  double ndx = dx.safePixel((int)rx,(int)ry);
+	  double ndy = dy.safePixel((int)rx,(int)ry);
+	  if (pdx*ndx+pdy*ndy<0) {
+	    ndx *= -1;
+	    ndy *= -1;
+	  }
+	  if (fabs(odx)+fabs(ody)<0.001) {
+	    odx = ndx;
+	    ody = ndy;
+	  }
+	  if (odx*ndx+ody*ndy<-0.5) {
+	    break;
+	  }
+	  rx += ndx;
+	  ry += ndy;
+	  pdx = ndx;
+	  pdy = ndy;
 	}
-	if (fabs(odx)+fabs(ody)<0.001) {
-	  odx = ndx;
-	  ody = ndy;
-	}
-	if (odx*ndx+ody*ndy<-0.5) {
-	  break;
-	}
-	rx += ndx;
-	ry += ndy;
-	pdx = ndx;
-	pdy = ndy;
       }
     }
-    addCircle(out,PixelRgb(255,0,0),tx,ty,5);
+    IMGFOR(out,x,y) {
+      out(x,y) = part(x,y);
+      if (mask(x,y)<0.5) {
+	PixelRgb& pix = out(x,y);
+	pix.g = pix.b = 0;
+      }
+      image(x+xmin,y+ymin) = out(x,y);
+    }
+    addRectangleOutline(image,PixelRgb(0,255,0),image.width()/2,
+			image.height()/2, out.width()/2, out.height()/2);
+    out = image;
+    
+    if (imageSink!=NULL) {
+      imageSink->putImage(out);
+    }
+
+    //addCircle(out,PixelRgb(0,255,0),tx,ty,5);
     outPort.write();
+
   }
 
   device.close();
