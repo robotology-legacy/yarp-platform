@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
   double peak = 0;
   double t = 0;
   ImageOf<PixelRgb> image, part;
-  ImageOf<PixelFloat> diff, dx, dy, mag;
+  ImageOf<PixelFloat> dx, dy, mag, work;
   GlutOrientation orient("data/orient.txt");
   while (imageSource->getImage(image)) {
     ct++;
@@ -62,7 +62,64 @@ int main(int argc, char *argv[]) {
 
     ImageOf<PixelRgb>& out = outPort.prepare();
     orient.Apply(part,out,dx,dy,mag);
-
+    work.resize(part);
+    work.zero();
+    IMGFOR(part,x,y) {
+      double ddx = dx(x,y);
+      double ddy = dy(x,y);
+      if (mag(x,y)>0.8) {
+	for (int g=-3; g<=3; g++) {
+	  for (int f=-10; f<10; f++) {
+	    work.safePixel((int)(x+f*ddx+g*ddy),(int)(y+f*ddy-g*ddx))++;
+	  }
+	}
+      }
+    }
+    double top = 0.01;
+    int tx = -1, ty = -1;
+    IMGFOR(work,x,y) {
+      if (work(x,y)>top && y<work.height()*0.75) {
+	top = work(x,y);
+	tx = x;
+	ty = y;
+      }
+    }
+    IMGFOR(work,x,y) {
+      work(x,y) = 254*work(x,y)/top;
+      if (work(x,y)>255) {
+	work(x,y) = 255;
+      }
+    }
+    out.copy(work);
+    for (int j=-1; j<=1; j+=2) {
+      double rx = tx;
+      double ry = ty;
+      double pdx = j;
+      double pdy = 0;
+      double odx = 0;
+      double ody = 0;
+      for (int i=0; i<50; i++) {      
+	addCircle(out,PixelRgb(0,255,0),(int)rx,(int)ry,3);
+	double ndx = dx.safePixel((int)rx,(int)ry);
+	double ndy = dy.safePixel((int)rx,(int)ry);
+	if (pdx*ndx+pdy*ndy<0) {
+	  ndx *= -1;
+	  ndy *= -1;
+	}
+	if (fabs(odx)+fabs(ody)<0.001) {
+	  odx = ndx;
+	  ody = ndy;
+	}
+	if (odx*ndx+ody*ndy<-0.5) {
+	  break;
+	}
+	rx += ndx;
+	ry += ndy;
+	pdx = ndx;
+	pdy = ndy;
+      }
+    }
+    addCircle(out,PixelRgb(255,0,0),tx,ty,5);
     outPort.write();
   }
 
