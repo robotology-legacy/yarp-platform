@@ -1,0 +1,97 @@
+################################################
+# Linguometer Word List                        #
+#  M. Tavella                                  #
+#  michele#liralab.it                          #
+#  Dec. 1, 2006                                #
+#                                              #
+# This file is going to be used by mWords.     #
+# Please be sure you enter and EOL char        #
+# after each word.                             #
+#                                              #
+# Every line that starts with:                 #
+#  ' ', '\0', '#' would be skipped.            #
+#                                              #
+################################################
+
+########################
+# Set 1                #
+#  (-)                 #
+########################
+Allora
+Babbuino
+Camaleonte
+Dingo
+Ermellino
+Fagiano
+Gallo
+Hotel
+Istrice
+Lemure
+Manta
+Nutria
+Ostrica
+Poiana
+Quadrupede
+Ramarro
+Si grazie
+Topo
+Unghia
+Volatile
+Zombie
+
+########################
+# Set 2                #
+#  (?)                 #
+########################
+Allora?
+Babbuino?
+Camaleonte?
+Dingo?
+Ermellino?
+Fagiano?
+Gallo?
+Hotel?
+Istrice?
+Lemure?
+Manta?
+Nutria?
+Ostrica?
+Poiana?
+Quadrupede?
+Ramarro?
+Si grazie?
+Topo?
+Unghia?
+Volatile?
+Zombie?
+
+########################
+# Set 3                #
+#  (!)                 #
+########################
+Allora!
+Babbuino!
+Camaleonte!
+Dingo!
+Ermellino!
+Fagiano!
+Gallo!
+Hotel!
+Istrice!
+Lemure!
+Manta!
+Nutria!
+Ostrica!
+Poiana!
+Quadrupede!
+Ramarro!
+Si grazie!
+Topo!
+Unghia!
+Volatile!
+Zombie!
+
+########################
+# Set 4                #
+#  Encoding test       #
+########################

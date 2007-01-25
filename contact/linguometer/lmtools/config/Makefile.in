@@ -1,0 +1,30 @@
+CC=g++
+OBJS = $(patsubst %.cpp, %.o, $(wildcard *.cpp))
+
+default: $(MAIN)
+
+%.o: %.cpp
+	@echo "> Compiling"
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(MAIN): $(OBJS)
+	@echo "> Linking"
+	$(CC) $(CFLAGS) $(OBJS) -o $(MAIN) $(LIBS) 
+
+clean:
+	@echo "> Cleaning"
+	rm -f $(OBJS)
+	rm -f $(MAIN) 
+	rm -f core*
+
+run:
+	@echo "> Executing"
+	./$(MAIN)
+
+install:
+	@echo "> Installing"
+	@rm -v ../../bin/$(MAIN)
+	@cp -v $(MAIN) ../../bin/
+	@chmod -v 750 ../../bin/$(MAIN)
+
+all: clean default install
