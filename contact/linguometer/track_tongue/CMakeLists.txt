@@ -5,4 +5,4 @@ PROJECT(track_tongue)
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
 
-ADD_EXECUTABLE(track_tongue main.cpp GlutOrientation.cpp IntegralImage.cpp)
+ADD_EXECUTABLE(track_tongue main.cpp GlutOrientation.cpp IntegralImage.cpp TongueFinder.cpp)
