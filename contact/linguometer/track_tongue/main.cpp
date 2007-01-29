@@ -9,6 +9,17 @@
 
 #include <yarp/sig/GlutOrientation.h>
 
+#include <deque>
+
+class Point { 
+public:
+  double x, y;
+  
+  Point(double x, double y) : x(x), y(y) {}
+};
+
+using namespace std;
+
 using namespace yarp::os;
 using namespace yarp::sig;
 using namespace yarp::sig::draw;
@@ -17,9 +28,13 @@ using namespace yarp::dev;
 int main(int argc, char *argv[]) {
   Property p;
   p.fromCommand(argc,argv);
+  if (p.check("file")) {
+    p.fromConfigFile(p.check("file",Value("config.ini")).asString());
+  }
 
   BufferedPort<ImageOf<PixelRgb> > outPort;
   outPort.open("/tongue");
+  Network::connect("/tongue",p.check("hit",Value("/view")).asString());
 
   // command line options should describe something that can provide
   // audio (and/or video)
@@ -44,11 +59,16 @@ int main(int argc, char *argv[]) {
 
   PolyDriver saver;
   if (p.check("saver")) {
-    Value v = p.check("saver",Value(0));
+    ConstString v = p.findGroup("saver").toString();
+    printf("saver is %s\n", v.c_str());
     saver.open(v);
   }
   IFrameWriterImage *imageSink;
   saver.view(imageSink);
+
+
+  double xglob = 0, yglob = 0;
+  bool globSet = false;
 
   int ct = 0;
   double peak = 0;
@@ -140,6 +160,7 @@ int main(int argc, char *argv[]) {
 	}
       }
     }
+    /*
     IMGFOR(out,x,y) {
       out(x,y) = part(x,y);
       if (mask(x,y)<0.5) {
@@ -147,7 +168,113 @@ int main(int argc, char *argv[]) {
 	pix.g = pix.b = 0;
       }
       image(x+xmin,y+ymin) = out(x,y);
+      //image(x+xmin,y+ymin).r = work(x,y);
+      //image(x+xmin,y+ymin).g = work(x,y);
+      //image(x+xmin,y+ymin).b = work(x,y);
     }
+    */
+    deque<Point> tongue;
+    {
+      for (int s=-1; s<=1; s+=2) {
+	double bx = tx;
+	double by = ty;
+	double dx = s;
+	double dy = 0;
+	double ct = 0;
+	double vbase = work.safePixel((int)bx,(int)by);
+      
+	for (int i=0; i<80; i++) {
+	  bx = bx+dx;
+	  by = by+dy;
+	  double best = 0;
+	  double nx = bx;
+	  double ny = by;
+	  for (int dd=-4; dd<=4; dd++) {
+	    double v = work.safePixel((int)bx,(int)by+dd);
+	    if (v>best) {
+	      best = v;
+	      ny = by+dd;
+	    }
+	  }
+	  if (best<vbase*0.25) {
+	    ct++;
+	    if (ct>5) {
+	      break;
+	    }
+	  } else {
+	    ct = 0;
+	  }
+	  bx = nx;
+	  by = ny;
+	  //addCircle(image,PixelRgb(0,0,255),bx+xmin,by+ymin,3);
+	  if (s==1) {
+	    tongue.push_back(Point(bx+xmin,by+ymin));
+	  } else {
+	    tongue.push_front(Point(bx+xmin,by+ymin));
+	  }
+	}
+      }
+    }
+
+    ImageOf<PixelFloat> locs, locs2;
+    int tops = tongue.size();
+    locs.resize(2,tops);
+    locs2 = locs;
+
+    int at = 0;
+    for (deque<Point>::iterator it=tongue.begin(); it!=tongue.end(); it++) {
+      Point p = *it;
+      locs(0,at) = p.x;
+      locs(1,at) = p.y;
+      //printf("(%g,%g)\n", p.x, p.y);
+      at++;
+    }
+    //printf("begin\n");
+    for (int k=0; k<10; k++) {
+      locs2 = locs;
+      for (int i=1; i<tops-1; i++) {
+	double x = (0.5*locs(0,i-1)+locs(0,i)+0.5*locs(0,i+1))/2;
+	double y = (0.5*locs(1,i-1)+locs(1,i)+0.5*locs(1,i+1))/2;
+	double xx = locs(0,i);
+	locs2(0,i) = x;
+	locs2(1,i) = y;
+      }
+      locs = locs2;
+    }
+    at = 0;
+    for (deque<Point>::iterator it=tongue.begin(); it!=tongue.end(); it++) {
+      Point& p = *it;
+      p.x = locs(0,at);
+      p.y = locs(1,at);
+      at++;
+    }
+
+    
+    //for (int r=-1; r<=1; r+=2) {
+    for (int r=0; r<=0; r+=2) {
+      int del = 10*r;
+      for (deque<Point>::iterator it=tongue.begin(); it!=tongue.end(); it++) {
+	Point p = *it;
+	if (int(p.x/7)%2==0) {
+	  addCircle(image,PixelRgb(0,0,255),p.x,p.y+del,3);
+	}
+      }
+      
+      for (deque<Point>::iterator it=tongue.begin(); it!=tongue.end(); it++) {
+	Point p = *it;
+	if (int(p.x/7)%2==0) {
+	  addCircle(image,PixelRgb(255,0,0),p.x,p.y+del,1);
+	}
+      }
+    }
+
+    if (!globSet) {
+      xglob = tx+xmin;
+      yglob = ty+ymin;
+    } else {
+      // need to do some tracking
+    }
+
     addRectangleOutline(image,PixelRgb(0,255,0),image.width()/2,
 			image.height()/2, out.width()/2, out.height()/2);
     out = image;
@@ -156,7 +283,7 @@ int main(int argc, char *argv[]) {
       imageSink->putImage(out);
     }
 
-    //addCircle(out,PixelRgb(0,255,0),tx,ty,5);
+    //addCircle(out,PixelRgb(0,255,0),xglob,yglob,5);
     outPort.write();
 
   }
