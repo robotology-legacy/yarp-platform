@@ -7,3 +7,51 @@
 --------------------------------------
 
 Lecce, Dec. 2nd 2006
+
+
+=======================================================================
+
+Some notes on the log file created by mwords.
+What follows is the content of an example log file,
+with indented text being a comment.
+
+#Time reference at  1305
+	Time reference means two things:
+	1. a waveform is generated and mixed on the sync channel
+	   (recorded in the stream.dv file).
+	2. t0 is set (t0 is the reference timer)
+	   t0 should refer to the first ascent front of the waveform
+        Please not that 1305 is the actual reference time.
+#Standard Run [1]
+	Standard run means that all words will be presented.
+ 	It differs from "Rejected" words, that presents just
+	words judged misspelled or generally incorrect
+0;125;notaio?;1305;17988;16683;1
+	This is a simple line where the CSV-like fields indicate:
+	Event	Word number (incremental, starting from 0)
+	Index	Word number in input file (before scrambling)
+	Word	The word
+	t0	reference time [ms]
+	tp	presentation time (when the word gets displayed on the
+		screen) [ms]
+	dt	calculated dt = (tp - t0)  [ms]
+	Flag	bool, 0 means rejected, 1 means accepted
+		misspelled words are presented recursively at the
+		end of the standard run
+1;184;gelo!;1305;19073;17768;1
+2;207;vassoio!;1305;20125;18820;1
+3;20;tuffo;1305;21142;19837;1
+4;50;gru;1305;22087;20782;1
+5;213;fazzoletto!;1305;23036;21731;1
+6;217;legnaia!;1305;23772;22467;1
+7;136;nonnetto?;1305;24618;23313;1
+#Time reference at  27182
+	This means that a new sweep (AG 500 sweep to be correct) has
+	been started.
+8;61;fasciatoio;27182;31188;4006;1
+9;157;bacco!;27182;32234;5052;1
+10;186;buchi!;27182;33455;6273;1
+11;110;gelo?;27182;34290;7108;1
+12;123;scoglio?;27182;35230;8048;1
+
+=======================================================================
