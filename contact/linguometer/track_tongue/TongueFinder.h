@@ -1,3 +1,11 @@
+// -*- mode:C++; tab-width:4; c-basic-offset:4; indent-tabs-mode:nil -*-
+
+/*
+ * Copyright (C) 2006 Paul Fitzpatrick
+ * CopyPolicy: Released under the terms of the GNU GPL v2.0.
+ *
+ */
+
 
 #ifndef TONGUEFINDER_INC
 #define TONGUEFINDER_INC
@@ -20,6 +28,7 @@ private:
   double xglob, yglob;
   double dxglob, dyglob;
   bool globSet;
+  bool verbose;
 
   int ct;
   double peak;
@@ -37,10 +46,18 @@ public:
     globSet = false;
     xglob = yglob = 0;
     dxglob = dyglob = 0;
+    verbose = false;
+  }
+
+  void setVerbose(bool verbose) {
+    this->verbose = verbose;
   }
 
   void process(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image, 
 	       yarp::sig::ImageOf<yarp::sig::PixelRgb>& out);
+
+  void saveImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image, 
+		 const char *key);
 };
 
 

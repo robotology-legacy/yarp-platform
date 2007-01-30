@@ -1,3 +1,11 @@
+// -*- mode:C++; tab-width:4; c-basic-offset:4; indent-tabs-mode:nil -*-
+
+/*
+ * Copyright (C) 2006 Paul Fitzpatrick
+ * CopyPolicy: Released under the terms of the GNU GPL v2.0.
+ *
+ */
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,15 +27,13 @@ int main(int argc, char *argv[]) {
   p.fromCommand(argc,argv);
   if (p.check("file")) {
     p.fromConfigFile(p.check("file",Value("config.ini")).asString());
+    // allow overrides if needed
+    p.fromCommand(argc,argv,true,false);
   }
-  // add back in overrides
-  printf("P is %s\n", p.toString().c_str());
-  p.fromCommand(argc,argv,true,false);
-  printf("P is %s\n", p.toString().c_str());
 
   BufferedPort<ImageOf<PixelRgb> > outPort;
   outPort.open("/tongue");
-  Network::connect("/tongue",p.check("hit",Value("/view")).asString());
+  Network::connect("/tongue",p.check("viewer",Value("/view")).asString());
 
   // command line options should describe something that can provide
   // audio (and/or video)
@@ -59,6 +65,7 @@ int main(int argc, char *argv[]) {
 
 
   TongueFinder finder;
+  finder.setVerbose(p.check("verbose"));
   ImageOf<PixelRgb> image;
   while (imageSource->getImage(image)) {
 
