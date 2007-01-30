@@ -20,6 +20,10 @@ int main(int argc, char *argv[]) {
   if (p.check("file")) {
     p.fromConfigFile(p.check("file",Value("config.ini")).asString());
   }
+  // add back in overrides
+  printf("P is %s\n", p.toString().c_str());
+  p.fromCommand(argc,argv,true,false);
+  printf("P is %s\n", p.toString().c_str());
 
   BufferedPort<ImageOf<PixelRgb> > outPort;
   outPort.open("/tongue");
