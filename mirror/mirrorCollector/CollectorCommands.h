@@ -18,7 +18,7 @@ public:
 			(dataNetName			default)\
 			(imgNetName				default)\
 			(streamFreq				25.0)\
-            (propertyFileName       c:\\\\work\\\\yarp2\\\\src\\\\mirrorCollector\\\\mirrorCollector.conf)\
+            (propertyFileName       c:\\\\work\\\\platform\\\\mirror\\\\mirrorCollector\\\\mirrorCollector.conf)\
 			(useCamera0				0)\
 			(useCamera1				0)\
 			(imgSizeX				384)\

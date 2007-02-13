@@ -41,7 +41,7 @@ public:
            (imgSizeX 0) (imgSizeY 0) \
            (seqPrefix seq) (seqPath c:\\\\) \
 	       (refreshFreq 40.0) \
-           (propertyFileName c:\\\\work\\\\yarp2\\\\src\\\\mirrorCapture\\\\mirrorCapture.conf) \
+           (propertyFileName c:\\\\work\\\\platform\\\\mirror\\\\mirrorCapture\\\\mirrorCapture.conf) \
         ");
 	};
 } _property;
@@ -69,58 +69,7 @@ bool streaming = false;
 
 void refreshLiveData(char*);
 
-// ----------------------------------------------
-// data acquisition thread
-// ----------------------------------------------
-
-// the thread works in two different modes:
-// - pull mode: each refreshFreq msecs, send getData to collector and refresh liveData,
-// - push mode: expect data to be available continually as a stream, and save it to a file.
-
-class _acqThread : public Thread {
-
-    void run () {
-
-        while ( ! isStopping() ) {
-            if ( streaming ) {
-                // push mode
-                // read data
-                _data = _dataPort.read()->content();
-            } else {
-                // pull mode
-                // send getData command
-                Bottle sent, recd;
-                sent.addInt(CCmdGetData);
-              	_cmdPort.write(sent,recd);
-                if ( recd.get(0).asInt() == CCmdFailed ) {
-                    g_print ("getData command failed\n");
-                    return;
-                }
-                // read data
-                _data = _dataPort.read()->content();
-                // display data
-                sprintf(_displayed, "Tracker #0: %d, %d, %d, %d, %d, %d\n",
-                    _data.tracker0Data.fakeDatum[0], _data.tracker0Data.fakeDatum[1],
-                    _data.tracker0Data.fakeDatum[2], _data.tracker0Data.fakeDatum[3],
-                    _data.tracker0Data.fakeDatum[4], _data.tracker0Data.fakeDatum[5]);
-                refreshLiveData(_displayed);
-                // delay by refreshFreq
-                Time::delay(_property.find("refreshFreq").asDouble()/1000);
-            }
-		}
-
-    }
-
-private:
-    char _displayed[1000];
-
-} acqThread;
-
-// -----------------------------
-// GTK interface
-// -----------------------------
-
-// --------------------------- interface objects
+// GTK interface objects
 
 GtkWidget *statusBar;
 GtkWidget *liveData;
@@ -134,6 +83,79 @@ GtkWidget *frame1;
 GtkWidget *alignment1;
 GtkWidget *label1;
 GtkTooltips *tooltips;
+
+// ----------------------------------------------
+// data acquisition thread
+// ----------------------------------------------
+
+// the thread works in two different modes:
+// - pull mode: each refreshFreq msecs, send getData to collector and refresh liveData,
+// - push mode: expect data to be available continually as a stream, and save it to a file.
+
+class _acqThread : public Thread {
+
+    void run () {
+
+        double prev = 0;
+
+        while ( ! isStopping() ) {
+            if ( collector_awake ) {
+                if ( streaming ) {
+                    // push mode
+                    double now = Time::now();
+                    // read data (asynchronous mode)
+                    BinPortable<collectorNumericalData>* b = _dataPort.read(false);
+                    if ( b == 0 ) {
+                        Time::delay(0.1);
+                        continue;
+                    }
+                    _data = b->content();
+                    // update status bar: what is the current streaming frequency?
+                    sprintf(_statusMsg, "streaming at %3.2f Hz", 1/(now-prev));
+                    gtk_statusbar_push ((GtkStatusbar*)statusBar,
+                        gtk_statusbar_get_context_id((GtkStatusbar*)statusBar,"timer"), _statusMsg);
+                    prev = now;
+                } else {
+                    // pull mode
+                    gtk_statusbar_push ((GtkStatusbar*)statusBar,
+                        gtk_statusbar_get_context_id((GtkStatusbar*)statusBar,"timer"), "");
+                    // send getData command
+                    Bottle sent, recd;
+                    sent.addInt(CCmdGetData);
+                  	_cmdPort.write(sent,recd);
+                    if ( recd.get(0).asInt() == CCmdFailed ) {
+                        g_print ("getData command failed\n");
+                        return;
+                    }
+                    // read data
+                    _data = _dataPort.read()->content();
+                    // delay by refreshFreq
+                    Time::delay(_property.find("refreshFreq").asDouble()/1000);
+                }
+                // in either mode, display data
+                sprintf(_displayed, "Tracker #0: %d, %d, %d, %d, %d, %d\n",
+                    _data.tracker0Data.fakeDatum[0], _data.tracker0Data.fakeDatum[1],
+                    _data.tracker0Data.fakeDatum[2], _data.tracker0Data.fakeDatum[3],
+                    _data.tracker0Data.fakeDatum[4], _data.tracker0Data.fakeDatum[5]);
+                refreshLiveData(_displayed);
+            } else {
+                // if the collector is sleeping, take some rest
+                refreshLiveData("");
+                Time::delay(0.5);
+            }
+		}
+
+    }
+
+private:
+    char _displayed[1000];
+    char _statusMsg[200];
+
+} acqThread;
+
+// -----------------------------
+// GTK interface
+// -----------------------------
 
 void refreshLiveData(char* text)
 {
@@ -182,7 +204,7 @@ void on_wakeUpButton_clicked (GtkButton* button, gpointer user_data)
             _property.put("usePresSens",_mcollProperty.find("usePresSens").asInt());
             _property.put("imgSizeX",_mcollProperty.find("imgSizeX").asInt());
             _property.put("imgSizeY",_mcollProperty.find("imgSizeY").asInt());
-            g_print ("received collector properties\n");
+            g_print ("received collector properties:\n");
             cout << _property.toString().c_str() << endl;
         }
         // activate buttons
@@ -194,8 +216,6 @@ void on_wakeUpButton_clicked (GtkButton* button, gpointer user_data)
         gtk_button_set_label((GtkButton*)button, "Shut down");
         // set flag
         collector_awake = true;
-        // start acquisition thread
-        acqThread.start();
     } else {
         g_print ("user wants to shut down collector\n");
         g_print ("asking collector to shut down\n");
@@ -214,7 +234,6 @@ void on_wakeUpButton_clicked (GtkButton* button, gpointer user_data)
         gtk_widget_set_sensitive( (GtkWidget*)camera1Button, FALSE);
         gtk_button_set_label((GtkButton*)button, "Wake up");
         collector_awake = false;
-        acqThread.stop();
     }
 
 }
@@ -227,21 +246,43 @@ void on_streamButton_clicked (GtkButton* button, gpointer user_data)
     if ( ! streaming ) {
         // user wants to stream
         g_print ("user wants to stream\n");
+        // send startStreaming command; expect ok
+        g_print ("asking collector to start streaming\n");
+        Bottle sent, recd;
+        sent.addInt(CCmdStartStreaming);
+    	_cmdPort.write(sent,recd);
+        Value v = recd.get(0);
+        if ( v.asInt() == CCmdFailed ) {
+            g_print ("shut down command failed\n");
+            return;
+        }
+        g_print ("streaming command succeeded\n");
         // deactivate buttons
         g_print ("deactivating buttons\n");
         gtk_widget_set_sensitive( (GtkWidget*)wakeUpButton, FALSE);
         gtk_widget_set_sensitive( (GtkWidget*)camera0Button, FALSE);
         gtk_widget_set_sensitive( (GtkWidget*)camera1Button, FALSE);
         gtk_button_set_label((GtkButton*)button, "Stop");
+        // set flag
         streaming = true;
     } else {
         g_print ("user wants to stop streaming\n");
-        g_print ("activating buttons\n");
+        streaming = false;
+        g_print ("asking collector to stop streaming\n");
+        Bottle sent, recd;
+        sent.addInt(CCmdStopStreaming);
+    	_cmdPort.write(sent,recd);
+        Value v = recd.get(0);
+        if ( v.asInt() == CCmdFailed ) {
+            g_print ("shut down command failed\n");
+            return;
+        }
+        g_print ("stream successfully stopped\n");
+        g_print ("re-activating buttons\n");
         gtk_widget_set_sensitive( (GtkWidget*)wakeUpButton, TRUE);
         gtk_widget_set_sensitive( (GtkWidget*)camera0Button, TRUE);
         gtk_widget_set_sensitive( (GtkWidget*)camera1Button, TRUE);
         gtk_button_set_label((GtkButton*)button, "Stream");
-        streaming = false;
     }
 
 }
@@ -392,9 +433,13 @@ int main( int argc, char *argv[] )
     gtk_init (&argc, &argv);
     create_interface ();
 
+    // start acquisition thread
+//    acqThread.start();
+
     // idle and wait for events
     gtk_main ();
 
+//    acqThread.stop();
     closePorts();
     Network::fini();
 

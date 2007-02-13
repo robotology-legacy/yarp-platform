@@ -296,62 +296,45 @@ public:
 
 	virtual void run (void) {
 
-		// circular buffer to evaluate mean streaming frequency
-		_elapsedTop = 0;
-		_previous = 0.0;
-
-		// streaming interval
-		_streamInterval = 1/_property.find("streamFreq").asInt();
+        double streamInterval = 1/_property.find("streamFreq").asDouble();
+        double prev = 0;
 
 		// put those sensors which do have a streaming mode into streaming mode
-		if (_property.find("useDataGlove").asInt()) _hardware.glove.startStreaming();
 		if (_property.find("useTracker0").asInt()) _hardware.tracker0.startStreaming();
 		if (_property.find("useTracker1").asInt()) _hardware.tracker1.startStreaming();
+		if (_property.find("useDataGlove").asInt()) _hardware.glove.startStreaming();
 
 		// stream until terminated
 		while ( !isStopping() ) {
 
 			// acquire and send data
-			acquireAndSend();
+//			acquireAndSend();
 
-			// evaluate elapsed time since last loop
-			_now = Time::now();
+			// if it is the case, insert appropriate delay
+            double now = Time::now();
+			if ( now-prev < streamInterval ) {
+                Time::delay( streamInterval - (now-prev) );
+                cout << "delayed by " << streamInterval - (now-prev) << endl;
+            } else {
+                cout << "not delayed" << endl;
+            }
+            prev = now;
 
-            _elapsed[_elapsedTop] = _now - _previous;
-            _previous = _now;
+//			Time::delay( .3 );
 
-			// insert appropriate delay
-			if ( _elapsed[_elapsedTop] < _streamInterval ) {
-				// no idea why, need a correction factor (1.7)
-				Time::delay( _streamInterval*1.7 - _elapsed[_elapsedTop] );
-			}
-
-			// show average loop time, over 5 runs
-			if ( ++_elapsedTop == 5 ) _elapsedTop = 0;
-			_meanElapsed = ( _elapsed[0] + _elapsed[1] + _elapsed[2] + _elapsed[3] + _elapsed[4] )/5;
-			cout << "mean interval " << _meanElapsed << " (should be " << _streamInterval << ")       \r";
-
-		}
+        }
 
 		// stop streaming mode for some sensors
+		if (_property.find("useDataGlove").asInt()) _hardware.glove.stopStreaming();
 		if (_property.find("useTracker1").asInt()) _hardware.tracker1.stopStreaming();
 		if (_property.find("useTracker0").asInt()) _hardware.tracker0.stopStreaming();
-		if (_property.find("useDataGlove").asInt()) _hardware.glove.stopStreaming();
 
 		// bail out
 		return;
 
 	}
 
-private:
-	double _streamInterval, _now, _previous;
-	// 5 sample intervals to evaluate a reasonable average
-	double _meanElapsed, _elapsed[5];
-	int _elapsedTop;
-
-};
-
-streamingThread stream;
+} stream;
 
 // ------------ command port callback
 
@@ -468,6 +451,8 @@ int main (int argc, char *argv[])
 
 //  _img0.Resize (_property.imgSizeX, _property.imgSizeY);
 //  _img1.Resize (_property.imgSizeX, _property.imgSizeY);
+
+    Time::turboBoost();
 
 	Network::init();
 
