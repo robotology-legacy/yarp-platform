@@ -18,6 +18,7 @@
 // ----------------- globals
 
 using namespace std;
+using namespace yarp::dev;
 
 // what hardware is possibly attached to this setup?
 typedef struct {

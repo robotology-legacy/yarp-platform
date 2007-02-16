@@ -16,7 +16,7 @@ typedef struct FakeDataStruct {
 class TrackerData :		public FakeData {};
 class GazeTrackerData : public FakeData {};
 class DataGloveData :	public FakeData {};
-class PresSensData :	public FakeData {};
+//class PresSensData :	public FakeData {};
 
 // fake hardware
 
@@ -37,7 +37,6 @@ class YARPGrabber :			public FakeDriver {};
 class YARPMagneticTracker : public FakeDriver {};
 class YARPDataGlove :		public FakeDriver {};
 class YARPGazeTracker :		public FakeDriver {};
-class PressureDriver :		public FakeDriver {
-};
+//class PressureDriver :		public FakeDriver {};
 
-//#include <yarp/dev/PressureDriver.h>
+#include <yarp/dev/PressureDriver.h>
