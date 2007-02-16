@@ -1,11 +1,11 @@
 #ifndef __CollectorCommandsh__
 #define __CollectorCommandsh__
 
-// -------- start: to be removed once all drivers have been ported to YARP2
-#include "fakes.h"
-// -------- end
-
 #include <yarp/os/Property.h>
+
+// -------- to be removed once all drivers have been ported to YARP2
+#include "fakes.h"
+// --------
 
 using namespace yarp::os;
 
@@ -43,7 +43,7 @@ public:
 			(tracker1TransOpMode	2)\
 			(tracker1Timeout		160)\
 			(usePresSens			0)\
-			(NPresSens				2)\
+			(nPresSens				2)\
 	    ");
     };
 } mirrorCollectorProperty;

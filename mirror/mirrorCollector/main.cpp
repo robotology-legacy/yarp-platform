@@ -5,6 +5,7 @@
 
 #include <yarp/String.h>
 #include <yarp/ThreadImpl.h>
+
 #include <yarp/os/BinPortable.h>
 #include <yarp/os/Port.h>
 #include <yarp/os/BufferedPort.h>
@@ -25,7 +26,7 @@ typedef struct {
 	YARPMagneticTracker	tracker0;
 	YARPMagneticTracker	tracker1;
 	YARPDataGlove		glove;
-	YARPPresSens		press;
+	PressureDriver		press;
 	YARPGazeTracker		gt;
 } collectorHardware;
 
@@ -97,7 +98,7 @@ bool wakeUpSensors(void)
 	if (_property.useCamera0) {
 		// Framegrabber Initialization
 		cout << "Initialising camera #0... ";
-		if ( _hardware.grabber0.initialize (0, _property.imgSizeX, _property.imgSizeY) == YARP_OK ) {
+		if ( _hardware.grabber0.open (0, _property.imgSizeX, _property.imgSizeY) == YARP_OK ) {
 			cout <<  "done. W=" << _property.imgSizeX << ", H=" << _property.imgSizeY <<endl;
 			atLeastOneIsOK = true;
 		} else {
@@ -109,7 +110,7 @@ bool wakeUpSensors(void)
 	if (_property.useCamera1) {
 		// Framegrabber Initialization
 		cout << "Initialising camera #1... ";
-		if ( _hardware.grabber1.initialize (1, _property.imgSizeX, _property.imgSizeY) == YARP_OK ) {
+		if ( _hardware.grabber1.open (1, _property.imgSizeX, _property.imgSizeY) == YARP_OK ) {
 			cout <<  "done. W=" << _property.imgSizeX << ", H=" << _property.imgSizeY <<endl;
 			atLeastOneIsOK = true;
 		} else {
@@ -128,7 +129,7 @@ bool wakeUpSensors(void)
 		FoBparams.timeOut = _property.tracker0Timeout;
 		FoBparams.measurementRate = _property.tracker0MeasRate;
 		FoBparams.transOpMode = _property.tracker0TransOpMode;
-		if ( _hardware.tracker0.initialize(FoBparams) == YARP_OK ) {
+		if ( _hardware.tracker0.open(FoBparams) == YARP_OK ) {
 			cout <<  "done. On COM" << _property.tracker0ComPort << ", " << _property.tracker0BaudRate << " baud." << endl;
 			atLeastOneIsOK = true;
 		} else {
@@ -147,7 +148,7 @@ bool wakeUpSensors(void)
 		FoBparams.timeOut = _property.tracker1Timeout;
 		FoBparams.measurementRate = _property.tracker1MeasRate;
 		FoBparams.transOpMode = _property.tracker1TransOpMode;
-		if ( _hardware.tracker1.initialize(FoBparams) == YARP_OK ) {
+		if ( _hardware.tracker1.open(FoBparams) == YARP_OK ) {
 			cout <<  "done. On COM" << _property.tracker1ComPort << ", " << _property.tracker1BaudRate << " baud." << endl;
 			atLeastOneIsOK = true;
 		} else {
@@ -159,7 +160,7 @@ bool wakeUpSensors(void)
 	if (_property.useDataGlove) {
 		// DataGlove Initialization
 		cout << "Initialising DataGlove... ";
-		if ( _hardware.glove.initialize (_property.gloveComPort, _property.gloveBaudRate) == YARP_OK ) {
+		if ( _hardware.glove.open (_property.gloveComPort, _property.gloveBaudRate) == YARP_OK ) {
 			cout <<  "done. On COM" << _property.gloveComPort << ", " << _property.gloveBaudRate << " baud." << endl;
 			atLeastOneIsOK = true;
 		} else {
@@ -174,31 +175,26 @@ bool wakeUpSensors(void)
 		E504OpenParameters params;
 		params.baudRate = _property.GTBaudRate;
 		params.comPort = _property.GTComPort;
-		if ( _hardware.gt.initialize (params) == YARP_OK ) {
+		if ( _hardware.gt.open (params) == YARP_OK ) {
 			cout <<  "done. On COM" << _property.GTComPort << ", " << _property.GTBaudRate << " baud." << endl;
 			atLeastOneIsOK = true;
 		} else {
 			cout <<  "failed." <<endl;
 			_property.useGazeTracker = false;
 		}
-	}
-	
-	if (_property.usePresSens) {					//usePresSens controllare
-		// PresSensors Initialization
-		cout << "Initialising pressure sensors... ";
-		if ( _hardware.press.initialize (_property.NPresSens) == YARP_OK ) {
-			cout <<  "done. " << _property.NPresSens << " sensor(s) connected." << endl;
+	}*/
+
+    if ( _property.find("usePresSens").asInt() ) {
+        if ( _hardware.press.open () ) {
+    		cout << "pressure sensors initialised";
 			atLeastOneIsOK = true;
-		} else {
-			cout <<  "failed." <<endl;
-			_property.usePresSens = false;
+        } else {
+    		cout << "pressure sensors failed to initialise";
+			_property.put("usePresSens",0);
 		}
 	}
 
 	return atLeastOneIsOK;
-*/
-
-    return true;
 
 }
 
@@ -208,37 +204,37 @@ void shutDownSensors(void)
 {
 
 	if (_property.find("useCamera0").asInt()) {
-		_hardware.grabber0.uninitialize ();
+		_hardware.grabber0.close ();
 		cout << "camera #0 released." << endl;  
 	}
 	
 	if (_property.find("useCamera1").asInt()) {
-		_hardware.grabber1.uninitialize ();
+		_hardware.grabber1.close ();
 		cout << "camera #1 released." << endl;  
 	}
 	
 	if (_property.find("useTracker0").asInt()) {
-		_hardware.tracker0.uninitialize ();
+		_hardware.tracker0.close ();
 		cout << "tracker #0 released." << endl;  
 	}
 
 	if (_property.find("useTracker1").asInt()) {
-		_hardware.tracker1.uninitialize ();
+		_hardware.tracker1.close ();
 		cout << "tracker #1 released." << endl;  
 	}
 
 	if (_property.find("useDataGlove").asInt()) {
-		_hardware.glove.uninitialize ();
+		_hardware.glove.close ();
 		cout << "dataglove released." << endl;  
 	}
 	
 	if (_property.find("useGazeTracker").asInt()) {
-		_hardware.gt.uninitialize ();
+		_hardware.gt.close ();
 		cout << "gaze tracker released." << endl;  
 	}
 	
 	if (_property.find("usePresSens").asInt()) {
-		_hardware.press.uninitialize ();
+		_hardware.press.close ();
 		cout << "pressure sensors released." << endl;  
 	}
 

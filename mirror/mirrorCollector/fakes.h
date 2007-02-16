@@ -29,11 +29,15 @@ typedef struct FakeDriverStruct {
     };
 	void waitOnNewFrame(void) {};
     void acquireBuffer(unsigned char* b) {};
-	void uninitialize(void) {};
+    bool open(void) { return true; };
+	void close(void) {};
 } FakeDriver;
 
 class YARPGrabber :			public FakeDriver {};
 class YARPMagneticTracker : public FakeDriver {};
 class YARPDataGlove :		public FakeDriver {};
 class YARPGazeTracker :		public FakeDriver {};
-class YARPPresSens :		public FakeDriver {};
+class PressureDriver :		public FakeDriver {
+};
+
+//#include <yarp/dev/PressureDriver.h>
