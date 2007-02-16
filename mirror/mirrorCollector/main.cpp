@@ -10,7 +10,7 @@
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Network.h>
-#include <yarp/sig/Image.h>
+#include <yarp/os/RateThread.h>
 
 #include "CollectorCommands.h"
 
@@ -291,48 +291,34 @@ void acquireAndSend(void)
 
 // ---------- streaming thread
 
-class streamingThread : public Thread {
+class streamingThread : public RateThread {
 public:
 
-	virtual void run (void) {
+    streamingThread() : RateThread(1000) {}
 
-        double streamInterval = 1/_property.find("streamFreq").asDouble();
-        double prev = 0;
-
+    virtual bool threadInit (void) {
 		// put those sensors which do have a streaming mode into streaming mode
 		if (_property.find("useTracker0").asInt()) _hardware.tracker0.startStreaming();
 		if (_property.find("useTracker1").asInt()) _hardware.tracker1.startStreaming();
 		if (_property.find("useDataGlove").asInt()) _hardware.glove.startStreaming();
 
-		// stream until terminated
-		while ( !isStopping() ) {
+        setRate((int)(1000/_property.find("streamFreq").asDouble()));
+        cout << "streaming thread runs each "  << getRate() << "msecs." << endl;
 
-			// acquire and send data
-//			acquireAndSend();
+        return true;
+    }
 
-			// if it is the case, insert appropriate delay
-            double now = Time::now();
-			if ( now-prev < streamInterval ) {
-                Time::delay( streamInterval - (now-prev) );
-                cout << "delayed by " << streamInterval - (now-prev) << endl;
-            } else {
-                cout << "not delayed" << endl;
-            }
-            prev = now;
+    virtual void run (void) {
+    	// acquire and send data
+		acquireAndSend();
+	}
 
-//			Time::delay( .3 );
-
-        }
-
+    virtual void threadRelease (void) {
 		// stop streaming mode for some sensors
 		if (_property.find("useDataGlove").asInt()) _hardware.glove.stopStreaming();
 		if (_property.find("useTracker1").asInt()) _hardware.tracker1.stopStreaming();
 		if (_property.find("useTracker0").asInt()) _hardware.tracker0.stopStreaming();
-
-		// bail out
-		return;
-
-	}
+    }
 
 } stream;
 
@@ -452,8 +438,6 @@ int main (int argc, char *argv[])
 //  _img0.Resize (_property.imgSizeX, _property.imgSizeY);
 //  _img1.Resize (_property.imgSizeX, _property.imgSizeY);
 
-    Time::turboBoost();
-
 	Network::init();
 
     if ( ! openPorts() ) {
@@ -473,8 +457,7 @@ int main (int argc, char *argv[])
 			case 'r':
 				// RESET: if streaming, stop it, then if connected, disconnect sensors
 				if ( bStreaming ) {
-    				//stream.End();
-	    			stream.onStop();
+	    			stream.stop();
 					bStreaming = false;
 					cout << "No longer streaming." << endl;
 				}
