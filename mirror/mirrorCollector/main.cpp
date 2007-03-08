@@ -12,12 +12,6 @@
 #include <yarp/os/Network.h>
 #include <yarp/os/RateThread.h>
 
-#include <yarp/dev/PressureDriver.h>
-#include <yarp/dev/FobDriver.h>
-#include <yarp/dev/GazeDriver.h>
-#include <yarp/dev/PicoloDeviceDriver.h>
-#include <yarp/dev/CyberGloveDeviceDriver.h>
-
 #include "CollectorCommands.h"
 
 // ----------------- globals
