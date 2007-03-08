@@ -18,6 +18,7 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/Property.h>
 #include <yarp/os/RateThread.h>
+#include <yarp/os/Semaphore.h>
 
 // GTK+
 #include <gtk/gtk.h>
@@ -51,131 +52,142 @@ public:
 // globals
 // ----------------------------------------------
 
-// data coming from the collector
-collectorNumericalData  _data;
-collectorImage          _img0;
-collectorImage          _img1;
-
 // ports
 Port _cmdPort;
 BufferedPort<BinPortable<collectorNumericalData> > _dataPort;
 BufferedPort<collectorImage> _img0Port;
 BufferedPort<collectorImage> _img1Port;
+// and associated semaphores
+Semaphore cmdPortSema, dataPortSema, img0PortSema, img1PortSema;
+
+// data & images
+collectorNumericalData  _data;
+collectorImage          _img0;
+collectorImage          _img1;
 
 // is collector awake?
 bool collector_awake = false;
-
 // is collector in the streaming mode?
 bool streaming = false;
 
-void refreshLiveData(char*);
-
 // GTK interface objects
-
-GtkWidget *statusBar;
 GtkWidget *liveData;
 GtkWidget *streamButton;
 GtkWidget *camera0Button;
 GtkWidget *camera1Button;
 GtkWidget *wakeUpButton;
 GtkWidget *mainWindow;
-GtkWidget *myFixed;
-GtkWidget *frame1;
-GtkWidget *alignment1;
-GtkWidget *label1;
-GtkTooltips *tooltips;
 
 // ----------------------------------------------
-// data acquisition threads
+// helpers
 // ----------------------------------------------
 
-// - pull thread: each refreshFreq msecs, send getData to collector and acquire data
+bool sendCmd(collectorCommand cmd, Bottle* recd = 0)
+{
 
-class _pullThread : public RateThread {
-public:
+    // if the second argument is omitted, the function will not care about it;
+    // otherwise it will fill it with the reply from the remote application
 
-    _pullThread() : RateThread(1000) {}
+    Bottle sent, safeRecd;
 
-    virtual bool threadInit (void) {
-        setRate((int)(1000/_property.find("refreshFreq").asDouble()));
-        cout << "pull thread runs each "  << getRate() << "msecs." << endl;
-        return true;
+    if ( recd == 0 ) {
+        recd = &safeRecd;
     }
 
-    virtual void run (void) {
-        // send getData command
-        Bottle sent, recd;
-        sent.addInt(CCmdGetData);
-       	_cmdPort.write(sent,recd);
-        if ( recd.get(0).asInt() == CCmdFailed ) {
-            g_print ("getData command failed\n");
-            return;
-        }
-        // read data
-        _data = _dataPort.read()->content();
-        // display data
-        sprintf(_displayed, "Tracker #0: %d, %d, %d, %d, %d, %d\n",
-            _data.tracker0Data.fakeDatum[0], _data.tracker0Data.fakeDatum[1],
-            _data.tracker0Data.fakeDatum[2], _data.tracker0Data.fakeDatum[3],
-            _data.tracker0Data.fakeDatum[4], _data.tracker0Data.fakeDatum[5]);
-        refreshLiveData(_displayed);
+    sent.addInt(cmd);
+
+    cmdPortSema.wait();
+    _cmdPort.write(sent,*recd);
+    cmdPortSema.post();
+
+    if ( recd->get(0).asInt() == CCmdFailed ) {
+        return false;
     }
 
-private:
-    char _displayed[1000];
+    return true;
 
-} pullThread;
+}
 
-// - push thread: expect data to be available continually as a stream
+void readData()
+{
 
-class _pushThread : public Thread {
+    // safely read data off the data and images ports
+    dataPortSema.wait();
+    dataPortSema.post();
+
+}
+
+// ----------------------------------------------
+// data streaming thread
+// ----------------------------------------------
+
+// expect data to be available continually as a stream and save it timely to the disc
+
+class _acquireThread : public Thread {
 
     void run () {
 
-        double _prev = 0.0;
+        g_print ("acquisition thread stopping....\n");
 
         while ( ! isStopping() ) {
-            double now = Time::now();
+            _now = Time::now();
             // read data (blocking read)
-            _data = _dataPort.read()->content();
+            _threadData = _dataPort.read()->content();
             // update status bar: what is the current streaming frequency?
-            sprintf(_statusMsg, "streaming at %.2f Hz", 1/(now-_prev));
-            gtk_statusbar_push ((GtkStatusbar*)statusBar,
-                gtk_statusbar_get_context_id((GtkStatusbar*)statusBar,"timer"), _statusMsg);
-            _prev = now;
-            // display data
-            sprintf(_displayed, "Tracker #0: %d, %d, %d, %d, %d, %d\n",
-                _data.tracker0Data.fakeDatum[0], _data.tracker0Data.fakeDatum[1],
-                _data.tracker0Data.fakeDatum[2], _data.tracker0Data.fakeDatum[3],
-                _data.tracker0Data.fakeDatum[4], _data.tracker0Data.fakeDatum[5]);
-            refreshLiveData(_displayed);
+            g_print("streaming at %3.2f Hz\r", 1/(_now-_prev));
+            _prev = _now;
+            // save data to disc
+            g_print ("Tr#0: %.2d %.2d %.2d %.2d %.2d %.2d\r",
+                _threadData.tracker0Data.fakeDatum[0], _threadData.tracker0Data.fakeDatum[1],
+                _threadData.tracker0Data.fakeDatum[2], _threadData.tracker0Data.fakeDatum[3],
+                _threadData.tracker0Data.fakeDatum[4], _threadData.tracker0Data.fakeDatum[5]);
 		}
 
-        g_print ("push thread stopping....\n");
+        g_print ("acquisition thread stopping....\n");
 
     }
 
 private:
-    char _displayed[1000];
-    char _statusMsg[200];
+    // data coming from the collector
+    collectorNumericalData  _threadData;
+    collectorImage          _threadImg0;
+    collectorImage          _threadImg1;
 
-} pushThread;
+    char _displayed[1000];
+    
+    double _now, _prev;
+
+} acquireThread;
 
 // -----------------------------
 // GTK interface
 // -----------------------------
 
-void refreshLiveData(char* text)
+// --------------------------- callbacks
+
+gboolean refreshLiveData (void*)
 {
 
+    static char _displayed[1000];
+
+    // send getData command
+    if ( sendCmd(CCmdGetData) == false ) {
+        g_print ("getData command failed\n");
+        return (collector_awake?TRUE:FALSE);
+    }
+
+    // read, pack and display data
+    _data = _dataPort.read()->content();
+    sprintf(_displayed, "Tracker #0: %3.2d %3.2d %3.2d %3.2d %3.2d %3.2d\nTracker #1: %3.2d %3.2d %3.2d %3.2d %3.2d %3.2d\n",
+        _data.tracker0Data.fakeDatum[0], _data.tracker0Data.fakeDatum[1], _data.tracker0Data.fakeDatum[2], _data.tracker0Data.fakeDatum[3], _data.tracker0Data.fakeDatum[4], _data.tracker0Data.fakeDatum[5],
+        _data.tracker1Data.fakeDatum[0], _data.tracker1Data.fakeDatum[1], _data.tracker1Data.fakeDatum[2], _data.tracker1Data.fakeDatum[3], _data.tracker1Data.fakeDatum[4], _data.tracker1Data.fakeDatum[5]);
     GtkTextBuffer* buf = gtk_text_view_get_buffer((GtkTextView*)liveData);
-    gtk_text_buffer_set_text(buf, text, -1);
-    gtk_widget_hide(liveData);
-    gtk_widget_show(liveData);
+    gtk_text_buffer_set_text(buf, _displayed, -1);
+    gtk_widget_queue_draw(liveData);
+
+    return (collector_awake?TRUE:FALSE);
 
 }
-
-// --------------------------- callbacks
 
 void on_wakeUpButton_clicked (GtkButton* button, gpointer user_data)
 {
@@ -187,10 +199,8 @@ void on_wakeUpButton_clicked (GtkButton* button, gpointer user_data)
         g_print ("user wants to wake up collector\n");
         // send "wakeup" command; expect "succeeded"
         g_print ("asking collector to wake up\n");
-        Bottle sent, recd;
-        sent.addInt(CCmdWakeUp);
-    	_cmdPort.write(sent,recd);
-        if ( recd.get(0).asInt() == CCmdFailed ) {
+        Bottle recd;
+        if ( sendCmd(CCmdWakeUp,&recd) == false ) {
             g_print ("wake up command failed\n");
             return;
         }
@@ -214,36 +224,32 @@ void on_wakeUpButton_clicked (GtkButton* button, gpointer user_data)
             g_print ("received collector properties:\n");
             cout << _property.toString().c_str() << endl;
         }
+        // set flag
+        collector_awake = true;
         // activate buttons
         g_print ("activating buttons\n");
         gtk_widget_set_sensitive( (GtkWidget*)streamButton, TRUE);
         gtk_widget_set_sensitive( (GtkWidget*)camera0Button, TRUE);
         gtk_widget_set_sensitive( (GtkWidget*)camera1Button, TRUE);
         // change label
-        gtk_button_set_label((GtkButton*)button, "Shut down");
-        // set flag
-        collector_awake = true;
-        // launch pull acquisition thread
-        pullThread.start();
+        gtk_button_set_label((GtkButton*)wakeUpButton, "Shut down");
+        // install timeout for live data refreshing
+        g_timeout_add (1000/_property.find("refreshFreq").asDouble(),refreshLiveData,0);
     } else {
         g_print ("user wants to shut down collector\n");
+        g_print ("stopping pull thread\n");
         g_print ("asking collector to shut down\n");
-        Bottle sent, recd;
-        sent.addInt(CCmdShutDown);
-    	_cmdPort.write(sent,recd);
-        Value v = recd.get(0);
-        if ( v.asInt() == CCmdFailed ) {
+        if ( sendCmd(CCmdShutDown) == false ) {
             g_print ("shut down command failed\n");
             return;
         }
         g_print ("shut down command succeeded\n");
+        collector_awake = false;
         g_print ("deactivating buttons\n");
         gtk_widget_set_sensitive( (GtkWidget*)streamButton, FALSE);
         gtk_widget_set_sensitive( (GtkWidget*)camera0Button, FALSE);
         gtk_widget_set_sensitive( (GtkWidget*)camera1Button, FALSE);
-        gtk_button_set_label((GtkButton*)button, "Wake up");
-        collector_awake = false;
-        pullThread.stop();
+        gtk_button_set_label((GtkButton*)wakeUpButton, "Wake up");
     }
 
 }
@@ -258,15 +264,14 @@ void on_streamButton_clicked (GtkButton* button, gpointer user_data)
         g_print ("user wants to stream\n");
         // send startStreaming command; expect ok
         g_print ("asking collector to start streaming\n");
-        Bottle sent, recd;
-        sent.addInt(CCmdStartStreaming);
-    	_cmdPort.write(sent,recd);
-        Value v = recd.get(0);
-        if ( v.asInt() == CCmdFailed ) {
-            g_print ("shut down command failed\n");
+        if ( sendCmd(CCmdStartStreaming) == false ) {
+            g_print ("startStreaming command failed\n");
             return;
         }
-        g_print ("streaming command succeeded\n");
+        g_print ("startStreaming command succeeded\n");
+        // start push thread
+        g_print ("starting push thread\n");
+        acquireThread.start();
         // deactivate buttons
         g_print ("deactivating buttons\n");
         gtk_widget_set_sensitive( (GtkWidget*)wakeUpButton, FALSE);
@@ -275,30 +280,22 @@ void on_streamButton_clicked (GtkButton* button, gpointer user_data)
         gtk_button_set_label((GtkButton*)button, "Stop");
         // set flag
         streaming = true;
-        // stop pull thread, start push thread
-        pullThread.stop();
-//        pushThread.start();
     } else {
         g_print ("user wants to stop streaming\n");
-        streaming = false;
         g_print ("stopping push thread\n");
-//        pushThread.stop();
+        acquireThread.stop();
         g_print ("asking collector to stop streaming\n");
-        Bottle sent, recd;
-        sent.addInt(CCmdStopStreaming);
-    	_cmdPort.write(sent,recd);
-        Value v = recd.get(0);
-        if ( v.asInt() == CCmdFailed ) {
-            g_print ("shut down command failed\n");
+        if ( sendCmd(CCmdStopStreaming) == false ) {
+            g_print ("stopStreaming command failed\n");
             return;
         }
         g_print ("stream successfully stopped\n");
+        streaming = false;
         g_print ("re-activating buttons\n");
         gtk_widget_set_sensitive( (GtkWidget*)wakeUpButton, TRUE);
         gtk_widget_set_sensitive( (GtkWidget*)camera0Button, TRUE);
         gtk_widget_set_sensitive( (GtkWidget*)camera1Button, TRUE);
         gtk_button_set_label((GtkButton*)button, "Stream");
-        pullThread.start();
     }
 
 }
@@ -318,77 +315,77 @@ void on_camera1Button_clicked (GtkButton* button, gpointer user_data)
 void create_interface (void)
 {
 
-  tooltips = gtk_tooltips_new ();
+    GtkWidget *myFixed;
+    GtkWidget *frame1;
+    GtkWidget *alignment1;
+    GtkWidget *label1;
+    GtkTooltips *tooltips;
+  
+    tooltips = gtk_tooltips_new ();
 
-  mainWindow = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title (GTK_WINDOW (mainWindow), "Mirror Capture");
-  gtk_window_set_icon_name (GTK_WINDOW (mainWindow), "gtk-connect");
+    mainWindow = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title (GTK_WINDOW (mainWindow), "Mirror Capture");
+    gtk_window_set_icon_name (GTK_WINDOW (mainWindow), "gtk-connect");
 
-  myFixed = gtk_fixed_new ();
-  gtk_widget_show (myFixed);
-  gtk_container_add (GTK_CONTAINER (mainWindow), myFixed);
+    myFixed = gtk_fixed_new ();
+    gtk_widget_show (myFixed);
+    gtk_container_add (GTK_CONTAINER (mainWindow), myFixed);
 
-  statusBar = gtk_statusbar_new ();
-  gtk_widget_show (statusBar);
-  gtk_fixed_put (GTK_FIXED (myFixed), statusBar, 0, 272);
-  gtk_widget_set_size_request (statusBar, 400, 20);
-  gtk_statusbar_set_has_resize_grip (GTK_STATUSBAR (statusBar), FALSE);
+    frame1 = gtk_frame_new (NULL);
+    gtk_widget_show (frame1);
+    gtk_fixed_put (GTK_FIXED (myFixed), frame1, 0, 44);
+    gtk_widget_set_size_request (frame1, 400, 225);
+    gtk_frame_set_shadow_type (GTK_FRAME (frame1), GTK_SHADOW_NONE);
 
-  frame1 = gtk_frame_new (NULL);
-  gtk_widget_show (frame1);
-  gtk_fixed_put (GTK_FIXED (myFixed), frame1, 0, 44);
-  gtk_widget_set_size_request (frame1, 400, 225);
-  gtk_frame_set_shadow_type (GTK_FRAME (frame1), GTK_SHADOW_NONE);
+    alignment1 = gtk_alignment_new (0.5, 0.5, 1, 1);
+    gtk_widget_show (alignment1);
+    gtk_container_add (GTK_CONTAINER (frame1), alignment1);
+    gtk_alignment_set_padding (GTK_ALIGNMENT (alignment1), 0, 0, 12, 0);
 
-  alignment1 = gtk_alignment_new (0.5, 0.5, 1, 1);
-  gtk_widget_show (alignment1);
-  gtk_container_add (GTK_CONTAINER (frame1), alignment1);
-  gtk_alignment_set_padding (GTK_ALIGNMENT (alignment1), 0, 0, 12, 0);
+    liveData = gtk_text_view_new ();
+    gtk_widget_show (liveData);
+    gtk_container_add (GTK_CONTAINER (alignment1), liveData);
+    GTK_WIDGET_UNSET_FLAGS (liveData, GTK_CAN_FOCUS);
 
-  liveData = gtk_text_view_new ();
-  gtk_widget_show (liveData);
-  gtk_container_add (GTK_CONTAINER (alignment1), liveData);
-  GTK_WIDGET_UNSET_FLAGS (liveData, GTK_CAN_FOCUS);
+    label1 = gtk_label_new ("<b>Numerical data:</b>");
+    gtk_widget_show (label1);
+    gtk_frame_set_label_widget (GTK_FRAME (frame1), label1);
+    gtk_label_set_use_markup (GTK_LABEL (label1), TRUE);
 
-  label1 = gtk_label_new ("<b>Numerical data:</b>");
-  gtk_widget_show (label1);
-  gtk_frame_set_label_widget (GTK_FRAME (frame1), label1);
-  gtk_label_set_use_markup (GTK_LABEL (label1), TRUE);
+    streamButton = gtk_button_new_with_mnemonic ("Stream");
+    gtk_widget_show (streamButton);
+    gtk_fixed_put (GTK_FIXED (myFixed), streamButton, 104, 4);
+    gtk_widget_set_size_request (streamButton, 96, 40);
+    gtk_widget_set_sensitive (streamButton, FALSE);
+    gtk_tooltips_set_tip (tooltips, streamButton, "Start streaming data to disc", NULL);
 
-  streamButton = gtk_button_new_with_mnemonic ("Stream");
-  gtk_widget_show (streamButton);
-  gtk_fixed_put (GTK_FIXED (myFixed), streamButton, 104, 4);
-  gtk_widget_set_size_request (streamButton, 96, 40);
-  gtk_widget_set_sensitive (streamButton, FALSE);
-  gtk_tooltips_set_tip (tooltips, streamButton, "Start streaming data to disc", NULL);
+    camera0Button = gtk_button_new_with_mnemonic ("Camera #0");
+    gtk_widget_show (camera0Button);
+    gtk_fixed_put (GTK_FIXED (myFixed), camera0Button, 204, 4);
+    gtk_widget_set_size_request (camera0Button, 96, 40);
+    gtk_widget_set_sensitive (camera0Button, FALSE);
+    gtk_tooltips_set_tip (tooltips, camera0Button, "Show camera #0 live", NULL);
 
-  camera0Button = gtk_button_new_with_mnemonic ("Camera #0");
-  gtk_widget_show (camera0Button);
-  gtk_fixed_put (GTK_FIXED (myFixed), camera0Button, 204, 4);
-  gtk_widget_set_size_request (camera0Button, 96, 40);
-  gtk_widget_set_sensitive (camera0Button, FALSE);
-  gtk_tooltips_set_tip (tooltips, camera0Button, "Show camera #0 live", NULL);
+    camera1Button = gtk_button_new_with_mnemonic ("Camera #1");
+    gtk_widget_show (camera1Button);
+    gtk_fixed_put (GTK_FIXED (myFixed), camera1Button, 304, 4);
+    gtk_widget_set_size_request (camera1Button, 96, 40);
+    gtk_widget_set_sensitive (camera1Button, FALSE);
+    gtk_tooltips_set_tip (tooltips, camera1Button, "Show camera #1 live", NULL);
 
-  camera1Button = gtk_button_new_with_mnemonic ("Camera #1");
-  gtk_widget_show (camera1Button);
-  gtk_fixed_put (GTK_FIXED (myFixed), camera1Button, 304, 4);
-  gtk_widget_set_size_request (camera1Button, 96, 40);
-  gtk_widget_set_sensitive (camera1Button, FALSE);
-  gtk_tooltips_set_tip (tooltips, camera1Button, "Show camera #1 live", NULL);
+    wakeUpButton = gtk_button_new_with_mnemonic ("Wake up");
+    gtk_widget_show (wakeUpButton);
+    gtk_fixed_put (GTK_FIXED (myFixed), wakeUpButton, 4, 4);
+    gtk_widget_set_size_request (wakeUpButton, 96, 40);
+    gtk_tooltips_set_tip (tooltips, wakeUpButton, "Wake up the Mirror Collecor", NULL);
 
-  wakeUpButton = gtk_button_new_with_mnemonic ("Wake up");
-  gtk_widget_show (wakeUpButton);
-  gtk_fixed_put (GTK_FIXED (myFixed), wakeUpButton, 4, 4);
-  gtk_widget_set_size_request (wakeUpButton, 96, 40);
-  gtk_tooltips_set_tip (tooltips, wakeUpButton, "Wake up the Mirror Collecor", NULL);
+    g_signal_connect ((gpointer) wakeUpButton, "clicked", G_CALLBACK (on_wakeUpButton_clicked), NULL);
+    g_signal_connect ((gpointer) streamButton, "clicked", G_CALLBACK (on_streamButton_clicked), NULL);
+    g_signal_connect ((gpointer) camera0Button, "clicked", G_CALLBACK (on_camera0Button_clicked), NULL);
+    g_signal_connect ((gpointer) camera1Button, "clicked", G_CALLBACK (on_camera1Button_clicked), NULL);
 
-  g_signal_connect ((gpointer) wakeUpButton, "clicked", G_CALLBACK (on_wakeUpButton_clicked), NULL);
-  g_signal_connect ((gpointer) streamButton, "clicked", G_CALLBACK (on_streamButton_clicked), NULL);
-  g_signal_connect ((gpointer) camera0Button, "clicked", G_CALLBACK (on_camera0Button_clicked), NULL);
-  g_signal_connect ((gpointer) camera1Button, "clicked", G_CALLBACK (on_camera1Button_clicked), NULL);
-
-  gtk_widget_show (mainWindow);
-  g_signal_connect ((gpointer) mainWindow, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+    gtk_widget_show (mainWindow);
+    g_signal_connect ((gpointer) mainWindow, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
 }
 
@@ -452,37 +449,10 @@ int main( int argc, char *argv[] )
     // idle and wait for events
     gtk_main ();
 
+    // bail out
     closePorts();
     Network::fini();
 
     return 0;
 
 }
-
-// if you don't want a console to be opened along with the gtk windows, then:
-
-// (1) uncomment the following code
-/*
-#ifdef WIN32
-#include <windows.h>
-// win32 non-console applications define WinMain as the
-// entry point for the linker
-int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow)
-{
-    return main (__argc, __argv);
-}
-#endif
-*/
-
-// (2) add this to CMakeLists.txt
-/*
-    SET(CMAKE_MODULE_PATH "$ENV{YARP_ROOT}/conf")
-    INCLUDE(YarpProgram)
-    IF (WIN32 AND NOT CYGWIN)
-        YarpProgram(<program name> NO_CONSOLE)
-        INSTALL_TARGETS(/bin <program name>)
-    ELSE (WIN32 AND NOT CYGWIN)
-        YarpProgram(<program name> CONSOLE)
-        INSTALL_TARGETS(/bin <program name>)
-    ENDIF (WIN32 AND NOT CYGWIN)
-*/
