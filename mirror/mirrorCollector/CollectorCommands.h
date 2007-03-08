@@ -3,10 +3,6 @@
 
 #include <yarp/os/Property.h>
 
-// -------- to be removed once all drivers have been ported to YARP2
-#include "fakes.h"
-// --------
-
 using namespace yarp::os;
 
 // properties of the collector
@@ -24,16 +20,16 @@ public:
 			(imgSizeX				384)\
 			(imgSizeY				272)\
 			(YOffset				0)\
-			(useGazeTracker			0)\
+			(useGazeTracker			1)\
 			(GTComPort				1)\
 			(GTBaudRate				57600)\
-			(useTracker0			0)\
+			(useTracker0			1)\
 			(tracker0ComPort		2)\
 			(tracker0BaudRate		115200)\
 			(tracker0MeasRate		103.3)\
 			(tracker0TransOpMode	2)\
 			(tracker0Timeout		160)\
-			(useDataGlove			0)\
+			(useDataGlove			1)\
 			(gloveComPort			3)\
 			(gloveBaudRate			115200)\
 			(useTracker1			0)\
@@ -42,7 +38,7 @@ public:
 			(tracker1MeasRate		103.3)\
 			(tracker1TransOpMode	2)\
 			(tracker1Timeout		160)\
-			(usePresSens			0)\
+			(usePresSens			1)\
 			(nPresSens				2)\
 	    ");
     };
@@ -78,6 +74,17 @@ typedef struct _collectorNumericalData {
 
 // images sent over the network
 #include <yarp/sig/Image.h>
-typedef yarp::sig::ImageOf<yarp::sig::PixelBgr> collectorImage;
+//typedef yarp::sig::ImageOf<yarp::sig::PixelBgr> collectorImage;
+typedef yarp::sig::ImageOf<yarp::sig::PixelRgb> collectorImage;
+
+
+#include <yarp/sig/ImageFile.h>
+
+
+
+
+
+
+
 
 #endif
