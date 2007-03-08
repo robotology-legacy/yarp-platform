@@ -71,16 +71,47 @@ bool collector_awake = false;
 bool streaming = false;
 
 // GTK interface objects
-GtkWidget *liveData;
+GtkWidget *numDataTextView;
 GtkWidget *streamButton;
-GtkWidget *camera0Button;
-GtkWidget *camera1Button;
+GtkWidget *camera0Image;
+GtkWidget *camera1Image;
 GtkWidget *wakeUpButton;
 GtkWidget *mainWindow;
 
 // ----------------------------------------------
 // helpers
 // ----------------------------------------------
+
+bool openPorts()
+{
+
+    char portName[256];
+
+    ACE_OS::sprintf(portName, "/%s/data", _property.find("appName").asString().c_str());
+    if ( _dataPort.open(portName) == false ) return false;
+
+    ACE_OS::sprintf(portName, "/%s/img0", _property.find("appName").asString().c_str());
+    if ( _img0Port.open(portName) == false ) return false;
+
+    ACE_OS::sprintf(portName, "/%s/img1", _property.find("appName").asString().c_str());
+    if ( _img1Port.open(portName) == false ) return false;
+
+    ACE_OS::sprintf(portName, "/%s/cmd", _property.find("appName").asString().c_str());
+    if ( _cmdPort.open(portName) == false ) return false;
+
+    return true;
+
+}
+
+void closePorts()
+{
+
+    _cmdPort.close();
+    _img1Port.close();
+    _img0Port.close();
+    _dataPort.close();
+
+}
 
 bool sendCmd(collectorCommand cmd, Bottle* recd = 0)
 {
@@ -90,30 +121,20 @@ bool sendCmd(collectorCommand cmd, Bottle* recd = 0)
 
     Bottle sent, safeRecd;
 
+    // if recd is null, fallback (the response is then ignored)
     if ( recd == 0 ) {
         recd = &safeRecd;
     }
 
+    // send command
     sent.addInt(cmd);
-
-    cmdPortSema.wait();
     _cmdPort.write(sent,*recd);
-    cmdPortSema.post();
 
     if ( recd->get(0).asInt() == CCmdFailed ) {
         return false;
     }
 
     return true;
-
-}
-
-void readData()
-{
-
-    // safely read data off the data and images ports
-    dataPortSema.wait();
-    dataPortSema.post();
 
 }
 
@@ -165,7 +186,36 @@ private:
 
 // --------------------------- callbacks
 
-gboolean refreshLiveData (void*)
+void img2buf(collectorImage* img, GdkPixbuf* buf)
+{
+
+    guchar* dst_data = gdk_pixbuf_get_pixels(buf);
+    unsigned int rowstride = gdk_pixbuf_get_rowstride (buf);
+    unsigned int n_channels = gdk_pixbuf_get_n_channels (buf);
+
+	char* src_data = (char*) img->getRawImage();
+    unsigned int width = img->width();
+    unsigned int height = img->height();
+	unsigned int src_line_size = img->getRowSize();
+
+	unsigned int dst_size_in_memory = rowstride * height;
+
+	guchar *p_dst;
+	char *p_src;
+
+    if ( src_line_size == rowstride ) {
+        ACE_OS::memcpy(dst_data, src_data, dst_size_in_memory);
+    } else {
+        for (int i=0; i < (int)height; i++) {
+            p_dst = dst_data + i * rowstride;
+            p_src = src_data + i * src_line_size;
+            ACE_OS::memcpy(p_dst, p_src, (n_channels*width));
+        }
+    }
+
+}
+
+gboolean refresh (void*)
 {
 
     static char _displayed[1000];
@@ -176,15 +226,25 @@ gboolean refreshLiveData (void*)
         return (collector_awake?TRUE:FALSE);
     }
 
-    // read, pack and display data
+    // read numerical data and update textView
     _data = _dataPort.read()->content();
     sprintf(_displayed, "Tracker #0: %3.2d %3.2d %3.2d %3.2d %3.2d %3.2d\nTracker #1: %3.2d %3.2d %3.2d %3.2d %3.2d %3.2d\n",
         _data.tracker0Data.fakeDatum[0], _data.tracker0Data.fakeDatum[1], _data.tracker0Data.fakeDatum[2], _data.tracker0Data.fakeDatum[3], _data.tracker0Data.fakeDatum[4], _data.tracker0Data.fakeDatum[5],
         _data.tracker1Data.fakeDatum[0], _data.tracker1Data.fakeDatum[1], _data.tracker1Data.fakeDatum[2], _data.tracker1Data.fakeDatum[3], _data.tracker1Data.fakeDatum[4], _data.tracker1Data.fakeDatum[5]);
-    GtkTextBuffer* buf = gtk_text_view_get_buffer((GtkTextView*)liveData);
+    GtkTextBuffer* buf = gtk_text_view_get_buffer((GtkTextView*)numDataTextView);
     gtk_text_buffer_set_text(buf, _displayed, -1);
-    gtk_widget_queue_draw(liveData);
+    gtk_widget_queue_draw(numDataTextView);
 
+    // read image 0 and update window
+    if ( _property.find("useCamera0").asInt() == 1 ) {
+        collectorImage *img0 = _img0Port.read();
+	    if ( img0 != 0 ) {
+            GdkPixbuf* camera0Pixbuf = gtk_image_get_pixbuf((GtkImage*)camera0Image);
+            img2buf(img0,camera0Pixbuf);
+            gtk_widget_queue_draw (camera0Image);
+        }
+    }
+    
     return (collector_awake?TRUE:FALSE);
 
 }
@@ -229,12 +289,10 @@ void on_wakeUpButton_clicked (GtkButton* button, gpointer user_data)
         // activate buttons
         g_print ("activating buttons\n");
         gtk_widget_set_sensitive( (GtkWidget*)streamButton, TRUE);
-        gtk_widget_set_sensitive( (GtkWidget*)camera0Button, TRUE);
-        gtk_widget_set_sensitive( (GtkWidget*)camera1Button, TRUE);
         // change label
         gtk_button_set_label((GtkButton*)wakeUpButton, "Shut down");
         // install timeout for live data refreshing
-        g_timeout_add (1000/_property.find("refreshFreq").asDouble(),refreshLiveData,0);
+        g_timeout_add (1000/_property.find("refreshFreq").asDouble(),refresh,0);
     } else {
         g_print ("user wants to shut down collector\n");
         g_print ("stopping pull thread\n");
@@ -247,8 +305,6 @@ void on_wakeUpButton_clicked (GtkButton* button, gpointer user_data)
         collector_awake = false;
         g_print ("deactivating buttons\n");
         gtk_widget_set_sensitive( (GtkWidget*)streamButton, FALSE);
-        gtk_widget_set_sensitive( (GtkWidget*)camera0Button, FALSE);
-        gtk_widget_set_sensitive( (GtkWidget*)camera1Button, FALSE);
         gtk_button_set_label((GtkButton*)wakeUpButton, "Wake up");
     }
 
@@ -275,8 +331,6 @@ void on_streamButton_clicked (GtkButton* button, gpointer user_data)
         // deactivate buttons
         g_print ("deactivating buttons\n");
         gtk_widget_set_sensitive( (GtkWidget*)wakeUpButton, FALSE);
-        gtk_widget_set_sensitive( (GtkWidget*)camera0Button, FALSE);
-        gtk_widget_set_sensitive( (GtkWidget*)camera1Button, FALSE);
         gtk_button_set_label((GtkButton*)button, "Stop");
         // set flag
         streaming = true;
@@ -293,20 +347,8 @@ void on_streamButton_clicked (GtkButton* button, gpointer user_data)
         streaming = false;
         g_print ("re-activating buttons\n");
         gtk_widget_set_sensitive( (GtkWidget*)wakeUpButton, TRUE);
-        gtk_widget_set_sensitive( (GtkWidget*)camera0Button, TRUE);
-        gtk_widget_set_sensitive( (GtkWidget*)camera1Button, TRUE);
         gtk_button_set_label((GtkButton*)button, "Stream");
     }
-
-}
-
-void on_camera0Button_clicked (GtkButton* button, gpointer user_data)
-{
-
-}
-
-void on_camera1Button_clicked (GtkButton* button, gpointer user_data)
-{
 
 }
 
@@ -315,112 +357,46 @@ void on_camera1Button_clicked (GtkButton* button, gpointer user_data)
 void create_interface (void)
 {
 
-    GtkWidget *myFixed;
-    GtkWidget *frame1;
-    GtkWidget *alignment1;
-    GtkWidget *label1;
-    GtkTooltips *tooltips;
-  
-    tooltips = gtk_tooltips_new ();
+    GtkWidget *fixed;
 
     mainWindow = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title (GTK_WINDOW (mainWindow), "Mirror Capture");
     gtk_window_set_icon_name (GTK_WINDOW (mainWindow), "gtk-connect");
 
-    myFixed = gtk_fixed_new ();
-    gtk_widget_show (myFixed);
-    gtk_container_add (GTK_CONTAINER (mainWindow), myFixed);
+    fixed = gtk_fixed_new ();
+    gtk_widget_show (fixed);
+    gtk_container_add (GTK_CONTAINER (mainWindow), fixed);
 
-    frame1 = gtk_frame_new (NULL);
-    gtk_widget_show (frame1);
-    gtk_fixed_put (GTK_FIXED (myFixed), frame1, 0, 44);
-    gtk_widget_set_size_request (frame1, 400, 225);
-    gtk_frame_set_shadow_type (GTK_FRAME (frame1), GTK_SHADOW_NONE);
-
-    alignment1 = gtk_alignment_new (0.5, 0.5, 1, 1);
-    gtk_widget_show (alignment1);
-    gtk_container_add (GTK_CONTAINER (frame1), alignment1);
-    gtk_alignment_set_padding (GTK_ALIGNMENT (alignment1), 0, 0, 12, 0);
-
-    liveData = gtk_text_view_new ();
-    gtk_widget_show (liveData);
-    gtk_container_add (GTK_CONTAINER (alignment1), liveData);
-    GTK_WIDGET_UNSET_FLAGS (liveData, GTK_CAN_FOCUS);
-
-    label1 = gtk_label_new ("<b>Numerical data:</b>");
-    gtk_widget_show (label1);
-    gtk_frame_set_label_widget (GTK_FRAME (frame1), label1);
-    gtk_label_set_use_markup (GTK_LABEL (label1), TRUE);
-
+    wakeUpButton = gtk_button_new_with_mnemonic ("Wake Up");
+    gtk_widget_show (wakeUpButton);
+    gtk_fixed_put (GTK_FIXED (fixed), wakeUpButton, 192, 0);
+    gtk_widget_set_size_request (wakeUpButton, 112, 40);
+    
     streamButton = gtk_button_new_with_mnemonic ("Stream");
     gtk_widget_show (streamButton);
-    gtk_fixed_put (GTK_FIXED (myFixed), streamButton, 104, 4);
-    gtk_widget_set_size_request (streamButton, 96, 40);
-    gtk_widget_set_sensitive (streamButton, FALSE);
-    gtk_tooltips_set_tip (tooltips, streamButton, "Start streaming data to disc", NULL);
+    gtk_fixed_put (GTK_FIXED (fixed), streamButton, 312, 0);
+    gtk_widget_set_size_request (streamButton, 112, 40);
 
-    camera0Button = gtk_button_new_with_mnemonic ("Camera #0");
-    gtk_widget_show (camera0Button);
-    gtk_fixed_put (GTK_FIXED (myFixed), camera0Button, 204, 4);
-    gtk_widget_set_size_request (camera0Button, 96, 40);
-    gtk_widget_set_sensitive (camera0Button, FALSE);
-    gtk_tooltips_set_tip (tooltips, camera0Button, "Show camera #0 live", NULL);
+    numDataTextView = gtk_text_view_new ();
+    gtk_widget_show (numDataTextView);
+    gtk_fixed_put (GTK_FIXED (fixed), numDataTextView, 192, 40);
+    gtk_widget_set_size_request (numDataTextView, 232, 176);
 
-    camera1Button = gtk_button_new_with_mnemonic ("Camera #1");
-    gtk_widget_show (camera1Button);
-    gtk_fixed_put (GTK_FIXED (myFixed), camera1Button, 304, 4);
-    gtk_widget_set_size_request (camera1Button, 96, 40);
-    gtk_widget_set_sensitive (camera1Button, FALSE);
-    gtk_tooltips_set_tip (tooltips, camera1Button, "Show camera #1 live", NULL);
+    camera0Image = gtk_image_new ();
+    gtk_widget_show (camera0Image);
+    gtk_fixed_put (GTK_FIXED (fixed), camera0Image, 0, 0);
+    gtk_widget_set_size_request (camera0Image, 192, 216);
 
-    wakeUpButton = gtk_button_new_with_mnemonic ("Wake up");
-    gtk_widget_show (wakeUpButton);
-    gtk_fixed_put (GTK_FIXED (myFixed), wakeUpButton, 4, 4);
-    gtk_widget_set_size_request (wakeUpButton, 96, 40);
-    gtk_tooltips_set_tip (tooltips, wakeUpButton, "Wake up the Mirror Collecor", NULL);
+    camera1Image = gtk_image_new ();
+    gtk_widget_show (camera1Image);
+    gtk_fixed_put (GTK_FIXED (fixed), camera1Image, 424, 0);
+    gtk_widget_set_size_request (camera1Image, 192, 216);
 
     g_signal_connect ((gpointer) wakeUpButton, "clicked", G_CALLBACK (on_wakeUpButton_clicked), NULL);
     g_signal_connect ((gpointer) streamButton, "clicked", G_CALLBACK (on_streamButton_clicked), NULL);
-    g_signal_connect ((gpointer) camera0Button, "clicked", G_CALLBACK (on_camera0Button_clicked), NULL);
-    g_signal_connect ((gpointer) camera1Button, "clicked", G_CALLBACK (on_camera1Button_clicked), NULL);
 
     gtk_widget_show (mainWindow);
     g_signal_connect ((gpointer) mainWindow, "destroy", G_CALLBACK(gtk_main_quit), NULL);
-
-}
-
-// ----------------------------------------------
-// helpers
-// ----------------------------------------------
-
-bool openPorts()
-{
-
-    char portName[256];
-
-    ACE_OS::sprintf(portName, "/%s/data", _property.find("appName").asString().c_str());
-    if ( _dataPort.open(portName) == false ) return false;
-
-    ACE_OS::sprintf(portName, "/%s/img0", _property.find("appName").asString().c_str());
-    if ( _img0Port.open(portName) == false ) return false;
-
-    ACE_OS::sprintf(portName, "/%s/img1", _property.find("appName").asString().c_str());
-    if ( _img1Port.open(portName) == false ) return false;
-
-    ACE_OS::sprintf(portName, "/%s/cmd", _property.find("appName").asString().c_str());
-    if ( _cmdPort.open(portName) == false ) return false;
-
-    return true;
-
-}
-
-void closePorts()
-{
-
-    _cmdPort.close();
-    _img1Port.close();
-    _img0Port.close();
-    _dataPort.close();
 
 }
 
