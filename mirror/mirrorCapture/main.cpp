@@ -71,12 +71,14 @@ bool collector_awake = false;
 bool streaming = false;
 
 // GTK interface objects
-GtkWidget *numDataTextView;
-GtkWidget *streamButton;
-GtkWidget *camera0Image;
-GtkWidget *camera1Image;
-GtkWidget *wakeUpButton;
-GtkWidget *mainWindow;
+GtkWidget* numDataTextView;
+GtkWidget* streamButton;
+GtkWidget* camera0Image;
+GdkPixbuf* camera0Buf;
+GtkWidget* camera1Image;
+GdkPixbuf* camera1Buf;
+GtkWidget* wakeUpButton;
+GtkWidget* mainWindow;
 
 // ----------------------------------------------
 // helpers
@@ -148,7 +150,7 @@ class _acquireThread : public Thread {
 
     void run () {
 
-        g_print ("acquisition thread stopping....\n");
+        g_print ("acquisition thread starting....\n");
 
         while ( ! isStopping() ) {
             _now = Time::now();
@@ -158,10 +160,28 @@ class _acquireThread : public Thread {
             g_print("streaming at %3.2f Hz\r", 1/(_now-_prev));
             _prev = _now;
             // save data to disc
-            g_print ("Tr#0: %.2d %.2d %.2d %.2d %.2d %.2d\r",
-                _threadData.tracker0Data.fakeDatum[0], _threadData.tracker0Data.fakeDatum[1],
-                _threadData.tracker0Data.fakeDatum[2], _threadData.tracker0Data.fakeDatum[3],
-                _threadData.tracker0Data.fakeDatum[4], _threadData.tracker0Data.fakeDatum[5]);
+            g_print ("\
+Pressure sensors %5d %5d %5d %5d\n\
+Tracker0 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
+Tracker1 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
+Gaze %1d %3.2f %3.2f\n\
+Glove:\n\
+%3d %3d %3d  %3d %3d %3d\n\
+%3d %3d %3d  %3d %3d %3d\n\
+%3d %3d %3d\n\
+%3d %3d %3d %3d - %3d %3d %3d",
+		    _data.pressureData.channelA, _data.pressureData.channelB, _data.pressureData.channelC, _data.pressureData.channelD,
+			_data.tracker0Data.x, _data.tracker0Data.y, _data.tracker0Data.z, _data.tracker0Data.azimuth,_data.tracker0Data.elevation, _data.tracker0Data.roll,
+			_data.tracker1Data.x, _data.tracker1Data.y, _data.tracker1Data.z, _data.tracker1Data.azimuth,_data.tracker1Data.elevation, _data.tracker1Data.roll,
+			_data.GTData.valid, _data.GTData.pupilX, _data.GTData.pupilY,
+			_data.gloveData.thumb[0], _data.gloveData.thumb[1], _data.gloveData.thumb[2],
+			_data.gloveData.index[0], _data.gloveData.index[1], _data.gloveData.index[2],
+			_data.gloveData.middle[0], _data.gloveData.middle[1], _data.gloveData.middle[2],
+			_data.gloveData.ring[0], _data.gloveData.ring[1], _data.gloveData.ring[2],
+			_data.gloveData.pinkie[0], _data.gloveData.pinkie[1], _data.gloveData.pinkie[2],
+			_data.gloveData.abduction[0], _data.gloveData.abduction[1], _data.gloveData.abduction[2], _data.gloveData.abduction[3],
+			_data.gloveData.palmArch, _data.gloveData.wristPitch, _data.gloveData.wristYaw
+			);
 		}
 
         g_print ("acquisition thread stopping....\n");
@@ -228,9 +248,28 @@ gboolean refresh (void*)
 
     // read numerical data and update textView
     _data = _dataPort.read()->content();
-    sprintf(_displayed, "Tracker #0: %3.2d %3.2d %3.2d %3.2d %3.2d %3.2d\nTracker #1: %3.2d %3.2d %3.2d %3.2d %3.2d %3.2d\n",
-        _data.tracker0Data.fakeDatum[0], _data.tracker0Data.fakeDatum[1], _data.tracker0Data.fakeDatum[2], _data.tracker0Data.fakeDatum[3], _data.tracker0Data.fakeDatum[4], _data.tracker0Data.fakeDatum[5],
-        _data.tracker1Data.fakeDatum[0], _data.tracker1Data.fakeDatum[1], _data.tracker1Data.fakeDatum[2], _data.tracker1Data.fakeDatum[3], _data.tracker1Data.fakeDatum[4], _data.tracker1Data.fakeDatum[5]);
+    sprintf(_displayed, "\
+Pressure sensors %5d %5d %5d %5d\n\
+Tracker0 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
+Tracker1 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
+Gaze %1d %3.2f %3.2f\n\
+Glove:\n\
+%3d %3d %3d  %3d %3d %3d\n\
+%3d %3d %3d  %3d %3d %3d\n\
+%3d %3d %3d\n\
+%3d %3d %3d %3d - %3d %3d %3d",
+		    _data.pressureData.channelA, _data.pressureData.channelB, _data.pressureData.channelC, _data.pressureData.channelD,
+			_data.tracker0Data.x, _data.tracker0Data.y, _data.tracker0Data.z, _data.tracker0Data.azimuth,_data.tracker0Data.elevation, _data.tracker0Data.roll,
+			_data.tracker1Data.x, _data.tracker1Data.y, _data.tracker1Data.z, _data.tracker1Data.azimuth,_data.tracker1Data.elevation, _data.tracker1Data.roll,
+			_data.GTData.valid, _data.GTData.pupilX, _data.GTData.pupilY,
+			_data.gloveData.thumb[0], _data.gloveData.thumb[1], _data.gloveData.thumb[2],
+			_data.gloveData.index[0], _data.gloveData.index[1], _data.gloveData.index[2],
+			_data.gloveData.middle[0], _data.gloveData.middle[1], _data.gloveData.middle[2],
+			_data.gloveData.ring[0], _data.gloveData.ring[1], _data.gloveData.ring[2],
+			_data.gloveData.pinkie[0], _data.gloveData.pinkie[1], _data.gloveData.pinkie[2],
+			_data.gloveData.abduction[0], _data.gloveData.abduction[1], _data.gloveData.abduction[2], _data.gloveData.abduction[3],
+			_data.gloveData.palmArch, _data.gloveData.wristPitch, _data.gloveData.wristYaw
+			);
     GtkTextBuffer* buf = gtk_text_view_get_buffer((GtkTextView*)numDataTextView);
     gtk_text_buffer_set_text(buf, _displayed, -1);
     gtk_widget_queue_draw(numDataTextView);
@@ -239,9 +278,17 @@ gboolean refresh (void*)
     if ( _property.find("useCamera0").asInt() == 1 ) {
         collectorImage *img0 = _img0Port.read();
 	    if ( img0 != 0 ) {
-            GdkPixbuf* camera0Pixbuf = gtk_image_get_pixbuf((GtkImage*)camera0Image);
-            img2buf(img0,camera0Pixbuf);
+            img2buf(img0,camera0Buf);
             gtk_widget_queue_draw (camera0Image);
+        }
+    }
+    
+    // read image 1 and update window
+    if ( _property.find("useCamera1").asInt() == 1 ) {
+        collectorImage *img1 = _img1Port.read();
+	    if ( img1 != 0 ) {
+            img2buf(img1,camera1Buf);
+            gtk_widget_queue_draw (camera1Image);
         }
     }
     
@@ -382,12 +429,14 @@ void create_interface (void)
     gtk_fixed_put (GTK_FIXED (fixed), numDataTextView, 192, 40);
     gtk_widget_set_size_request (numDataTextView, 232, 176);
 
-    camera0Image = gtk_image_new ();
+	camera0Buf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 400, 400);
+    camera0Image = gtk_image_new_from_pixbuf (camera0Buf);
     gtk_widget_show (camera0Image);
     gtk_fixed_put (GTK_FIXED (fixed), camera0Image, 0, 0);
     gtk_widget_set_size_request (camera0Image, 192, 216);
 
-    camera1Image = gtk_image_new ();
+	camera1Buf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 400, 400);
+    camera1Image = gtk_image_new_from_pixbuf (camera1Buf);
     gtk_widget_show (camera1Image);
     gtk_fixed_put (GTK_FIXED (fixed), camera1Image, 424, 0);
     gtk_widget_set_size_request (camera1Image, 192, 216);

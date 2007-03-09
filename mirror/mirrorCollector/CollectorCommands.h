@@ -80,17 +80,8 @@ typedef struct _collectorNumericalData {
 
 // images sent over the network
 #include <yarp/sig/Image.h>
-//typedef yarp::sig::ImageOf<yarp::sig::PixelBgr> collectorImage;
 typedef yarp::sig::ImageOf<yarp::sig::PixelRgb> collectorImage;
 
-
 #include <yarp/sig/ImageFile.h>
-
-
-
-
-
-
-
 
 #endif

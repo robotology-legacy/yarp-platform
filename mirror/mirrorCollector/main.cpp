@@ -20,26 +20,15 @@ using namespace std;
 using namespace yarp::dev;
 using namespace yarp::sig;
 
-
-
 // what hardware is possibly attached to this setup?
 typedef struct {
-//friend class PicoloDeviceDriver;
-//	YARPGrabber			grabber0;
-//	YARPGrabber			grabber1;
-//	YARPMagneticTracker	tracker0;
-//	YARPMagneticTracker	tracker1;
-
 	PicoloDeviceDriver		grabber0;
 	PicoloDeviceDriver		grabber1;
-//	DataGlove			glove;
 	CyberGloveDeviceDriver	glove;
 	PressureDriver			press;
 	FoBDeviceDriver			tracker0;
 	FoBDeviceDriver			tracker1;
 	GazeDriver				gt;
-
-
 } collectorHardware;
 
 // properties of the collector
@@ -63,8 +52,6 @@ collectorHardware      _hardware;
 collectorNumericalData _data;
 collectorImage         _img0;
 collectorImage         _img1;
-//YARPGenericImage _img0;
-//YARPGenericImage _img1;
 
 // ---------- helpers
 
@@ -107,19 +94,20 @@ bool wakeUpSensors(void)
 	// disable peripherals which did not initialise.
 
 	bool atLeastOneIsOK = false;
-
  
-//	if (_property.useCamera0) {
 	if (_property.find("useCamera0").asInt()) {
 		// Framegrabber Initialization
 		cout << "Initialising camera #0... ";
-		PicoloOpenParameters Camparam;
-		if ( _hardware.grabber0.open(Camparam)) {
+		PicoloOpenParameters Camparam0;
+		Camparam0._unit_number = 0;
+		Camparam0._size_x =	_property.find("imgSizeX").asInt();
+		Camparam0._size_y = _property.find("imgSizeY").asInt();
+		Camparam0._offset_y = _property.find("YOffSet").asInt();
+		if ( _hardware.grabber0.open(Camparam0)) {
 			cout <<  "done. W=" << _property.find("imgSizeX").asInt() << ", H=" << _property.find("imgSizeY").asInt() <<endl;
 			atLeastOneIsOK = true;
 		} else {
 			cout <<  "failed." <<endl;
-//			_property.useCamera0 = false;
 			_property.put("useCamera0", 0);
 		}
 	}
@@ -128,7 +116,11 @@ bool wakeUpSensors(void)
 		// Framegrabber Initialization
 		cout << "Initialising camera #1... ";
 		PicoloOpenParameters Camparam1;
-		if ( _hardware.grabber0.open(Camparam1)) {
+		Camparam1._unit_number = 1;
+		Camparam1._size_x =	_property.find("imgSizeX").asInt();
+		Camparam1._size_y = _property.find("imgSizeY").asInt();
+		Camparam1._offset_y = _property.find("YOffSet").asInt();
+		if ( _hardware.grabber1.open(Camparam1)) {
 			cout <<  "done. W=" << _property.find("imgSizeX").asInt() << ", H=" << _property.find("imgSizeY").asInt() <<endl;
 			atLeastOneIsOK = true;
 		} else {
@@ -136,131 +128,65 @@ bool wakeUpSensors(void)
 			_property.put("useCamera1", 0);
 		}
 	}
-/*
-	if (_property.useCamera1) {
-		// Framegrabber Initialization
-		cout << "Initialising camera #1... ";
-		if ( _hardware.grabber1.open (1, _property.imgSizeX, _property.imgSizeY) == YARP_OK ) {
-			cout <<  "done. W=" << _property.imgSizeX << ", H=" << _property.imgSizeY <<endl;
-			atLeastOneIsOK = true;
-		} else {
-			cout <<  "failed." <<endl;
-			_property.useCamera1 = false;
-		}
-	}
-*/
-//	if (_property.useTracker0) {
-//	int pippo = _property.find("useTracker0").asInt() ;
+
 	if ( _property.find("useTracker0").asInt() ) {
 		// Tracker Initialization
 		cout << "Initialising tracker #0... ";
-		FoBOpenParameters FoBparams;
-//		FoBparams.nGroupID = 0;
-
-//		FoBparams.comPort = _property.tracker0ComPort;
-//		FoBparams.baudRate = _property.tracker0BaudRate;
-//		FoBparams.timeOut = _property.tracker0Timeout;
-//		FoBparams.measurementRate = _property.tracker0MeasRate;
-//		FoBparams.transOpMode = _property.tracker0TransOpMode;
-		
-		FoBparams.comPort = _property.find("tracker0ComPort").asInt() ;
-		FoBparams.baudRate = _property.find("tracker0BaudRate").asInt() ;
-		FoBparams.timeOut = _property.find("tracker0Timeout").asInt() ;
-		FoBparams.measurementRate = _property.find("tracker0MeasRate").asInt() ;
-		FoBparams.transOpMode = _property.find("tracker0TransOpMode").asInt() ;
-//		if ( _hardware.tracker0.open(FoBparams) == YARP_OK ) {
-		if ( _hardware.tracker0.open(FoBparams)  ) {
+		FoBOpenParameters FoBparams0;
+		FoBparams0.comPort = _property.find("tracker0ComPort").asInt() ;
+		FoBparams0.baudRate = _property.find("tracker0BaudRate").asInt() ;
+		FoBparams0.timeOut = _property.find("tracker0Timeout").asInt() ;
+		FoBparams0.measurementRate = _property.find("tracker0MeasRate").asInt() ;
+		FoBparams0.transOpMode = _property.find("tracker0TransOpMode").asInt() ;
+		if ( _hardware.tracker0.open(FoBparams0)  ) {
 			cout <<  "done. On COM" << _property.find("tracker0ComPort").asInt() << ", " << _property.find("tracker0BaudRate").asInt() << " baud." << endl;
 			atLeastOneIsOK = true;
 		} else {
 			cout <<  "failed." <<endl;
-//			_property.useTracker0 = false;
 			_property.put("useTracker0", 0);
 		}
 	}
 
-
-	//	if (_property.useTracker0) {
-//	int pippo = _property.find("useTracker0").asInt() ;
 	if ( _property.find("useTracker1").asInt() ) {
 		// Tracker Initialization
 		cout << "Initialising tracker #1... ";
 		FoBOpenParameters FoBparams1;
-//		FoBparams.nGroupID = 0;
-
-//		FoBparams.comPort = _property.tracker0ComPort;
-//		FoBparams.baudRate = _property.tracker0BaudRate;
-//		FoBparams.timeOut = _property.tracker0Timeout;
-//		FoBparams.measurementRate = _property.tracker0MeasRate;
-//		FoBparams.transOpMode = _property.tracker0TransOpMode;
-		
 		FoBparams1.comPort = _property.find("tracker1ComPort").asInt() ;
 		FoBparams1.baudRate = _property.find("tracker1BaudRate").asInt() ;
 		FoBparams1.timeOut = _property.find("tracker1Timeout").asInt() ;
 		FoBparams1.measurementRate = _property.find("tracker1MeasRate").asInt() ;
 		FoBparams1.transOpMode = _property.find("tracker1TransOpMode").asInt() ;
-//		if ( _hardware.tracker0.open(FoBparams) == YARP_OK ) {
 		if ( _hardware.tracker1.open(FoBparams1)  ) {
 			cout <<  "done. On COM" << _property.find("tracker1ComPort").asInt() << ", " << _property.find("tracker1BaudRate").asInt() << " baud." << endl;
 			atLeastOneIsOK = true;
 		} else {
 			cout <<  "failed." <<endl;
-//			_property.useTracker0 = false;
 			_property.put("useTracker1", 0);
 		}
 	}
-/*	
-	if (_property.useTracker1) {
-		// Tracker Initialization
-		cout << "Initialising tracker #1... ";
-		FoBOpenParameters FoBparams;
-//		FoBparams.nGroupID = 0;
-		FoBparams.comPort = _property.tracker1ComPort;
-		FoBparams.baudRate = _property.tracker1BaudRate;
-		FoBparams.timeOut = _property.tracker1Timeout;
-		FoBparams.measurementRate = _property.tracker1MeasRate;
-		FoBparams.transOpMode = _property.tracker1TransOpMode;
-		if ( _hardware.tracker1.open(FoBparams) == YARP_OK ) {
-			cout <<  "done. On COM" << _property.tracker1ComPort << ", " << _property.tracker1BaudRate << " baud." << endl;
-			atLeastOneIsOK = true;
-		} else {
-			cout <<  "failed." <<endl;
-			_property.useTracker1 = false;
-		}
-	}
-*/	
-//	if (_property.useDataGlove) {
+
 	if ( _property.find("useDataGlove").asInt() ) {
 		// DataGlove Initialization
 		cout << "Initialising DataGlove... ";
 		CyberGloveOpenParameters Gloveparam;
 		Gloveparam.comPort = _property.find("gloveComPort").asInt() ;
 		Gloveparam.baudRate = _property.find("gloveBaudRate").asInt() ;
-//		if ( _hardware.glove.open (_property.gloveComPort, _property.gloveBaudRate) == YARP_OK ) {
 		if ( _hardware.glove.open (Gloveparam) ) {
-//			cout <<  "done. On COM" << _property.gloveComPort << ", " << _property.gloveBaudRate << " baud." << endl;
 			cout <<  "done. On COM" << _property.find("gloveComPort").asInt() << ", " << _property.find("gloveBaudRate").asInt() << " baud." << endl;
 			atLeastOneIsOK = true;
 		} else {
 			cout <<  "failed." <<endl;
-//			_property.useDataGlove = false;
 			_property.put("useDataGlove",0);
 		}
 	}
 	
-//	if (_property.useGazeTracker) {
 	if ( _property.find("useGazeTracker").asInt() ) {
 		// GT Initialization
 		cout << "Initialising GazeTracker... ";
-//		E504OpenParameters params;
 		GazeOpenParameters parameter;
-//		params.baudRate = _property.GTBaudRate;
 		parameter.baudRate = _property.find("GTBaudRate").asInt();
-//		params.comPort = _property.GTComPort;
 		parameter.comPort = _property.find("GTComPort").asInt();
-//		if ( _hardware.gt.open (params) == YARP_OK ) {
 		if ( _hardware.gt.open (parameter) ) {
-//			cout <<  "done. On COM" << _property.GTComPort << ", " << _property.GTBaudRate << " baud." << endl;
 			cout <<  "done. On COM" << _property.find("GTComPort").asInt() << ", " << _property.find("GTBaudRate").asInt() << " baud." << endl;
 			atLeastOneIsOK = true;
 		} else {
@@ -269,7 +195,6 @@ bool wakeUpSensors(void)
 		}
 	}	
 
-//	pippo = _property.find("usePresSens").asInt() ;
     if ( _property.find("usePresSens").asInt() ) {
         if ( _hardware.press.open () ) {
     		cout << "pressure sensors initialised";
@@ -279,7 +204,7 @@ bool wakeUpSensors(void)
 			_property.put("usePresSens",0);
 		}
 	}
-	cout << "\nall sensors I need are initialised";
+
 	return atLeastOneIsOK;
 
 }
@@ -329,49 +254,26 @@ void shutDownSensors(void)
 void acquireAndSend(void)
 {
 
-	// acquire images
-
-				//Mattia le immagini le faccio dopo
+	// acquire and send images
 	if (_property.find("useCamera0").asInt()) {
-		unsigned char *buffer = NULL;
-		_hardware.grabber0.getRawBufferSize();
-		_hardware.grabber0.waitOnNewFrame();
-		_hardware.grabber0.acquireBuffer(&buffer);
-//		memcpy((unsigned char *)_img2.GetRawBuffer(), buffer, _property.find("imgSizeX").asInt() * _property.find("imgSizeY").asInt() * 3);
-//		memcpy((unsigned char *)_img0.GetRawBuffer(), buffer, _property.imgSizeX * _property.imgSizeY * 3);
-//		memcpy((unsigned char *)_img0.GetRawBuffer());
-		_hardware.grabber0.getRawBuffer(buffer);
-		_hardware.grabber0.releaseBuffer();
-
-//		_img0Port.Content().Refer(_img0);		//controllare Content, Refer, Write
-//		_img0Port.Write();						//img verrà cambiato, inviare immagine su porta,
-													//_img0_outport è la porta,
-													//metti img0 sulla porta _img0_outport
+		_hardware.grabber0.getImage(_img0);
+	    collectorImage& portableData = _img0Port.prepare();
+		portableData = _img0;
+		_img0Port.write();
 	}
-
-
-
-
-/*
 	if (_property.find("useCamera1").asInt()) {
-		unsigned char *buffer = NULL;
-		_hardware.grabber1.waitOnNewFrame();
-		_hardware.grabber1.acquireBuffer(&buffer);
-		memcpy((unsigned char *)_img1.GetRawBuffer(), buffer, _property.imgSizeX * _property.imgSizeY * 3);
-		_hardware.grabber1.releaseBuffer();
-
-		_img1_outport.Content().Refer(_img1);
-		_img1_outport.Write();
+		_hardware.grabber1.getImage(_img1);
+	    collectorImage& portableData = _img1Port.prepare();
+		portableData = _img1;
+		_img1Port.write();
 	}
-*/
-//	cout << "\ninside acquireAndSend ";
-  	// acquire numerical data
+
+  	// acquire and send numerical data
 	if (_property.find("useTracker0").asInt())    _hardware.tracker0.getData(&_data.tracker0Data);
 	if (_property.find("useTracker1").asInt())    _hardware.tracker1.getData(&_data.tracker1Data);
 	if (_property.find("useDataGlove").asInt())   _hardware.glove.getData(&_data.gloveData);
 	if (_property.find("usePresSens").asInt())		_hardware.press.getData(&_data.pressureData);
 	if (_property.find("useGazeTracker").asInt())  _hardware.gt.getData(&_data.GTData);
-    // send numerical data
     BinPortable<collectorNumericalData>& portableData = _dataPort.prepare();
 	portableData.content() = _data;
     _dataPort.write();
@@ -380,26 +282,23 @@ void acquireAndSend(void)
 
 // ---------- streaming thread
 
-class streamingThread : public RateThread {
+class _streamingThread : public RateThread {
 public:
 
-    streamingThread() : RateThread(1000) {}
+    _streamingThread() : RateThread(1000) {}
 
     virtual bool threadInit (void) {
 		// put those sensors which do have a streaming mode into streaming mode
 		if (_property.find("useTracker0").asInt()) _hardware.tracker0.startStreaming();
 		if (_property.find("useTracker1").asInt()) _hardware.tracker1.startStreaming();
 		if (_property.find("useDataGlove").asInt()) _hardware.glove.startStreaming();
-//		if (_property.find("useGazeTracker").asInt()) _hardware.gt.startStreaming();
-
+		// set correct stremaing rate
         setRate((int)(1000/_property.find("streamFreq").asDouble()));
         cout << "streaming thread runs each "  << getRate() << "msecs." << endl;
-
         return true;
     }
 
     virtual void run (void) {
-    	// acquire and send data
 		acquireAndSend();
 	}
 
@@ -408,10 +307,9 @@ public:
 		if (_property.find("useDataGlove").asInt()) _hardware.glove.stopStreaming();
 		if (_property.find("useTracker1").asInt()) _hardware.tracker1.stopStreaming();
 		if (_property.find("useTracker0").asInt()) _hardware.tracker0.stopStreaming();
-//		if (_property.find("useGazeTracker").asInt()) _hardware.gt.stopStreaming();
     }
 
-} stream;
+} streamingThread;
 
 // ------------ command port callback
 
@@ -473,7 +371,7 @@ class _commandPortCallback : public PortReader{
 			// start streaming thread
 			cout << "got startStreaming command" << endl;
 			if ( bAwake && !bStreaming ) {
-				stream.start();
+				streamingThread.start();
 				bStreaming = true;
 				cmdPortAnswer.addInt(CCmdSucceeded);
 				cout << "startStreaming succeeded - now streaming" << endl;
@@ -487,7 +385,7 @@ class _commandPortCallback : public PortReader{
 			// start streaming thread
 			cout << "got stopStreaming command" << endl;
 			if ( bAwake && bStreaming ) {
-				stream.stop();
+				streamingThread.stop();
 				bStreaming = false;
 				cmdPortAnswer.addInt(CCmdSucceeded);
 				cout << "stopStreaming succeeded - no longer streaming" << endl;
@@ -526,9 +424,6 @@ int main (int argc, char *argv[])
     // load options from the configuration file
     _property.fromConfigFile(_property.find("propertyFileName").asString().c_str(),false);
 
-//  _img0.Resize (_property.imgSizeX, _property.imgSizeY);
-//  _img1.Resize (_property.imgSizeX, _property.imgSizeY);
-
 	Network::init();
 
     if ( ! openPorts() ) {
@@ -548,7 +443,7 @@ int main (int argc, char *argv[])
 			case 'r':
 				// RESET: if streaming, stop it, then if connected, disconnect sensors
 				if ( bStreaming ) {
-	    			stream.stop();
+	    			streamingThread.stop();
 					bStreaming = false;
 					cout << "No longer streaming." << endl;
 				}
