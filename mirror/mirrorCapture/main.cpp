@@ -1,3 +1,10 @@
+/*
+
+    - aggiustare live telecamere
+    - scrittura su disco dati in streaming, con uso delle timestamp
+
+*/
+
 // ----------------------------------------------
 // headers
 // ----------------------------------------------
@@ -18,7 +25,6 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/Property.h>
 #include <yarp/os/RateThread.h>
-#include <yarp/os/Semaphore.h>
 
 // GTK+
 #include <gtk/gtk.h>
@@ -42,7 +48,7 @@ public:
            (useGazeTracker 0) (useDataGlove 0) (usePresSens 0) \
            (imgSizeX 0) (imgSizeY 0) \
            (seqPrefix seq) (seqPath c:\\\\) \
-	       (refreshFreq 40.0) \
+	       (refreshFreq 2.0) \
            (propertyFileName c:\\\\work\\\\platform\\\\mirror\\\\mirrorCapture\\\\mirrorCapture.conf) \
         ");
 	};
@@ -57,8 +63,6 @@ Port _cmdPort;
 BufferedPort<BinPortable<collectorNumericalData> > _dataPort;
 BufferedPort<collectorImage> _img0Port;
 BufferedPort<collectorImage> _img1Port;
-// and associated semaphores
-Semaphore cmdPortSema, dataPortSema, img0PortSema, img1PortSema;
 
 // data & images
 collectorNumericalData  _data;
@@ -78,11 +82,135 @@ GdkPixbuf* camera0Buf;
 GtkWidget* camera1Image;
 GdkPixbuf* camera1Buf;
 GtkWidget* wakeUpButton;
+GtkWidget* statusBar;
 GtkWidget* mainWindow;
 
 // ----------------------------------------------
 // helpers
 // ----------------------------------------------
+
+bool sendCmd(collectorCommand cmd, Bottle* recd = 0)
+{
+
+    // if the second argument is omitted, the function will not care about it;
+    // otherwise it will fill it with the reply from the remote application
+
+    Bottle sent, safeRecd;
+
+    // if recd is null, ignore the response
+    if ( recd == 0 ) {
+        recd = &safeRecd;
+    }
+
+    // send command
+    sent.addInt(cmd);
+    _cmdPort.write(sent,*recd);
+
+    if ( recd->get(0).asInt() == CCmdFailed ) {
+        return false;
+    }
+
+    return true;
+
+}
+
+void img2buf(collectorImage* img, GdkPixbuf* buf)
+{
+
+    guchar* dst_data = gdk_pixbuf_get_pixels(buf);
+    unsigned int rowstride = gdk_pixbuf_get_rowstride (buf);
+    unsigned int n_channels = gdk_pixbuf_get_n_channels (buf);
+
+	char* src_data = (char*) img->getRawImage();
+    unsigned int width = img->width();
+    unsigned int height = img->height();
+	unsigned int src_line_size = img->getRowSize();
+
+	unsigned int dst_size_in_memory = rowstride * height;
+
+	guchar *p_dst;
+	char *p_src;
+
+    if ( src_line_size == rowstride ) {
+        ACE_OS::memcpy(dst_data, src_data, dst_size_in_memory);
+    } else {
+        for (int i=0; i < (int)height; i++) {
+            p_dst = dst_data + i * rowstride;
+            p_src = src_data + i * src_line_size;
+            ACE_OS::memcpy(p_dst, p_src, (n_channels*width));
+        }
+    }
+
+}
+
+gboolean pollData (void*)
+{
+
+    static char _displayed[1000];
+
+    // send getData command
+    if ( sendCmd(CCmdGetData) == false ) {
+        g_print ("getData command failed\n");
+        return (collector_awake?TRUE:FALSE);
+    }
+
+    // read numerical data and update textView
+    _data = _dataPort.read()->content();
+    sprintf(_displayed, "\
+Pressure sensors %5d %5d %5d %5d\n\
+Tracker0 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
+Tracker1 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
+Gaze %1d %3.2f %3.2f\n\
+Glove:\n\
+%3d %3d %3d  %3d %3d %3d\n\
+%3d %3d %3d  %3d %3d %3d\n\
+%3d %3d %3d\n\
+%3d %3d %3d %3d - %3d %3d %3d",
+_data.pressureData.fakeDatum[2], 0, 0, 0,
+0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+0, 0.0, 0.0,
+0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0,
+0, 0, 0,
+0, 0, 0, 0, 0, 0, 0
+/*		    _data.pressureData.channelA, _data.pressureData.channelB, _data.pressureData.channelC, _data.pressureData.channelD,
+			_data.tracker0Data.x, _data.tracker0Data.y, _data.tracker0Data.z, _data.tracker0Data.azimuth,_data.tracker0Data.elevation, _data.tracker0Data.roll,
+			_data.tracker1Data.x, _data.tracker1Data.y, _data.tracker1Data.z, _data.tracker1Data.azimuth,_data.tracker1Data.elevation, _data.tracker1Data.roll,
+			_data.GTData.valid, _data.GTData.pupilX, _data.GTData.pupilY,
+			_data.gloveData.thumb[0], _data.gloveData.thumb[1], _data.gloveData.thumb[2],
+			_data.gloveData.index[0], _data.gloveData.index[1], _data.gloveData.index[2],
+			_data.gloveData.middle[0], _data.gloveData.middle[1], _data.gloveData.middle[2],
+			_data.gloveData.ring[0], _data.gloveData.ring[1], _data.gloveData.ring[2],
+			_data.gloveData.pinkie[0], _data.gloveData.pinkie[1], _data.gloveData.pinkie[2],
+			_data.gloveData.abduction[0], _data.gloveData.abduction[1], _data.gloveData.abduction[2], _data.gloveData.abduction[3],
+			_data.gloveData.palmArch, _data.gloveData.wristPitch, _data.gloveData.wristYaw*/
+			);
+    GtkTextBuffer* buf = gtk_text_view_get_buffer((GtkTextView*)numDataTextView);
+    gtk_text_buffer_set_text(buf, _displayed, -1);
+    gtk_widget_queue_draw(numDataTextView);
+
+    // read image 0 and update window
+    if ( _property.find("useCamera0").asInt() == 1 ) {
+        collectorImage *img0 = _img0Port.read();
+	    if ( img0 != 0 ) {
+            img2buf(img0,camera0Buf);
+            gtk_widget_queue_draw (camera0Image);
+        }
+    }
+    
+    // read image 1 and update window
+    if ( _property.find("useCamera1").asInt() == 1 ) {
+        collectorImage *img1 = _img1Port.read();
+	    if ( img1 != 0 ) {
+            img2buf(img1,camera1Buf);
+            gtk_widget_queue_draw (camera1Image);
+        }
+    }
+    
+    return (collector_awake?TRUE:FALSE);
+
+}
 
 bool openPorts()
 {
@@ -115,31 +243,6 @@ void closePorts()
 
 }
 
-bool sendCmd(collectorCommand cmd, Bottle* recd = 0)
-{
-
-    // if the second argument is omitted, the function will not care about it;
-    // otherwise it will fill it with the reply from the remote application
-
-    Bottle sent, safeRecd;
-
-    // if recd is null, fallback (the response is then ignored)
-    if ( recd == 0 ) {
-        recd = &safeRecd;
-    }
-
-    // send command
-    sent.addInt(cmd);
-    _cmdPort.write(sent,*recd);
-
-    if ( recd->get(0).asInt() == CCmdFailed ) {
-        return false;
-    }
-
-    return true;
-
-}
-
 // ----------------------------------------------
 // data streaming thread
 // ----------------------------------------------
@@ -160,28 +263,7 @@ class _acquireThread : public Thread {
             g_print("streaming at %3.2f Hz\r", 1/(_now-_prev));
             _prev = _now;
             // save data to disc
-            g_print ("\
-Pressure sensors %5d %5d %5d %5d\n\
-Tracker0 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
-Tracker1 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
-Gaze %1d %3.2f %3.2f\n\
-Glove:\n\
-%3d %3d %3d  %3d %3d %3d\n\
-%3d %3d %3d  %3d %3d %3d\n\
-%3d %3d %3d\n\
-%3d %3d %3d %3d - %3d %3d %3d",
-		    _data.pressureData.channelA, _data.pressureData.channelB, _data.pressureData.channelC, _data.pressureData.channelD,
-			_data.tracker0Data.x, _data.tracker0Data.y, _data.tracker0Data.z, _data.tracker0Data.azimuth,_data.tracker0Data.elevation, _data.tracker0Data.roll,
-			_data.tracker1Data.x, _data.tracker1Data.y, _data.tracker1Data.z, _data.tracker1Data.azimuth,_data.tracker1Data.elevation, _data.tracker1Data.roll,
-			_data.GTData.valid, _data.GTData.pupilX, _data.GTData.pupilY,
-			_data.gloveData.thumb[0], _data.gloveData.thumb[1], _data.gloveData.thumb[2],
-			_data.gloveData.index[0], _data.gloveData.index[1], _data.gloveData.index[2],
-			_data.gloveData.middle[0], _data.gloveData.middle[1], _data.gloveData.middle[2],
-			_data.gloveData.ring[0], _data.gloveData.ring[1], _data.gloveData.ring[2],
-			_data.gloveData.pinkie[0], _data.gloveData.pinkie[1], _data.gloveData.pinkie[2],
-			_data.gloveData.abduction[0], _data.gloveData.abduction[1], _data.gloveData.abduction[2], _data.gloveData.abduction[3],
-			_data.gloveData.palmArch, _data.gloveData.wristPitch, _data.gloveData.wristYaw
-			);
+            // ..................
 		}
 
         g_print ("acquisition thread stopping....\n");
@@ -205,96 +287,6 @@ private:
 // -----------------------------
 
 // --------------------------- callbacks
-
-void img2buf(collectorImage* img, GdkPixbuf* buf)
-{
-
-    guchar* dst_data = gdk_pixbuf_get_pixels(buf);
-    unsigned int rowstride = gdk_pixbuf_get_rowstride (buf);
-    unsigned int n_channels = gdk_pixbuf_get_n_channels (buf);
-
-	char* src_data = (char*) img->getRawImage();
-    unsigned int width = img->width();
-    unsigned int height = img->height();
-	unsigned int src_line_size = img->getRowSize();
-
-	unsigned int dst_size_in_memory = rowstride * height;
-
-	guchar *p_dst;
-	char *p_src;
-
-    if ( src_line_size == rowstride ) {
-        ACE_OS::memcpy(dst_data, src_data, dst_size_in_memory);
-    } else {
-        for (int i=0; i < (int)height; i++) {
-            p_dst = dst_data + i * rowstride;
-            p_src = src_data + i * src_line_size;
-            ACE_OS::memcpy(p_dst, p_src, (n_channels*width));
-        }
-    }
-
-}
-
-gboolean refresh (void*)
-{
-
-    static char _displayed[1000];
-
-    // send getData command
-    if ( sendCmd(CCmdGetData) == false ) {
-        g_print ("getData command failed\n");
-        return (collector_awake?TRUE:FALSE);
-    }
-
-    // read numerical data and update textView
-    _data = _dataPort.read()->content();
-    sprintf(_displayed, "\
-Pressure sensors %5d %5d %5d %5d\n\
-Tracker0 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
-Tracker1 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
-Gaze %1d %3.2f %3.2f\n\
-Glove:\n\
-%3d %3d %3d  %3d %3d %3d\n\
-%3d %3d %3d  %3d %3d %3d\n\
-%3d %3d %3d\n\
-%3d %3d %3d %3d - %3d %3d %3d",
-		    _data.pressureData.channelA, _data.pressureData.channelB, _data.pressureData.channelC, _data.pressureData.channelD,
-			_data.tracker0Data.x, _data.tracker0Data.y, _data.tracker0Data.z, _data.tracker0Data.azimuth,_data.tracker0Data.elevation, _data.tracker0Data.roll,
-			_data.tracker1Data.x, _data.tracker1Data.y, _data.tracker1Data.z, _data.tracker1Data.azimuth,_data.tracker1Data.elevation, _data.tracker1Data.roll,
-			_data.GTData.valid, _data.GTData.pupilX, _data.GTData.pupilY,
-			_data.gloveData.thumb[0], _data.gloveData.thumb[1], _data.gloveData.thumb[2],
-			_data.gloveData.index[0], _data.gloveData.index[1], _data.gloveData.index[2],
-			_data.gloveData.middle[0], _data.gloveData.middle[1], _data.gloveData.middle[2],
-			_data.gloveData.ring[0], _data.gloveData.ring[1], _data.gloveData.ring[2],
-			_data.gloveData.pinkie[0], _data.gloveData.pinkie[1], _data.gloveData.pinkie[2],
-			_data.gloveData.abduction[0], _data.gloveData.abduction[1], _data.gloveData.abduction[2], _data.gloveData.abduction[3],
-			_data.gloveData.palmArch, _data.gloveData.wristPitch, _data.gloveData.wristYaw
-			);
-    GtkTextBuffer* buf = gtk_text_view_get_buffer((GtkTextView*)numDataTextView);
-    gtk_text_buffer_set_text(buf, _displayed, -1);
-    gtk_widget_queue_draw(numDataTextView);
-
-    // read image 0 and update window
-    if ( _property.find("useCamera0").asInt() == 1 ) {
-        collectorImage *img0 = _img0Port.read();
-	    if ( img0 != 0 ) {
-            img2buf(img0,camera0Buf);
-            gtk_widget_queue_draw (camera0Image);
-        }
-    }
-    
-    // read image 1 and update window
-    if ( _property.find("useCamera1").asInt() == 1 ) {
-        collectorImage *img1 = _img1Port.read();
-	    if ( img1 != 0 ) {
-            img2buf(img1,camera1Buf);
-            gtk_widget_queue_draw (camera1Image);
-        }
-    }
-    
-    return (collector_awake?TRUE:FALSE);
-
-}
 
 void on_wakeUpButton_clicked (GtkButton* button, gpointer user_data)
 {
@@ -334,15 +326,14 @@ void on_wakeUpButton_clicked (GtkButton* button, gpointer user_data)
         // set flag
         collector_awake = true;
         // activate buttons
-        g_print ("activating buttons\n");
+        g_print ("activating stream button\n");
         gtk_widget_set_sensitive( (GtkWidget*)streamButton, TRUE);
         // change label
         gtk_button_set_label((GtkButton*)wakeUpButton, "Shut down");
-        // install timeout for live data refreshing
-        g_timeout_add (1000/_property.find("refreshFreq").asDouble(),refresh,0);
+        // install timeout for data polling
+        g_timeout_add (1000/_property.find("refreshFreq").asDouble(),pollData,0);
     } else {
         g_print ("user wants to shut down collector\n");
-        g_print ("stopping pull thread\n");
         g_print ("asking collector to shut down\n");
         if ( sendCmd(CCmdShutDown) == false ) {
             g_print ("shut down command failed\n");
@@ -350,7 +341,7 @@ void on_wakeUpButton_clicked (GtkButton* button, gpointer user_data)
         }
         g_print ("shut down command succeeded\n");
         collector_awake = false;
-        g_print ("deactivating buttons\n");
+        g_print ("deactivating stream button\n");
         gtk_widget_set_sensitive( (GtkWidget*)streamButton, FALSE);
         gtk_button_set_label((GtkButton*)wakeUpButton, "Wake up");
     }
@@ -408,38 +399,50 @@ void create_interface (void)
 
     mainWindow = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title (GTK_WINDOW (mainWindow), "Mirror Capture");
+    gtk_window_set_resizable (GTK_WINDOW (mainWindow), FALSE);
     gtk_window_set_icon_name (GTK_WINDOW (mainWindow), "gtk-connect");
 
     fixed = gtk_fixed_new ();
     gtk_widget_show (fixed);
     gtk_container_add (GTK_CONTAINER (mainWindow), fixed);
 
-    wakeUpButton = gtk_button_new_with_mnemonic ("Wake Up");
-    gtk_widget_show (wakeUpButton);
-    gtk_fixed_put (GTK_FIXED (fixed), wakeUpButton, 192, 0);
-    gtk_widget_set_size_request (wakeUpButton, 112, 40);
-    
+    numDataTextView = gtk_text_view_new ();
+    gtk_widget_show (numDataTextView);
+    gtk_fixed_put (GTK_FIXED (fixed), numDataTextView, 192, 40);
+    gtk_widget_set_size_request (numDataTextView, 232, 176);
+    gtk_container_set_border_width (GTK_CONTAINER (numDataTextView), 1);
+    gtk_text_view_set_editable (GTK_TEXT_VIEW (numDataTextView), FALSE);
+    gtk_text_view_set_accepts_tab (GTK_TEXT_VIEW (numDataTextView), FALSE);
+    gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW (numDataTextView), FALSE);
+
     streamButton = gtk_button_new_with_mnemonic ("Stream");
     gtk_widget_show (streamButton);
     gtk_fixed_put (GTK_FIXED (fixed), streamButton, 312, 0);
     gtk_widget_set_size_request (streamButton, 112, 40);
 
-    numDataTextView = gtk_text_view_new ();
-    gtk_widget_show (numDataTextView);
-    gtk_fixed_put (GTK_FIXED (fixed), numDataTextView, 192, 40);
-    gtk_widget_set_size_request (numDataTextView, 232, 176);
-
+    wakeUpButton = gtk_button_new_with_mnemonic ("Wake Up");
+    gtk_widget_show (wakeUpButton);
+    gtk_fixed_put (GTK_FIXED (fixed), wakeUpButton, 192, 0);
+    gtk_widget_set_size_request (wakeUpButton, 112, 40);
+    
 	camera0Buf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 400, 400);
     camera0Image = gtk_image_new_from_pixbuf (camera0Buf);
     gtk_widget_show (camera0Image);
     gtk_fixed_put (GTK_FIXED (fixed), camera0Image, 0, 0);
-    gtk_widget_set_size_request (camera0Image, 192, 216);
+    gtk_widget_set_size_request (camera0Image, 192, 240);
+
+    statusBar = gtk_statusbar_new ();
+    gtk_widget_show (statusBar);
+    gtk_fixed_put (GTK_FIXED (fixed), statusBar, 192, 216);
+    gtk_widget_set_size_request (statusBar, 232, 24);
+    gtk_container_set_border_width (GTK_CONTAINER (statusBar), 1);
+    gtk_statusbar_set_has_resize_grip (GTK_STATUSBAR (statusBar), FALSE);
 
 	camera1Buf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 400, 400);
     camera1Image = gtk_image_new_from_pixbuf (camera1Buf);
     gtk_widget_show (camera1Image);
     gtk_fixed_put (GTK_FIXED (fixed), camera1Image, 424, 0);
-    gtk_widget_set_size_request (camera1Image, 192, 216);
+    gtk_widget_set_size_request (camera1Image, 192, 240);
 
     g_signal_connect ((gpointer) wakeUpButton, "clicked", G_CALLBACK (on_wakeUpButton_clicked), NULL);
     g_signal_connect ((gpointer) streamButton, "clicked", G_CALLBACK (on_streamButton_clicked), NULL);
