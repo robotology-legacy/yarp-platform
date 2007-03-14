@@ -25,6 +25,8 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/Property.h>
 #include <yarp/os/RateThread.h>
+#include <yarp/os/Semaphore.h>
+#include <yarp/os/Stamp.h>
 
 // GTK+
 #include <gtk/gtk.h>
@@ -64,10 +66,12 @@ BufferedPort<BinPortable<collectorNumericalData> > _dataPort;
 BufferedPort<collectorImage> _img0Port;
 BufferedPort<collectorImage> _img1Port;
 
-// data & images
+// data & images, and their semaphores
 collectorNumericalData  _data;
 collectorImage          _img0;
 collectorImage          _img1;
+Semaphore _dataSem, _img0Sem, _img1Sem;
+Stamp _dataStamp, _img0Stamp, _img1Stamp;
 
 // is collector awake?
 bool collector_awake = false;
@@ -89,11 +93,14 @@ GtkWidget* mainWindow;
 // helpers
 // ----------------------------------------------
 
+// send a command to the collector and expect OK; possibly, return to the
+// caller the collector's answer.
+
 bool sendCmd(collectorCommand cmd, Bottle* recd = 0)
 {
 
     // if the second argument is omitted, the function will not care about it;
-    // otherwise it will fill it with the reply from the remote application
+    // otherwise it will fill it with the reply from the collector
 
     Bottle sent, safeRecd;
 
@@ -113,6 +120,35 @@ bool sendCmd(collectorCommand cmd, Bottle* recd = 0)
     return true;
 
 }
+
+// read data from the ports and store them to the appropriate data structures
+
+void readData()
+{
+
+    // numerical data
+    _dataSem.wait();
+    _data = _dataPort.read()->content();
+    _dataPort.getEnvelope(_dataStamp);
+    _dataSem.post();
+
+    // images
+    if ( _property.find("useCamera0").asInt() == 1 ) {
+        _img0Sem.wait();
+        _img0 = *_img0Port.read();
+        _img0Port.getEnvelope(_img0Stamp);
+        _img0Sem.post();
+    }
+    if ( _property.find("useCamera1").asInt() == 1 ) {
+        _img1Sem.wait();
+        _img1 = *_img1Port.read();
+        _img1Port.getEnvelope(_img1Stamp);
+        _img1Sem.post();
+    }
+
+}
+
+// convert an image to a GdkPixbuf
 
 void img2buf(collectorImage* img, GdkPixbuf* buf)
 {
@@ -140,75 +176,6 @@ void img2buf(collectorImage* img, GdkPixbuf* buf)
             ACE_OS::memcpy(p_dst, p_src, (n_channels*width));
         }
     }
-
-}
-
-gboolean pollData (void*)
-{
-
-    static char _displayed[1000];
-
-    // send getData command
-    if ( sendCmd(CCmdGetData) == false ) {
-        g_print ("getData command failed\n");
-        return (collector_awake?TRUE:FALSE);
-    }
-
-    // read numerical data and update textView
-    _data = _dataPort.read()->content();
-    sprintf(_displayed, "\
-Pressure sensors %5d %5d %5d %5d\n\
-Tracker0 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
-Tracker1 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
-Gaze %1d %3.2f %3.2f\n\
-Glove:\n\
-%3d %3d %3d  %3d %3d %3d\n\
-%3d %3d %3d  %3d %3d %3d\n\
-%3d %3d %3d\n\
-%3d %3d %3d %3d - %3d %3d %3d",
-_data.pressureData.fakeDatum[2], 0, 0, 0,
-0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-0, 0.0, 0.0,
-0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0,
-0, 0, 0,
-0, 0, 0, 0, 0, 0, 0
-/*		    _data.pressureData.channelA, _data.pressureData.channelB, _data.pressureData.channelC, _data.pressureData.channelD,
-			_data.tracker0Data.x, _data.tracker0Data.y, _data.tracker0Data.z, _data.tracker0Data.azimuth,_data.tracker0Data.elevation, _data.tracker0Data.roll,
-			_data.tracker1Data.x, _data.tracker1Data.y, _data.tracker1Data.z, _data.tracker1Data.azimuth,_data.tracker1Data.elevation, _data.tracker1Data.roll,
-			_data.GTData.valid, _data.GTData.pupilX, _data.GTData.pupilY,
-			_data.gloveData.thumb[0], _data.gloveData.thumb[1], _data.gloveData.thumb[2],
-			_data.gloveData.index[0], _data.gloveData.index[1], _data.gloveData.index[2],
-			_data.gloveData.middle[0], _data.gloveData.middle[1], _data.gloveData.middle[2],
-			_data.gloveData.ring[0], _data.gloveData.ring[1], _data.gloveData.ring[2],
-			_data.gloveData.pinkie[0], _data.gloveData.pinkie[1], _data.gloveData.pinkie[2],
-			_data.gloveData.abduction[0], _data.gloveData.abduction[1], _data.gloveData.abduction[2], _data.gloveData.abduction[3],
-			_data.gloveData.palmArch, _data.gloveData.wristPitch, _data.gloveData.wristYaw*/
-			);
-    GtkTextBuffer* buf = gtk_text_view_get_buffer((GtkTextView*)numDataTextView);
-    gtk_text_buffer_set_text(buf, _displayed, -1);
-    gtk_widget_queue_draw(numDataTextView);
-
-    // read image 0 and update window
-    if ( _property.find("useCamera0").asInt() == 1 ) {
-        collectorImage *img0 = _img0Port.read();
-	    if ( img0 != 0 ) {
-            img2buf(img0,camera0Buf);
-            gtk_widget_queue_draw (camera0Image);
-        }
-    }
-    
-    // read image 1 and update window
-    if ( _property.find("useCamera1").asInt() == 1 ) {
-        collectorImage *img1 = _img1Port.read();
-	    if ( img1 != 0 ) {
-            img2buf(img1,camera1Buf);
-            gtk_widget_queue_draw (camera1Image);
-        }
-    }
-    
-    return (collector_awake?TRUE:FALSE);
 
 }
 
@@ -244,49 +211,134 @@ void closePorts()
 }
 
 // ----------------------------------------------
-// data streaming thread
+// threads
 // ----------------------------------------------
 
-// expect data to be available continually as a stream and save it timely to the disc
+// data polling thread
+// the thread polls the collector for new data (send getData / expect OK)
+// and reads data from the ports, updating the related data structures
 
-class _acquireThread : public Thread {
+class _pollingThread : public RateThread {
+
+public:
+
+    _pollingThread() : RateThread(1000) {}
+
+    bool threadInit() {
+        setRate( (int) (1000/_property.find("refreshFreq").asDouble()) );
+        g_print ("polling thread initialised at %3.2f Hz\n", _property.find("refreshFreq").asDouble());
+        return true;
+    }
 
     void run () {
+        // poll collector
+        if ( sendCmd(CCmdGetData) == false ) {
+            g_print ("getData command failed\n");
+        } else {
+            // read data
+            readData();
+        }
+    }
 
-        g_print ("acquisition thread starting....\n");
+} pollingThread;
 
+// data streaming thread
+// the thread expects data to be available continually as a stream,
+// updates the data structures and saves the data to the disc
+
+class _streamingThread : public Thread {
+public:
+
+    _streamingThread() : _timeTop(0) {}
+
+    void run () {
+        g_print ("streaming thread starting....\n");
         while ( ! isStopping() ) {
-            _now = Time::now();
-            // read data (blocking read)
-            _threadData = _dataPort.read()->content();
+            // read data
+            readData();
             // update status bar: what is the current streaming frequency?
-            g_print("streaming at %3.2f Hz\r", 1/(_now-_prev));
-            _prev = _now;
+            _tick[ ((++_timeTop==10)?(_timeTop=0):_timeTop) ] = Time::now() - _prev;
+            _prev = Time::now();
+            g_print("streaming at %3.2f Hz\r", 1.0/((
+                _tick[0]+_tick[1]+_tick[2]+_tick[3]+_tick[4]+
+                _tick[5]+_tick[6]+_tick[7]+_tick[8]+_tick[9]
+                )/10.0) );
             // save data to disc
             // ..................
 		}
-
-        g_print ("acquisition thread stopping....\n");
-
+        g_print ("streaming thread stopping....\n");
     }
 
 private:
-    // data coming from the collector
-    collectorNumericalData  _threadData;
-    collectorImage          _threadImg0;
-    collectorImage          _threadImg1;
-
-    char _displayed[1000];
-    
-    double _now, _prev;
-
-} acquireThread;
+    double _tick[10], _prev;
+    int _timeTop;
+} streamingThread;
 
 // -----------------------------
 // GTK interface
 // -----------------------------
 
 // --------------------------- callbacks
+
+// timeout callback: every now and then (refreshFreq), update the GTK+ display
+
+gboolean refreshData (void*)
+{
+
+    static char _displayed[1000];
+
+    // update textView using numerical data
+    _dataSem.wait();
+    sprintf(_displayed, "\
+Pressure sensors %5d %5d %5d %5d\n\
+Tracker0 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
+Tracker1 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
+Gaze %1d %3.2f %3.2f\n\
+Glove:\n\
+%3d %3d %3d  %3d %3d %3d\n\
+%3d %3d %3d  %3d %3d %3d\n\
+%3d %3d %3d\n\
+%3d %3d %3d %3d - %3d %3d %3d",
+_data.pressureData.fakeDatum[2], 0, 0, 0,
+0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+0, 0.0, 0.0,
+0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0,
+0, 0, 0,
+0, 0, 0, 0, 0, 0, 0
+/*		    _data.pressureData.channelA, _data.pressureData.channelB, _data.pressureData.channelC, _data.pressureData.channelD,
+			_data.tracker0Data.x, _data.tracker0Data.y, _data.tracker0Data.z, _data.tracker0Data.azimuth,_data.tracker0Data.elevation, _data.tracker0Data.roll,
+			_data.tracker1Data.x, _data.tracker1Data.y, _data.tracker1Data.z, _data.tracker1Data.azimuth,_data.tracker1Data.elevation, _data.tracker1Data.roll,
+			_data.GTData.valid, _data.GTData.pupilX, _data.GTData.pupilY,
+			_data.gloveData.thumb[0], _data.gloveData.thumb[1], _data.gloveData.thumb[2],
+			_data.gloveData.index[0], _data.gloveData.index[1], _data.gloveData.index[2],
+			_data.gloveData.middle[0], _data.gloveData.middle[1], _data.gloveData.middle[2],
+			_data.gloveData.ring[0], _data.gloveData.ring[1], _data.gloveData.ring[2],
+			_data.gloveData.pinkie[0], _data.gloveData.pinkie[1], _data.gloveData.pinkie[2],
+			_data.gloveData.abduction[0], _data.gloveData.abduction[1], _data.gloveData.abduction[2], _data.gloveData.abduction[3],
+			_data.gloveData.palmArch, _data.gloveData.wristPitch, _data.gloveData.wristYaw*/
+			);
+    _dataSem.post();
+    GtkTextBuffer* buf = gtk_text_view_get_buffer((GtkTextView*)numDataTextView);
+    gtk_text_buffer_set_text(buf, _displayed, -1);
+    gtk_widget_queue_draw(numDataTextView);
+
+    // update camera windows
+    _img0Sem.wait();
+    img2buf(&_img0,camera0Buf);
+    _img0Sem.post();
+    gtk_widget_queue_draw (camera0Image);
+    _img1Sem.wait();
+    img2buf(&_img1,camera1Buf);
+    _img1Sem.post();
+    gtk_widget_queue_draw (camera1Image);
+
+    printf("data: %3.2f, img0: %3.2f, img1: %3.2f\r", _dataStamp.getTime(), _img0Stamp.getTime(), _img1Stamp.getTime());
+
+    return (collector_awake?TRUE:FALSE);
+
+}
 
 void on_wakeUpButton_clicked (GtkButton* button, gpointer user_data)
 {
@@ -330,9 +382,14 @@ void on_wakeUpButton_clicked (GtkButton* button, gpointer user_data)
         gtk_widget_set_sensitive( (GtkWidget*)streamButton, TRUE);
         // change label
         gtk_button_set_label((GtkButton*)wakeUpButton, "Shut down");
-        // install timeout for data polling
-        g_timeout_add (1000/_property.find("refreshFreq").asDouble(),pollData,0);
+        // install timeout for data refreshing
+        g_timeout_add (1000/_property.find("refreshFreq").asDouble(),refreshData,0);
+        // start polling thread
+        g_print ("starting polling thread\n");
+        pollingThread.start();
     } else {
+        g_print ("stopping polling thread\n");
+        pollingThread.stop();
         g_print ("user wants to shut down collector\n");
         g_print ("asking collector to shut down\n");
         if ( sendCmd(CCmdShutDown) == false ) {
@@ -356,32 +413,39 @@ void on_streamButton_clicked (GtkButton* button, gpointer user_data)
     if ( ! streaming ) {
         // user wants to stream
         g_print ("user wants to stream\n");
+        // stop polling thread
+        g_print ("stopping polling thread\n");
+        pollingThread.stop();
         // send startStreaming command; expect ok
         g_print ("asking collector to start streaming\n");
         if ( sendCmd(CCmdStartStreaming) == false ) {
             g_print ("startStreaming command failed\n");
+            g_print ("restarting polling thread\n");
+            pollingThread.start();
             return;
         }
         g_print ("startStreaming command succeeded\n");
-        // start push thread
-        g_print ("starting push thread\n");
-        acquireThread.start();
+        // start streaming thread
+        g_print ("starting streaming thread\n");
+        streamingThread.start();
         // deactivate buttons
-        g_print ("deactivating buttons\n");
+        g_print ("deactivating wake up button\n");
         gtk_widget_set_sensitive( (GtkWidget*)wakeUpButton, FALSE);
         gtk_button_set_label((GtkButton*)button, "Stop");
         // set flag
         streaming = true;
     } else {
         g_print ("user wants to stop streaming\n");
-        g_print ("stopping push thread\n");
-        acquireThread.stop();
+        g_print ("stopping streaming thread\n");
+        streamingThread.stop();
         g_print ("asking collector to stop streaming\n");
         if ( sendCmd(CCmdStopStreaming) == false ) {
             g_print ("stopStreaming command failed\n");
             return;
         }
         g_print ("stream successfully stopped\n");
+        g_print ("starting polling thread\n");
+        pollingThread.start();
         streaming = false;
         g_print ("re-activating buttons\n");
         gtk_widget_set_sensitive( (GtkWidget*)wakeUpButton, TRUE);
@@ -419,6 +483,7 @@ void create_interface (void)
     gtk_widget_show (streamButton);
     gtk_fixed_put (GTK_FIXED (fixed), streamButton, 312, 0);
     gtk_widget_set_size_request (streamButton, 112, 40);
+    gtk_widget_set_sensitive (streamButton, FALSE);
 
     wakeUpButton = gtk_button_new_with_mnemonic ("Wake Up");
     gtk_widget_show (wakeUpButton);
@@ -476,6 +541,10 @@ int main( int argc, char *argv[] )
 
     // idle and wait for events
     gtk_main ();
+
+    // possibly, stop the threads
+    if ( streamingThread.isRunning() ) streamingThread.stop();
+    if ( pollingThread.isRunning() ) pollingThread.stop();
 
     // bail out
     closePorts();
