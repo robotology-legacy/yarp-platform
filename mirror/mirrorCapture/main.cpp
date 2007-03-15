@@ -48,7 +48,6 @@ public:
            (appName mirrorCapture) (dataNetName default) (imgNetName Net1) \
            (useCamera0 0) (useCamera1 0) (useTracker0 0) (useTracker1 0) \
            (useGazeTracker 0) (useDataGlove 0) (usePresSens 0) \
-           (imgSizeX 0) (imgSizeY 0) \
            (seqPrefix seq) (seqPath c:\\\\) \
 	       (refreshFreq 2.0) \
            (propertyFileName c:\\\\work\\\\platform\\\\mirror\\\\mirrorCapture\\\\mirrorCapture.conf) \
@@ -67,9 +66,8 @@ BufferedPort<collectorImage> _img0Port;
 BufferedPort<collectorImage> _img1Port;
 
 // data & images, and their semaphores
-collectorNumericalData  _data;
-collectorImage          _img0;
-collectorImage          _img1;
+collectorNumericalData _data;
+collectorImage _img0, _img1;
 Semaphore _dataSem, _img0Sem, _img1Sem;
 Stamp _dataStamp, _img0Stamp, _img1Stamp;
 
@@ -123,22 +121,31 @@ bool sendCmd(collectorCommand cmd, Bottle* recd = 0)
 
 // read data from the ports and store them to the appropriate data structures
 
-void readData()
+void readNumData()
 {
 
-    // numerical data
     _dataSem.wait();
     _data = _dataPort.read()->content();
     _dataPort.getEnvelope(_dataStamp);
     _dataSem.post();
 
-    // images
+}
+
+void readImg0()
+{
+
     if ( _property.find("useCamera0").asInt() == 1 ) {
         _img0Sem.wait();
         _img0 = *_img0Port.read();
         _img0Port.getEnvelope(_img0Stamp);
         _img0Sem.post();
     }
+
+}
+
+void readImg1()
+{
+
     if ( _property.find("useCamera1").asInt() == 1 ) {
         _img1Sem.wait();
         _img1 = *_img1Port.read();
@@ -216,7 +223,7 @@ void closePorts()
 
 // data polling thread
 // the thread polls the collector for new data (send getData / expect OK)
-// and reads data from the ports, updating the related data structures
+// and reads data from the ports, updating the related data structures.
 
 class _pollingThread : public RateThread {
 
@@ -235,27 +242,29 @@ public:
         if ( sendCmd(CCmdGetData) == false ) {
             g_print ("getData command failed\n");
         } else {
-            // read data
-            readData();
+            // read all data in a single strike
+            readNumData();
+            readImg0();
+            readImg1();
         }
     }
 
 } pollingThread;
 
-// data streaming thread
-// the thread expects data to be available continually as a stream,
-// updates the data structures and saves the data to the disc
+// streaming threads
+// the threads expect data to be available continually as a stream,
+// update the data structures and save the data to the disc
 
-class _streamingThread : public Thread {
+class _numDataStreamingThread : public Thread {
 public:
 
-    _streamingThread() : _timeTop(0) {}
+    _numDataStreamingThread() : _timeTop(0) {}
 
     void run () {
-        g_print ("streaming thread starting....\n");
+        g_print ("numerical data streaming thread starting....\n");
         while ( ! isStopping() ) {
             // read data
-            readData();
+            readNumData();
             // update status bar: what is the current streaming frequency?
             _tick[ ((++_timeTop==10)?(_timeTop=0):_timeTop) ] = Time::now() - _prev;
             _prev = Time::now();
@@ -266,13 +275,69 @@ public:
             // save data to disc
             // ..................
 		}
-        g_print ("streaming thread stopping....\n");
+        g_print ("numerical data streaming thread stopping....\n");
     }
 
 private:
     double _tick[10], _prev;
     int _timeTop;
-} streamingThread;
+} numDataStreamingThread;
+
+class _img0StreamingThread : public Thread {
+public:
+
+    _img0StreamingThread() : _timeTop(0) {}
+
+    void run () {
+        g_print ("image 0 streaming thread starting....\n");
+        while ( ! isStopping() ) {
+            // read data
+            readImg0();
+            // update status bar: what is the current streaming frequency?
+            _tick[ ((++_timeTop==10)?(_timeTop=0):_timeTop) ] = Time::now() - _prev;
+            _prev = Time::now();
+            g_print("streaming at %3.2f Hz\r", 1.0/((
+                _tick[0]+_tick[1]+_tick[2]+_tick[3]+_tick[4]+
+                _tick[5]+_tick[6]+_tick[7]+_tick[8]+_tick[9]
+                )/10.0) );
+            // save data to disc
+            // ..................
+		}
+        g_print ("image 0 streaming thread stopping....\n");
+    }
+
+private:
+    double _tick[10], _prev;
+    int _timeTop;
+} img0StreamingThread;
+
+class _img1StreamingThread : public Thread {
+public:
+
+    _img1StreamingThread() : _timeTop(0) {}
+
+    void run () {
+        g_print ("image 1 streaming thread starting....\n");
+        while ( ! isStopping() ) {
+            // read data
+            readImg1();
+            // update status bar: what is the current streaming frequency?
+            _tick[ ((++_timeTop==10)?(_timeTop=0):_timeTop) ] = Time::now() - _prev;
+            _prev = Time::now();
+            g_print("streaming at %3.2f Hz\r", 1.0/((
+                _tick[0]+_tick[1]+_tick[2]+_tick[3]+_tick[4]+
+                _tick[5]+_tick[6]+_tick[7]+_tick[8]+_tick[9]
+                )/10.0) );
+            // save data to disc
+            // ..................
+		}
+        g_print ("image 1 streaming thread stopping....\n");
+    }
+
+private:
+    double _tick[10], _prev;
+    int _timeTop;
+} img1StreamingThread;
 
 // -----------------------------
 // GTK interface
@@ -426,8 +491,10 @@ void on_streamButton_clicked (GtkButton* button, gpointer user_data)
         }
         g_print ("startStreaming command succeeded\n");
         // start streaming thread
-        g_print ("starting streaming thread\n");
-        streamingThread.start();
+        g_print ("starting streaming threads\n");
+        numDataStreamingThread.start();
+        img0StreamingThread.start();
+        img1StreamingThread.start();
         // deactivate buttons
         g_print ("deactivating wake up button\n");
         gtk_widget_set_sensitive( (GtkWidget*)wakeUpButton, FALSE);
@@ -437,7 +504,9 @@ void on_streamButton_clicked (GtkButton* button, gpointer user_data)
     } else {
         g_print ("user wants to stop streaming\n");
         g_print ("stopping streaming thread\n");
-        streamingThread.stop();
+        img1StreamingThread.stop();
+        img0StreamingThread.stop();
+        numDataStreamingThread.stop();
         g_print ("asking collector to stop streaming\n");
         if ( sendCmd(CCmdStopStreaming) == false ) {
             g_print ("stopStreaming command failed\n");
@@ -543,7 +612,9 @@ int main( int argc, char *argv[] )
     gtk_main ();
 
     // possibly, stop the threads
-    if ( streamingThread.isRunning() ) streamingThread.stop();
+    if ( numDataStreamingThread.isRunning() ) numDataStreamingThread.stop();
+    if ( img0StreamingThread.isRunning() ) img0StreamingThread.stop();
+    if ( img1StreamingThread.isRunning() ) img1StreamingThread.stop();
     if ( pollingThread.isRunning() ) pollingThread.stop();
 
     // bail out
