@@ -3,29 +3,23 @@
 
 #include <yarp/os/Property.h>
 
-#include <yarp/dev/PressureDriver.h>
-#include <yarp/dev/FobDriver.h>
-#include <yarp/dev/GazeDriver.h>
-#include <yarp/dev/PicoloDeviceDriver.h>
-#include <yarp/dev/CyberGloveDeviceDriver.h>
+#include <yarp/FoBDeviceDriver.h>
+#include <yarp/CyberGloveDeviceDriver.h>
+#include <yarp/E504DeviceDriver.h>
+#include <yarp/JoyPresDeviceDriver.h>
 
 using namespace yarp::os;
 
 // properties of the collector
+
 typedef class _mirrorCollectorProperty : public Property {
 public:
 	_mirrorCollectorProperty() {
 		fromString("\
 			(appName				mirrorCollector)\
 			(dataNetName			default)\
-			(imgNetName				default)\
 			(streamFreq				25.0)\
             (propertyFileName       c:\\\\work\\\\platform\\\\mirror\\\\mirrorCollector\\\\mirrorCollector.conf)\
-			(useCamera0				0)\
-			(useCamera1				0)\
-			(imgSizeX				384)\
-			(imgSizeY				272)\
-			(YOffset				0)\
 			(useGazeTracker			1)\
 			(GTComPort				1)\
 			(GTBaudRate				57600)\
@@ -63,7 +57,9 @@ typedef enum {
 
 // numerical data sent over the network
 typedef struct _collectorNumericalData {
-    _collectorNumericalData() { clean(); };
+    
+	_collectorNumericalData() { clean(); };
+
     void clean() {
         tracker0Data.clean();
         tracker1Data.clean();
@@ -71,17 +67,13 @@ typedef struct _collectorNumericalData {
         gloveData.clean();
         pressureData.clean();
     };
-    TrackerData		tracker0Data;
-    TrackerData		tracker1Data;
-    GazeTrackerData	GTData;
-    DataGloveData	gloveData;
-    PresSensData	pressureData;
+    
+	FoBData			tracker0Data;
+    FoBData			tracker1Data;
+    E504Data		GTData;
+    CyberGloveData	gloveData;
+    JoyPresData		pressureData;
+
 } collectorNumericalData;
-
-// images sent over the network
-#include <yarp/sig/Image.h>
-typedef yarp::sig::ImageOf<yarp::sig::PixelRgb> collectorImage;
-
-#include <yarp/sig/ImageFile.h>
 
 #endif

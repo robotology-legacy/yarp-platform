@@ -28,6 +28,8 @@
 #include <yarp/os/Semaphore.h>
 #include <yarp/os/Stamp.h>
 
+#include <yarp/sig/Image.h>
+
 // GTK+
 #include <gtk/gtk.h>
 
@@ -36,6 +38,8 @@
 
 using namespace std;
 using namespace yarp::os;
+
+typedef yarp::sig::ImageOf<yarp::sig::PixelRgb> collectorImage;
 
 // ----------------------------------------------
 // properties of the application
@@ -126,7 +130,7 @@ void readNumData()
 
     _dataSem.wait();
     _data = _dataPort.read()->content();
-    _dataPort.getEnvelope(_dataStamp);
+	_dataPort.getEnvelope(_dataStamp);
     _dataSem.post();
 
 }
@@ -364,15 +368,7 @@ Glove:\n\
 %3d %3d %3d  %3d %3d %3d\n\
 %3d %3d %3d\n\
 %3d %3d %3d %3d - %3d %3d %3d",
-_data.pressureData.fakeDatum[2], 0, 0, 0,
-0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-0, 0.0, 0.0,
-0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0,
-0, 0, 0,
-0, 0, 0, 0, 0, 0, 0
-/*		    _data.pressureData.channelA, _data.pressureData.channelB, _data.pressureData.channelC, _data.pressureData.channelD,
+		    _data.pressureData.channelA, _data.pressureData.channelB, _data.pressureData.channelC, _data.pressureData.channelD,
 			_data.tracker0Data.x, _data.tracker0Data.y, _data.tracker0Data.z, _data.tracker0Data.azimuth,_data.tracker0Data.elevation, _data.tracker0Data.roll,
 			_data.tracker1Data.x, _data.tracker1Data.y, _data.tracker1Data.z, _data.tracker1Data.azimuth,_data.tracker1Data.elevation, _data.tracker1Data.roll,
 			_data.GTData.valid, _data.GTData.pupilX, _data.GTData.pupilY,
@@ -382,7 +378,7 @@ _data.pressureData.fakeDatum[2], 0, 0, 0,
 			_data.gloveData.ring[0], _data.gloveData.ring[1], _data.gloveData.ring[2],
 			_data.gloveData.pinkie[0], _data.gloveData.pinkie[1], _data.gloveData.pinkie[2],
 			_data.gloveData.abduction[0], _data.gloveData.abduction[1], _data.gloveData.abduction[2], _data.gloveData.abduction[3],
-			_data.gloveData.palmArch, _data.gloveData.wristPitch, _data.gloveData.wristYaw*/
+			_data.gloveData.palmArch, _data.gloveData.wristPitch, _data.gloveData.wristYaw
 			);
     _dataSem.post();
     GtkTextBuffer* buf = gtk_text_view_get_buffer((GtkTextView*)numDataTextView);
@@ -399,7 +395,7 @@ _data.pressureData.fakeDatum[2], 0, 0, 0,
     _img1Sem.post();
     gtk_widget_queue_draw (camera1Image);
 
-    printf("data: %3.2f, img0: %3.2f, img1: %3.2f\r", _dataStamp.getTime(), _img0Stamp.getTime(), _img1Stamp.getTime());
+//    printf("data: %3.2f, img0: %3.2f, img1: %3.2f\r", _dataStamp.getTime(), _img0Stamp.getTime(), _img1Stamp.getTime());
 
     return (collector_awake?TRUE:FALSE);
 
@@ -428,15 +424,11 @@ void on_wakeUpButton_clicked (GtkButton* button, gpointer user_data)
             // read properties of the hardware
             _mirrorCollectorProperty _mcollProperty;
             _mcollProperty.fromString(recd.get(1).asString().c_str());
-            _property.put("useCamera0",_mcollProperty.find("useCamera0").asInt());
-            _property.put("useCamera1",_mcollProperty.find("useCamera1").asInt());
             _property.put("useTracker0",_mcollProperty.find("useTracker0").asInt());
             _property.put("useTracker1",_mcollProperty.find("useTracker1").asInt());
             _property.put("useGazeTracker",_mcollProperty.find("useGazeTracker").asInt());
             _property.put("useDataGlove",_mcollProperty.find("useDataGlove").asInt());
             _property.put("usePresSens",_mcollProperty.find("usePresSens").asInt());
-            _property.put("imgSizeX",_mcollProperty.find("imgSizeX").asInt());
-            _property.put("imgSizeY",_mcollProperty.find("imgSizeY").asInt());
             g_print ("received collector properties:\n");
             cout << _property.toString().c_str() << endl;
         }
