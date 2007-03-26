@@ -138,24 +138,20 @@ void readNumData()
 void readImg0()
 {
 
-    if ( _property.find("useCamera0").asInt() == 1 ) {
-        _img0Sem.wait();
-        _img0 = *_img0Port.read();
-        _img0Port.getEnvelope(_img0Stamp);
-        _img0Sem.post();
-    }
+    _img0Sem.wait();
+    _img0 = *_img0Port.read();
+    _img0Port.getEnvelope(_img0Stamp);
+    _img0Sem.post();
 
 }
 
 void readImg1()
 {
 
-    if ( _property.find("useCamera1").asInt() == 1 ) {
-        _img1Sem.wait();
-        _img1 = *_img1Port.read();
-        _img1Port.getEnvelope(_img1Stamp);
-        _img1Sem.post();
-    }
+    _img1Sem.wait();
+    _img1 = *_img1Port.read();
+    _img1Port.getEnvelope(_img1Stamp);
+    _img1Sem.post();
 
 }
 
@@ -248,8 +244,8 @@ public:
         } else {
             // read all data in a single strike
             readNumData();
-            readImg0();
-            readImg1();
+            if ( _property.find("useCamera0").asInt() == 1 ) readImg0();
+            if ( _property.find("useCamera1").asInt() == 1 ) readImg1();
         }
     }
 
@@ -485,8 +481,8 @@ void on_streamButton_clicked (GtkButton* button, gpointer user_data)
         // start streaming thread
         g_print ("starting streaming threads\n");
         numDataStreamingThread.start();
-        img0StreamingThread.start();
-        img1StreamingThread.start();
+        if ( _property.find("useCamera0").asInt() == 1 ) img0StreamingThread.start();
+        if ( _property.find("useCamera1").asInt() == 1 ) img1StreamingThread.start();
         // deactivate buttons
         g_print ("deactivating wake up button\n");
         gtk_widget_set_sensitive( (GtkWidget*)wakeUpButton, FALSE);
@@ -495,9 +491,9 @@ void on_streamButton_clicked (GtkButton* button, gpointer user_data)
         streaming = true;
     } else {
         g_print ("user wants to stop streaming\n");
-        g_print ("stopping streaming thread\n");
-        img1StreamingThread.stop();
-        img0StreamingThread.stop();
+        g_print ("stopping streaming threads\n");
+        if ( _property.find("useCamera1").asInt() == 1 ) img1StreamingThread.stop();
+        if ( _property.find("useCamera0").asInt() == 1 ) img0StreamingThread.stop();
         numDataStreamingThread.stop();
         g_print ("asking collector to stop streaming\n");
         if ( sendCmd(CCmdStopStreaming) == false ) {
