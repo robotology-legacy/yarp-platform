@@ -1,5 +1,6 @@
 
 // - scrittura su disco dati in streaming, con uso delle timestamp
+// - status bar con la frequenza reale
 // - forse: disabilitare refresh se va troppo piano?
 
 // ----------------------------------------------
@@ -71,6 +72,8 @@ collectorNumericalData _data;
 collectorImage _img0, _img1;
 Semaphore _dataSem, _img0Sem, _img1Sem;
 Stamp _dataStamp, _img0Stamp, _img1Stamp;
+double _dataFreq, _img0Freq, _img1Freq;
+char statusBarMsg[50];
 
 // is collector awake?
 bool collector_awake = false;
@@ -265,10 +268,10 @@ public:
             // update status bar: what is the current streaming frequency?
             _tick[ ((++_timeTop==10)?(_timeTop=0):_timeTop) ] = Time::now() - _prev;
             _prev = Time::now();
-            g_print("streaming at %3.2f Hz\r", 1.0/((
+            _dataFreq = 1.0/((
                 _tick[0]+_tick[1]+_tick[2]+_tick[3]+_tick[4]+
                 _tick[5]+_tick[6]+_tick[7]+_tick[8]+_tick[9]
-                )/10.0) );
+                )/10.0);
             // save data to disc
             // ..................
 		}
@@ -293,10 +296,10 @@ public:
             // update status bar: what is the current streaming frequency?
             _tick[ ((++_timeTop==10)?(_timeTop=0):_timeTop) ] = Time::now() - _prev;
             _prev = Time::now();
-            g_print("streaming at %3.2f Hz\r", 1.0/((
+            _img0Freq = 1.0/((
                 _tick[0]+_tick[1]+_tick[2]+_tick[3]+_tick[4]+
                 _tick[5]+_tick[6]+_tick[7]+_tick[8]+_tick[9]
-                )/10.0) );
+                )/10.0);
             // save data to disc
             // ..................
 		}
@@ -321,10 +324,10 @@ public:
             // update status bar: what is the current streaming frequency?
             _tick[ ((++_timeTop==10)?(_timeTop=0):_timeTop) ] = Time::now() - _prev;
             _prev = Time::now();
-            g_print("streaming at %3.2f Hz\r", 1.0/((
+            _img1Freq = 1.0/((
                 _tick[0]+_tick[1]+_tick[2]+_tick[3]+_tick[4]+
                 _tick[5]+_tick[6]+_tick[7]+_tick[8]+_tick[9]
-                )/10.0) );
+                )/10.0);
             // save data to disc
             // ..................
 		}
@@ -388,7 +391,12 @@ Glove:\n\
     _img1Sem.post();
     gtk_widget_queue_draw (camera1Image);
 
-//    printf("data: %3.2f, img0: %3.2f, img1: %3.2f\r", _dataStamp.getTime(), _img0Stamp.getTime(), _img1Stamp.getTime());
+    // update status bar
+    sprintf(statusBarMsg, "data %3.2f, cam0 %3.2f, cam1 %3.2f", _dataFreq, _img0Freq, _img1Freq);
+    gtk_statusbar_push ((GtkStatusbar*)statusBar,
+                        gtk_statusbar_get_context_id((GtkStatusbar*)statusBar,"msg"),
+                        statusBarMsg);
+    gtk_widget_queue_draw (statusBar);
 
     return (collector_awake?TRUE:FALSE);
 
