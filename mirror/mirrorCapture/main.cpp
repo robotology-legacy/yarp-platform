@@ -1,9 +1,6 @@
-/*
 
-    - aggiustare live telecamere
-    - scrittura su disco dati in streaming, con uso delle timestamp
-
-*/
+// - scrittura su disco dati in streaming, con uso delle timestamp
+// - forse: disabilitare refresh se va troppo piano?
 
 // ----------------------------------------------
 // headers
@@ -160,29 +157,27 @@ void readImg1()
 void img2buf(collectorImage* img, GdkPixbuf* buf)
 {
 
+	// every now and then we could get an empty image...
+	if ( img->getRawImage()==0 ) return;
+
+	// gather pixbuf buffer and dimensions
     guchar* dst_data = gdk_pixbuf_get_pixels(buf);
-    unsigned int rowstride = gdk_pixbuf_get_rowstride (buf);
-    unsigned int n_channels = gdk_pixbuf_get_n_channels (buf);
+	unsigned int bufW = gdk_pixbuf_get_width(buf);
+	unsigned int bufH = gdk_pixbuf_get_height(buf);
 
-	char* src_data = (char*) img->getRawImage();
-    unsigned int width = img->width();
-    unsigned int height = img->height();
+	// evaluate stretch factors (to adapt the image to the pixbufs)
+    double xFact = (double)(img->width())/(double)bufW;
+    double yFact = (double)(img->height())/(double)bufH;
 
-    if ( img->getRowSize() == rowstride ) {
-    	unsigned int dst_size_in_memory = rowstride*height;
-        ACE_OS::memcpy(dst_data, src_data, dst_size_in_memory);
-    } else {
-        int bufW = gdk_pixbuf_get_width(buf);
-        int bufH = gdk_pixbuf_get_height(buf);
-        double xFact = (double)bufW/(double)width;
-        double yFact = (double)bufH/(double)height;
-        int pixSize = n_channels*sizeof(char);
-        for (int i=0; i<bufH; ++i) {
-            for (int j=0; j<bufW; ++j) {
-                ACE_OS::memcpy( dst_data+i*bufW*pixSize+j*pixSize,
-                                src_data+(int)(i/yFact*bufW*pixSize)+(int)(j/xFact*pixSize),
-                                pixSize );
-            }
+	// how big is our pixbuf pixel?
+    int pixSize = gdk_pixbuf_get_n_channels(buf)*gdk_pixbuf_get_bits_per_sample(buf)/8;
+
+	// now copy the image to the pixbuf
+    for (int i=0; i<bufH; ++i) {
+        for (int j=0; j<bufW; ++j) {
+			dst_data[i*bufW*pixSize+j*pixSize+2] = (*img)((int)(j*yFact),(int)(i*xFact)).r;
+			dst_data[i*bufW*pixSize+j*pixSize+1] = (*img)((int)(j*yFact),(int)(i*xFact)).g;
+			dst_data[i*bufW*pixSize+j*pixSize+0] = (*img)((int)(j*yFact),(int)(i*xFact)).b;
         }
     }
 
@@ -554,14 +549,14 @@ void create_interface (void)
     gtk_widget_show (camera0Image);
     gtk_fixed_put (GTK_FIXED (fixed), camera0Image, 232, 136);
     gtk_widget_set_size_request (camera0Image, 192, 136);
-    gtk_widget_set_sensitive (camera0Image, FALSE);
+    gtk_widget_set_sensitive (camera0Image, TRUE);
 
 	camera1Buf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 192, 136);
     camera1Image = gtk_image_new_from_pixbuf (camera1Buf);
     gtk_widget_show (camera1Image);
     gtk_fixed_put (GTK_FIXED (fixed), camera1Image, 232, 0);
     gtk_widget_set_size_request (camera1Image, 192, 136);
-    gtk_widget_set_sensitive (camera1Image, FALSE);
+    gtk_widget_set_sensitive (camera1Image, TRUE);
 
     statusBar = gtk_statusbar_new ();
     gtk_widget_show (statusBar);
