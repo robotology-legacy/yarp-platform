@@ -28,7 +28,7 @@
 	<widget class="GtkTextView" id="numDataTextView">
 	  <property name="border_width">1</property>
 	  <property name="width_request">232</property>
-	  <property name="height_request">176</property>
+	  <property name="height_request">208</property>
 	  <property name="visible">True</property>
 	  <property name="can_focus">True</property>
 	  <property name="editable">False</property>
@@ -46,25 +46,8 @@
 	  <property name="text" translatable="yes"></property>
 	</widget>
 	<packing>
-	  <property name="x">192</property>
+	  <property name="x">0</property>
 	  <property name="y">40</property>
-	</packing>
-      </child>
-
-      <child>
-	<widget class="GtkButton" id="streamButton">
-	  <property name="width_request">112</property>
-	  <property name="height_request">40</property>
-	  <property name="visible">True</property>
-	  <property name="can_focus">True</property>
-	  <property name="label" translatable="yes">Stream</property>
-	  <property name="use_underline">True</property>
-	  <property name="relief">GTK_RELIEF_NORMAL</property>
-	  <property name="focus_on_click">True</property>
-	</widget>
-	<packing>
-	  <property name="x">312</property>
-	  <property name="y">0</property>
 	</packing>
       </child>
 
@@ -80,23 +63,24 @@
 	  <property name="focus_on_click">True</property>
 	</widget>
 	<packing>
-	  <property name="x">192</property>
+	  <property name="x">0</property>
 	  <property name="y">0</property>
 	</packing>
       </child>
 
       <child>
-	<widget class="GtkImage" id="camera0Image">
-	  <property name="width_request">192</property>
-	  <property name="height_request">240</property>
+	<widget class="GtkButton" id="streamButton">
+	  <property name="width_request">112</property>
+	  <property name="height_request">40</property>
 	  <property name="visible">True</property>
-	  <property name="xalign">0.5</property>
-	  <property name="yalign">0.5</property>
-	  <property name="xpad">0</property>
-	  <property name="ypad">0</property>
+	  <property name="can_focus">True</property>
+	  <property name="label" translatable="yes">Stream</property>
+	  <property name="use_underline">True</property>
+	  <property name="relief">GTK_RELIEF_NORMAL</property>
+	  <property name="focus_on_click">True</property>
 	</widget>
 	<packing>
-	  <property name="x">0</property>
+	  <property name="x">120</property>
 	  <property name="y">0</property>
 	</packing>
       </child>
@@ -110,24 +94,42 @@
 	  <property name="has_resize_grip">False</property>
 	</widget>
 	<packing>
-	  <property name="x">192</property>
-	  <property name="y">216</property>
+	  <property name="x">0</property>
+	  <property name="y">248</property>
 	</packing>
       </child>
 
       <child>
 	<widget class="GtkImage" id="camera1Image">
 	  <property name="width_request">192</property>
-	  <property name="height_request">240</property>
+	  <property name="height_request">136</property>
 	  <property name="visible">True</property>
+	  <property name="sensitive">False</property>
 	  <property name="xalign">0.5</property>
 	  <property name="yalign">0.5</property>
 	  <property name="xpad">0</property>
 	  <property name="ypad">0</property>
 	</widget>
 	<packing>
-	  <property name="x">424</property>
+	  <property name="x">232</property>
 	  <property name="y">0</property>
+	</packing>
+      </child>
+
+      <child>
+	<widget class="GtkImage" id="camera0Image">
+	  <property name="width_request">192</property>
+	  <property name="height_request">136</property>
+	  <property name="visible">True</property>
+	  <property name="sensitive">False</property>
+	  <property name="xalign">0.5</property>
+	  <property name="yalign">0.5</property>
+	  <property name="xpad">0</property>
+	  <property name="ypad">0</property>
+	</widget>
+	<packing>
+	  <property name="x">232</property>
+	  <property name="y">136</property>
 	</packing>
       </child>
     </widget>

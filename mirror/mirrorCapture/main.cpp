@@ -167,20 +167,22 @@ void img2buf(collectorImage* img, GdkPixbuf* buf)
 	char* src_data = (char*) img->getRawImage();
     unsigned int width = img->width();
     unsigned int height = img->height();
-	unsigned int src_line_size = img->getRowSize();
 
-	unsigned int dst_size_in_memory = rowstride * height;
-
-	guchar *p_dst;
-	char *p_src;
-
-    if ( src_line_size == rowstride ) {
+    if ( img->getRowSize() == rowstride ) {
+    	unsigned int dst_size_in_memory = rowstride*height;
         ACE_OS::memcpy(dst_data, src_data, dst_size_in_memory);
     } else {
-        for (int i=0; i < (int)height; i++) {
-            p_dst = dst_data + i * rowstride;
-            p_src = src_data + i * src_line_size;
-            ACE_OS::memcpy(p_dst, p_src, (n_channels*width));
+        int bufW = gdk_pixbuf_get_width(buf);
+        int bufH = gdk_pixbuf_get_height(buf);
+        double xFact = (double)bufW/(double)width;
+        double yFact = (double)bufH/(double)height;
+        int pixSize = n_channels*sizeof(char);
+        for (int i=0; i<bufH; ++i) {
+            for (int j=0; j<bufW; ++j) {
+                ACE_OS::memcpy( dst_data+i*bufW*pixSize+j*pixSize,
+                                src_data+(int)(i/yFact*bufW*pixSize)+(int)(j/xFact*pixSize),
+                                pixSize );
+            }
         }
     }
 
@@ -529,8 +531,8 @@ void create_interface (void)
 
     numDataTextView = gtk_text_view_new ();
     gtk_widget_show (numDataTextView);
-    gtk_fixed_put (GTK_FIXED (fixed), numDataTextView, 192, 40);
-    gtk_widget_set_size_request (numDataTextView, 232, 176);
+    gtk_fixed_put (GTK_FIXED (fixed), numDataTextView, 0, 40);
+    gtk_widget_set_size_request (numDataTextView, 232, 208);
     gtk_container_set_border_width (GTK_CONTAINER (numDataTextView), 1);
     gtk_text_view_set_editable (GTK_TEXT_VIEW (numDataTextView), FALSE);
     gtk_text_view_set_accepts_tab (GTK_TEXT_VIEW (numDataTextView), FALSE);
@@ -538,33 +540,35 @@ void create_interface (void)
 
     streamButton = gtk_button_new_with_mnemonic ("Stream");
     gtk_widget_show (streamButton);
-    gtk_fixed_put (GTK_FIXED (fixed), streamButton, 312, 0);
+    gtk_fixed_put (GTK_FIXED (fixed), streamButton, 120, 0);
     gtk_widget_set_size_request (streamButton, 112, 40);
     gtk_widget_set_sensitive (streamButton, FALSE);
 
     wakeUpButton = gtk_button_new_with_mnemonic ("Wake Up");
     gtk_widget_show (wakeUpButton);
-    gtk_fixed_put (GTK_FIXED (fixed), wakeUpButton, 192, 0);
+    gtk_fixed_put (GTK_FIXED (fixed), wakeUpButton, 0, 0);
     gtk_widget_set_size_request (wakeUpButton, 112, 40);
     
-	camera0Buf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 400, 400);
+	camera0Buf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 192, 136);
     camera0Image = gtk_image_new_from_pixbuf (camera0Buf);
     gtk_widget_show (camera0Image);
-    gtk_fixed_put (GTK_FIXED (fixed), camera0Image, 0, 0);
-    gtk_widget_set_size_request (camera0Image, 192, 240);
+    gtk_fixed_put (GTK_FIXED (fixed), camera0Image, 232, 136);
+    gtk_widget_set_size_request (camera0Image, 192, 136);
+    gtk_widget_set_sensitive (camera0Image, FALSE);
+
+	camera1Buf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 192, 136);
+    camera1Image = gtk_image_new_from_pixbuf (camera1Buf);
+    gtk_widget_show (camera1Image);
+    gtk_fixed_put (GTK_FIXED (fixed), camera1Image, 232, 0);
+    gtk_widget_set_size_request (camera1Image, 192, 136);
+    gtk_widget_set_sensitive (camera1Image, FALSE);
 
     statusBar = gtk_statusbar_new ();
     gtk_widget_show (statusBar);
-    gtk_fixed_put (GTK_FIXED (fixed), statusBar, 192, 216);
+    gtk_fixed_put (GTK_FIXED (fixed), statusBar, 0, 248);
     gtk_widget_set_size_request (statusBar, 232, 24);
     gtk_container_set_border_width (GTK_CONTAINER (statusBar), 1);
     gtk_statusbar_set_has_resize_grip (GTK_STATUSBAR (statusBar), FALSE);
-
-	camera1Buf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 400, 400);
-    camera1Image = gtk_image_new_from_pixbuf (camera1Buf);
-    gtk_widget_show (camera1Image);
-    gtk_fixed_put (GTK_FIXED (fixed), camera1Image, 424, 0);
-    gtk_widget_set_size_request (camera1Image, 192, 240);
 
     g_signal_connect ((gpointer) wakeUpButton, "clicked", G_CALLBACK (on_wakeUpButton_clicked), NULL);
     g_signal_connect ((gpointer) streamButton, "clicked", G_CALLBACK (on_streamButton_clicked), NULL);
