@@ -34,7 +34,6 @@ public:
 	_mirrorCollectorProperty() {
 		fromString("\
 			(appName				mirrorCollector)\
-			(dataNetName			default)\
 			(streamFreq				25.0)\
             (propertyFileName       c:\\\\work\\\\platform\\\\mirror\\\\mirrorCollector\\\\mirrorCollector.conf)\
 			(useGazeTracker			1)\

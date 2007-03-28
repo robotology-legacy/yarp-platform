@@ -1,11 +1,8 @@
-// . ripulire codice dei tre thread di stream: e' tutto duplicato
-// . come scrivo un'immagine su file?
-// . come mandare le immagini di yarpdev su un altro network (i.e., 10.0.1.*) ?
+
+// . ottenere frequenze ragionevoli (prova atlas+macchina10)
 // . a quel punto, mettere un ratethread nel picolodevicedriver piuttosto che thread+delay?
 
-// investigare strani comportamenti di frequenze di streaming. i dati vanno piu`
-// veloci se su macchine diverse, le immagini... il contrario!
-// . provare fra atlas e macchina del setup babybot (cioe` su rete 43 e 10)
+// . incredibile comportamento delle versioni non debug...
 
 // ----------------------------------------------
 // headers
@@ -30,6 +27,7 @@
 #include <yarp/os/Semaphore.h>
 #include <yarp/os/Stamp.h>
 #include <yarp/sig/Image.h>
+#include <yarp/sig/ImageFile.h>
 
 // GTK+
 #include <gtk/gtk.h>
@@ -50,8 +48,7 @@ class _mirrorCaptureProperty : public Property {
 public:
     _mirrorCaptureProperty() {
 		fromString("\
-           (appName mirrorCapture) (dataNetName default) (imgNetName Net1) \
-           (useCamera0 0) (useCamera1 0) \
+           (appName mirrorCapture) (useCamera0 0) (useCamera1 0) \
            (seqPrefix seq) (seqPath c:) (refreshFreq 2.0) \
            (propertyFileName c:\\\\work\\\\platform\\\\mirror\\\\mirrorCapture\\\\mirrorCapture.conf) \
         ");
@@ -179,9 +176,9 @@ void img2buf(collectorImage* img, GdkPixbuf* buf)
 	// now copy the image to the pixbuf
     for (int i=0; i<bufH; ++i) {
         for (int j=0; j<bufW; ++j) {
-			dst_data[i*bufW*pixSize+j*pixSize+2] = (*img)((int)(j*yFact),(int)(i*xFact)).r;
+			dst_data[i*bufW*pixSize+j*pixSize+0] = (*img)((int)(j*yFact),(int)(i*xFact)).r;
 			dst_data[i*bufW*pixSize+j*pixSize+1] = (*img)((int)(j*yFact),(int)(i*xFact)).g;
-			dst_data[i*bufW*pixSize+j*pixSize+0] = (*img)((int)(j*yFact),(int)(i*xFact)).b;
+			dst_data[i*bufW*pixSize+j*pixSize+2] = (*img)((int)(j*yFact),(int)(i*xFact)).b;
         }
     }
 
@@ -265,11 +262,12 @@ public:
 // we actually DO need three separate threads, since numerical data is
 // basically independent of images grabbed off the cameras.
 
+// this is ALL thrice duplicated code... need to get some time to fix it.
+
 class _numDataStreamingThread : public Thread {
 public:
 
-    _numDataStreamingThread() :
-	  _timeTop(0), _seqCount(1), _readFirstStamp(true) {}
+    _numDataStreamingThread() : _timeTop(0), _seqCount(1), _readFirstStamp(true) {}
 
     bool threadInit() {
         char outFileName[200];
@@ -303,7 +301,7 @@ public:
                 _tick[5]+_tick[6]+_tick[7]+_tick[8]+_tick[9]
                 )/10.0);
             // save data to disc
-            fprintf(_dataOutFile, "%3.3g \
+            fprintf(_dataOutFile, "%g \
 %g %g %g %g %g %g \
 %g %g %g %g %g %g \
 %1d %g %g \
@@ -380,13 +378,13 @@ public:
                 )/10.0);
             // save data to disc
             char outFileName[200];
-            sprintf(outFileName, "%s\\%s.seq%02d.%04d.img0.png",
+            sprintf(outFileName, "%s\\%s.seq%02d.%04d.img0.ppm",
                 _property.find("seqPath").asString().c_str(),
                 _property.find("seqPrefix").asString().c_str(),
                 _seqCount, imgCount++
                 );
-//            _img0.save(outFileName);
-            fprintf(_dataOutFile, "%3.3g %s\n", _img0Stamp.getTime()-_firstStamp, outFileName);
+			yarp::sig::file::write(_img0,outFileName);
+            fprintf(_dataOutFile, "%g %s\n", _img0Stamp.getTime()-_firstStamp, outFileName);
 		}
         g_print ("image 0 streaming thread stopping....\n");
     }
@@ -445,13 +443,13 @@ public:
                 )/10.0);
             // save data to disc
             char outFileName[200];
-            sprintf(outFileName, "%s\\%s.seq%02d.%04d.img1.png",
+            sprintf(outFileName, "%s\\%s.seq%02d.%04d.img1.ppm",
                 _property.find("seqPath").asString().c_str(),
                 _property.find("seqPrefix").asString().c_str(),
                 _seqCount, imgCount++
                 );
-//            _img1.save(outFileName);
-            fprintf(_dataOutFile, "%3.3g %s\n", _img1Stamp.getTime()-_firstStamp, outFileName);
+			yarp::sig::file::write(_img1,outFileName);
+            fprintf(_dataOutFile, "%g %s\n", _img1Stamp.getTime()-_firstStamp, outFileName);
 		}
         g_print ("image 1 streaming thread stopping....\n");
     }
