@@ -1,7 +1,13 @@
+// come scrivo un'immagine su file?
 
-// - scrittura su disco dati in streaming, con uso delle timestamp
-// - status bar con la frequenza reale
-// - forse: disabilitare refresh se va troppo piano?
+// investigare strani comportamenti di frequenze di streaming. i dati vanno piu`
+// veloci se su macchine diverse, le immagini... il contrario!
+// . come mandare le immagini di yarpdev sul network 10.0.1.* ?
+// . provare fra atlas e macchina del setup babybot (cioe` su rete 43 e 10)
+// . mettere un ratethread nel picolodevicedriver? esperimento inziale non ha
+//   dato risultati buoni - sembra andare ancora piu` piano! ma questo potrebbe
+//   essere dovuto ad atlas che e` lento? improbabile, dal momento che la CPU
+//   non e` al 100% nemmeno con tutti e tre i thread attivi...
 
 // ----------------------------------------------
 // headers
@@ -25,7 +31,6 @@
 #include <yarp/os/RateThread.h>
 #include <yarp/os/Semaphore.h>
 #include <yarp/os/Stamp.h>
-
 #include <yarp/sig/Image.h>
 
 // GTK+
@@ -48,10 +53,8 @@ public:
     _mirrorCaptureProperty() {
 		fromString("\
            (appName mirrorCapture) (dataNetName default) (imgNetName Net1) \
-           (useCamera0 0) (useCamera1 0) (useTracker0 0) (useTracker1 0) \
-           (useGazeTracker 0) (useDataGlove 0) (usePresSens 0) \
-           (seqPrefix seq) (seqPath c:\\\\) \
-	       (refreshFreq 2.0) \
+           (useCamera0 0) (useCamera1 0) \
+           (seqPrefix seq) (seqPath c:\\\\) (refreshFreq 2.0) \
            (propertyFileName c:\\\\work\\\\platform\\\\mirror\\\\mirrorCapture\\\\mirrorCapture.conf) \
         ");
 	};
@@ -67,7 +70,7 @@ BufferedPort<BinPortable<collectorNumericalData> > _dataPort;
 BufferedPort<collectorImage> _img0Port;
 BufferedPort<collectorImage> _img1Port;
 
-// data & images, and their semaphores
+// data & images, and their companions
 collectorNumericalData _data;
 collectorImage _img0, _img1;
 Semaphore _dataSem, _img0Sem, _img1Sem;
@@ -123,7 +126,7 @@ bool sendCmd(collectorCommand cmd, Bottle* recd = 0)
 
 }
 
-// read data from the ports and store them to the appropriate data structures
+// read data from the ports and store them into the appropriate data structures
 
 void readNumData()
 {
@@ -224,6 +227,11 @@ void closePorts()
 // data polling thread
 // the thread polls the collector for new data (send getData / expect OK)
 // and reads data from the ports, updating the related data structures.
+// the polling frequency is specified in the conf file. notice that the
+// same frequency is used to install the GTK interface update timer, but
+// obviously there is no guarantee that the timeout and this thread be
+// synchronised. this cannot be, as no thread other than the main is allowed
+// to touch the GUI. and moreover, we don't really care about this synchronisation.
 
 class _pollingThread : public RateThread {
 
@@ -242,7 +250,7 @@ public:
         if ( sendCmd(CCmdGetData) == false ) {
             g_print ("getData command failed\n");
         } else {
-            // read all data in a single strike
+            // read data
             readNumData();
             if ( _property.find("useCamera0").asInt() == 1 ) readImg0();
             if ( _property.find("useCamera1").asInt() == 1 ) readImg1();
@@ -252,20 +260,39 @@ public:
 } pollingThread;
 
 // streaming threads
-// the threads expect data to be available continually as a stream,
-// update the data structures and save the data to the disc
+// the threads expect data to be available continually as a stream; so they
+// employ blocking read()s and their execution frequency is dictated by
+// the stream itself, that is, by the collector application. they then
+// update the data structures and save the data to the disc.
+// we actually DO need three separate threads, since numerical data is
+// basically independent of images grabbed off the cameras.
 
 class _numDataStreamingThread : public Thread {
 public:
 
-    _numDataStreamingThread() : _timeTop(0) {}
+    _numDataStreamingThread() : _timeTop(0), _seqCount(1) {}
+
+    bool threadInit() {
+        char outFileName[200];
+        sprintf(outFileName, "%s%s_data.%4d.dat",
+            _property.find("seqPath").asString(),
+            _property.find("seqPrefix").asString(),
+            _seqCount++
+            );
+        _dataOutFile = fopen(outFileName,"w");
+        if ( _dataOutFile == 0 ) {
+            g_print ("could not open data out file for writing");
+            return false;
+        }
+        return true;
+    }
 
     void run () {
         g_print ("numerical data streaming thread starting....\n");
         while ( ! isStopping() ) {
             // read data
             readNumData();
-            // update status bar: what is the current streaming frequency?
+            // update status bar: what is the actual streaming frequency?
             _tick[ ((++_timeTop==10)?(_timeTop=0):_timeTop) ] = Time::now() - _prev;
             _prev = Time::now();
             _dataFreq = 1.0/((
@@ -273,12 +300,36 @@ public:
                 _tick[5]+_tick[6]+_tick[7]+_tick[8]+_tick[9]
                 )/10.0);
             // save data to disc
-            // ..................
+            fprintf(_dataOutFile, "%g \
+%g %g %g %g %g %g \
+%g %g %g %g %g %g \
+%1d %g %g \
+%3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d \
+%5d %5d %5d %5d",
+		        _dataStamp.getTime(),
+			    _data.tracker0Data.x, _data.tracker0Data.y, _data.tracker0Data.z, _data.tracker0Data.azimuth,_data.tracker0Data.elevation, _data.tracker0Data.roll,
+			    _data.tracker1Data.x, _data.tracker1Data.y, _data.tracker1Data.z, _data.tracker1Data.azimuth,_data.tracker1Data.elevation, _data.tracker1Data.roll,
+			    _data.GTData.valid, _data.GTData.pupilX, _data.GTData.pupilY,
+			    _data.gloveData.thumb[0], _data.gloveData.thumb[1], _data.gloveData.thumb[2],
+			    _data.gloveData.index[0], _data.gloveData.index[1], _data.gloveData.index[2],
+			    _data.gloveData.middle[0], _data.gloveData.middle[1], _data.gloveData.middle[2],
+			    _data.gloveData.ring[0], _data.gloveData.ring[1], _data.gloveData.ring[2],
+			    _data.gloveData.pinkie[0], _data.gloveData.pinkie[1], _data.gloveData.pinkie[2],
+			    _data.gloveData.abduction[0], _data.gloveData.abduction[1], _data.gloveData.abduction[2], _data.gloveData.abduction[3],
+			    _data.gloveData.palmArch, _data.gloveData.wristPitch, _data.gloveData.wristYaw,
+                _data.pressureData.channelA, _data.pressureData.channelB, _data.pressureData.channelC, _data.pressureData.channelD
+			);
 		}
         g_print ("numerical data streaming thread stopping....\n");
     }
 
+    void threadRelease() {
+        fclose(_dataOutFile);
+    }
+
 private:
+    FILE* _dataOutFile;
+    int _seqCount;
     double _tick[10], _prev;
     int _timeTop;
 } numDataStreamingThread;
@@ -286,7 +337,7 @@ private:
 class _img0StreamingThread : public Thread {
 public:
 
-    _img0StreamingThread() : _timeTop(0) {}
+    _img0StreamingThread() : _timeTop(0), _seqCount(1) {}
 
     void run () {
         g_print ("image 0 streaming thread starting....\n");
@@ -301,12 +352,19 @@ public:
                 _tick[5]+_tick[6]+_tick[7]+_tick[8]+_tick[9]
                 )/10.0);
             // save data to disc
-            // ..................
+            char outFileName[200];
+            sprintf(outFileName, "%s%s_img0.%4d.dat",
+                _property.find("seqPath").asString(),
+                _property.find("seqPrefix").asString(),
+                _seqCount++
+                );
+//            _img0.save(outFileName);
 		}
         g_print ("image 0 streaming thread stopping....\n");
     }
 
 private:
+    int _seqCount;
     double _tick[10], _prev;
     int _timeTop;
 } img0StreamingThread;
@@ -314,7 +372,7 @@ private:
 class _img1StreamingThread : public Thread {
 public:
 
-    _img1StreamingThread() : _timeTop(0) {}
+    _img1StreamingThread() : _timeTop(0), _seqCount(1) {}
 
     void run () {
         g_print ("image 1 streaming thread starting....\n");
@@ -329,12 +387,19 @@ public:
                 _tick[5]+_tick[6]+_tick[7]+_tick[8]+_tick[9]
                 )/10.0);
             // save data to disc
-            // ..................
+            char outFileName[200];
+            sprintf(outFileName, "%s%s_img1.%4d.dat",
+                _property.find("seqPath").asString(),
+                _property.find("seqPrefix").asString(),
+                _seqCount++
+                );
+//            _img1.save(outFileName);
 		}
         g_print ("image 1 streaming thread stopping....\n");
     }
 
 private:
+    int _seqCount;
     double _tick[10], _prev;
     int _timeTop;
 } img1StreamingThread;
@@ -408,31 +473,13 @@ void on_wakeUpButton_clicked (GtkButton* button, gpointer user_data)
     g_print ("wakeUpButton clicked\n");
 
     if ( ! collector_awake ) {
-        // user wants to wake up collector!
-        g_print ("user wants to wake up collector\n");
         // send "wakeup" command; expect "succeeded"
         g_print ("asking collector to wake up\n");
-        Bottle recd;
-        if ( sendCmd(CCmdWakeUp,&recd) == false ) {
+        if ( sendCmd(CCmdWakeUp) == false ) {
             g_print ("wake up command failed\n");
             return;
         }
         g_print ("wake up command succeeded\n");
-        // must get collector properties
-        if ( recd.size() != 2 ) {
-            g_print ("collector did not send any property. using defaults.\n");
-        } else {
-            // read properties of the hardware
-            _mirrorCollectorProperty _mcollProperty;
-            _mcollProperty.fromString(recd.get(1).asString().c_str());
-            _property.put("useTracker0",_mcollProperty.find("useTracker0").asInt());
-            _property.put("useTracker1",_mcollProperty.find("useTracker1").asInt());
-            _property.put("useGazeTracker",_mcollProperty.find("useGazeTracker").asInt());
-            _property.put("useDataGlove",_mcollProperty.find("useDataGlove").asInt());
-            _property.put("usePresSens",_mcollProperty.find("usePresSens").asInt());
-            g_print ("received collector properties:\n");
-            cout << _property.toString().c_str() << endl;
-        }
         // set flag
         collector_awake = true;
         // activate buttons
@@ -469,12 +516,10 @@ void on_streamButton_clicked (GtkButton* button, gpointer user_data)
     g_print ("streamButton clicked\n");
 
     if ( ! streaming ) {
-        // user wants to stream
-        g_print ("user wants to stream\n");
         // stop polling thread
         g_print ("stopping polling thread\n");
         pollingThread.stop();
-        // send startStreaming command; expect ok
+        // send startStreaming command
         g_print ("asking collector to start streaming\n");
         if ( sendCmd(CCmdStartStreaming) == false ) {
             g_print ("startStreaming command failed\n");
@@ -520,6 +565,8 @@ void on_streamButton_clicked (GtkButton* button, gpointer user_data)
 
 void create_interface (void)
 {
+
+    // this is, more or less, GLADE-generated code
 
     GtkWidget *fixed;
 
@@ -606,7 +653,8 @@ int main( int argc, char *argv[] )
     // idle and wait for events
     gtk_main ();
 
-    // possibly, stop the threads
+    // possibly, stop the threads if they are hanging (i.e., the user pressed the
+    // KILL button without stopping streaming or shutting down
     if ( numDataStreamingThread.isRunning() ) numDataStreamingThread.stop();
     if ( img0StreamingThread.isRunning() ) img0StreamingThread.stop();
     if ( img1StreamingThread.isRunning() ) img1StreamingThread.stop();
