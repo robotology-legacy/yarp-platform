@@ -28,7 +28,38 @@ typedef struct {
 } collectorHardware;
 
 // properties of the collector
-mirrorCollectorProperty _property;
+
+class _mirrorCollectorProperty : public Property {
+public:
+	_mirrorCollectorProperty() {
+		fromString("\
+			(appName				mirrorCollector)\
+			(dataNetName			default)\
+			(streamFreq				25.0)\
+            (propertyFileName       c:\\\\work\\\\platform\\\\mirror\\\\mirrorCollector\\\\mirrorCollector.conf)\
+			(useGazeTracker			1)\
+			(GTComPort				1)\
+			(GTBaudRate				57600)\
+			(useTracker0			1)\
+			(tracker0ComPort		2)\
+			(tracker0BaudRate		115200)\
+			(tracker0MeasRate		103.3)\
+			(tracker0TransOpMode	2)\
+			(tracker0Timeout		160)\
+			(useDataGlove			1)\
+			(gloveComPort			3)\
+			(gloveBaudRate			115200)\
+			(useTracker1			0)\
+		    (tracker1ComPort		4)\
+			(tracker1BaudRate		115200)\
+			(tracker1MeasRate		103.3)\
+			(tracker1TransOpMode	2)\
+			(tracker1Timeout		160)\
+			(usePresSens			1)\
+			(nPresSens				2)\
+	    ");
+    };
+} _property;
 
 // ports
 Port _cmdPort;

@@ -100,7 +100,7 @@
       </child>
 
       <child>
-	<widget class="GtkImage" id="camera1Image">
+	<widget class="GtkImage" id="camera0Image">
 	  <property name="width_request">192</property>
 	  <property name="height_request">136</property>
 	  <property name="visible">True</property>
@@ -117,7 +117,7 @@
       </child>
 
       <child>
-	<widget class="GtkImage" id="camera0Image">
+	<widget class="GtkImage" id="camera1Image">
 	  <property name="width_request">192</property>
 	  <property name="height_request">136</property>
 	  <property name="visible">True</property>

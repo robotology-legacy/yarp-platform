@@ -2,12 +2,9 @@
 
 // investigare strani comportamenti di frequenze di streaming. i dati vanno piu`
 // veloci se su macchine diverse, le immagini... il contrario!
-// . come mandare le immagini di yarpdev sul network 10.0.1.* ?
+// . come mandare le immagini di yarpdev su un altro network (i.e., 10.0.1.*) ?
+// . mettere un ratethread nel picolodevicedriver?
 // . provare fra atlas e macchina del setup babybot (cioe` su rete 43 e 10)
-// . mettere un ratethread nel picolodevicedriver? esperimento inziale non ha
-//   dato risultati buoni - sembra andare ancora piu` piano! ma questo potrebbe
-//   essere dovuto ad atlas che e` lento? improbabile, dal momento che la CPU
-//   non e` al 100% nemmeno con tutti e tre i thread attivi...
 
 // ----------------------------------------------
 // headers
@@ -54,7 +51,7 @@ public:
 		fromString("\
            (appName mirrorCapture) (dataNetName default) (imgNetName Net1) \
            (useCamera0 0) (useCamera1 0) \
-           (seqPrefix seq) (seqPath c:\\\\) (refreshFreq 2.0) \
+           (seqPrefix seq) (seqPath c:) (refreshFreq 2.0) \
            (propertyFileName c:\\\\work\\\\platform\\\\mirror\\\\mirrorCapture\\\\mirrorCapture.conf) \
         ");
 	};
@@ -270,14 +267,15 @@ public:
 class _numDataStreamingThread : public Thread {
 public:
 
-    _numDataStreamingThread() : _timeTop(0), _seqCount(1) {}
+    _numDataStreamingThread() :
+	  _timeTop(0), _seqCount(1), _readFirstStamp(true) {}
 
     bool threadInit() {
         char outFileName[200];
-        sprintf(outFileName, "%s%s_data.%4d.dat",
-            _property.find("seqPath").asString(),
-            _property.find("seqPrefix").asString(),
-            _seqCount++
+        sprintf(outFileName, "%s\\%s.seq%02d.data.dat",
+            _property.find("seqPath").asString().c_str(),
+            _property.find("seqPrefix").asString().c_str(),
+            _seqCount
             );
         _dataOutFile = fopen(outFileName,"w");
         if ( _dataOutFile == 0 ) {
@@ -292,6 +290,10 @@ public:
         while ( ! isStopping() ) {
             // read data
             readNumData();
+			if ( _readFirstStamp ) {
+				_firstStamp = _dataStamp.getTime();
+				_readFirstStamp = false;
+			}
             // update status bar: what is the actual streaming frequency?
             _tick[ ((++_timeTop==10)?(_timeTop=0):_timeTop) ] = Time::now() - _prev;
             _prev = Time::now();
@@ -300,13 +302,13 @@ public:
                 _tick[5]+_tick[6]+_tick[7]+_tick[8]+_tick[9]
                 )/10.0);
             // save data to disc
-            fprintf(_dataOutFile, "%g \
+            fprintf(_dataOutFile, "%3.3g \
 %g %g %g %g %g %g \
 %g %g %g %g %g %g \
 %1d %g %g \
 %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d %3d \
-%5d %5d %5d %5d",
-		        _dataStamp.getTime(),
+%5d %5d %5d %5d\n",
+		        _dataStamp.getTime()-_firstStamp,
 			    _data.tracker0Data.x, _data.tracker0Data.y, _data.tracker0Data.z, _data.tracker0Data.azimuth,_data.tracker0Data.elevation, _data.tracker0Data.roll,
 			    _data.tracker1Data.x, _data.tracker1Data.y, _data.tracker1Data.z, _data.tracker1Data.azimuth,_data.tracker1Data.elevation, _data.tracker1Data.roll,
 			    _data.GTData.valid, _data.GTData.pupilX, _data.GTData.pupilY,
@@ -325,6 +327,8 @@ public:
 
     void threadRelease() {
         fclose(_dataOutFile);
+		_readFirstStamp = true;
+		_seqCount++;
     }
 
 private:
@@ -332,18 +336,40 @@ private:
     int _seqCount;
     double _tick[10], _prev;
     int _timeTop;
+	double _firstStamp;
+	bool _readFirstStamp;
 } numDataStreamingThread;
 
 class _img0StreamingThread : public Thread {
 public:
 
-    _img0StreamingThread() : _timeTop(0), _seqCount(1) {}
+    _img0StreamingThread() : _timeTop(0), _seqCount(1), _readFirstStamp(true) {}
+
+    bool threadInit() {
+        char outFileName[200];
+        sprintf(outFileName, "%s\\%s.seq%02d.img0.dat",
+            _property.find("seqPath").asString().c_str(),
+            _property.find("seqPrefix").asString().c_str(),
+            _seqCount
+            );
+        _dataOutFile = fopen(outFileName,"w");
+        if ( _dataOutFile == 0 ) {
+            g_print ("could not open image 0 table out file for writing");
+            return false;
+        }
+        return true;
+    }
 
     void run () {
         g_print ("image 0 streaming thread starting....\n");
+		unsigned int imgCount = 1;
         while ( ! isStopping() ) {
             // read data
             readImg0();
+			if ( _readFirstStamp ) {
+				_firstStamp = _img0Stamp.getTime();
+				_readFirstStamp = false;
+			}
             // update status bar: what is the current streaming frequency?
             _tick[ ((++_timeTop==10)?(_timeTop=0):_timeTop) ] = Time::now() - _prev;
             _prev = Time::now();
@@ -353,32 +379,62 @@ public:
                 )/10.0);
             // save data to disc
             char outFileName[200];
-            sprintf(outFileName, "%s%s_img0.%4d.dat",
-                _property.find("seqPath").asString(),
-                _property.find("seqPrefix").asString(),
-                _seqCount++
+            sprintf(outFileName, "%s\\%s.seq%02d.%04d.img0.png",
+                _property.find("seqPath").asString().c_str(),
+                _property.find("seqPrefix").asString().c_str(),
+                _seqCount, imgCount++
                 );
 //            _img0.save(outFileName);
+            fprintf(_dataOutFile, "%3.3g %s\n", _img0Stamp.getTime()-_firstStamp, outFileName);
 		}
         g_print ("image 0 streaming thread stopping....\n");
     }
 
+    void threadRelease() {
+        fclose(_dataOutFile);
+		_readFirstStamp = true;
+		_seqCount++;
+    }
+
 private:
+    FILE* _dataOutFile;
     int _seqCount;
     double _tick[10], _prev;
     int _timeTop;
+	double _firstStamp;
+	bool _readFirstStamp;
 } img0StreamingThread;
 
 class _img1StreamingThread : public Thread {
 public:
 
-    _img1StreamingThread() : _timeTop(0), _seqCount(1) {}
+    _img1StreamingThread() : _timeTop(0), _seqCount(1), _readFirstStamp(true) {}
+
+    bool threadInit() {
+        char outFileName[200];
+        sprintf(outFileName, "%s\\%s.seq%02d.img1.dat",
+            _property.find("seqPath").asString().c_str(),
+            _property.find("seqPrefix").asString().c_str(),
+            _seqCount
+            );
+        _dataOutFile = fopen(outFileName,"w");
+        if ( _dataOutFile == 0 ) {
+            g_print ("could not open image 1 table out file for writing");
+            return false;
+        }
+        return true;
+    }
 
     void run () {
         g_print ("image 1 streaming thread starting....\n");
+		unsigned int imgCount = 1;
         while ( ! isStopping() ) {
             // read data
             readImg1();
+			if ( _readFirstStamp ) {
+				_firstStamp = _img1Stamp.getTime();
+				_readFirstStamp = false;
+			}
             // update status bar: what is the current streaming frequency?
             _tick[ ((++_timeTop==10)?(_timeTop=0):_timeTop) ] = Time::now() - _prev;
             _prev = Time::now();
@@ -388,20 +444,30 @@ public:
                 )/10.0);
             // save data to disc
             char outFileName[200];
-            sprintf(outFileName, "%s%s_img1.%4d.dat",
-                _property.find("seqPath").asString(),
-                _property.find("seqPrefix").asString(),
-                _seqCount++
+            sprintf(outFileName, "%s\\%s.seq%02d.%04d.img1.png",
+                _property.find("seqPath").asString().c_str(),
+                _property.find("seqPrefix").asString().c_str(),
+                _seqCount, imgCount++
                 );
 //            _img1.save(outFileName);
+            fprintf(_dataOutFile, "%3.3g %s\n", _img1Stamp.getTime()-_firstStamp, outFileName);
 		}
         g_print ("image 1 streaming thread stopping....\n");
     }
 
+    void threadRelease() {
+        fclose(_dataOutFile);
+		_readFirstStamp = true;
+		_seqCount++;
+    }
+
 private:
+    FILE* _dataOutFile;
     int _seqCount;
     double _tick[10], _prev;
     int _timeTop;
+	double _firstStamp;
+	bool _readFirstStamp;
 } img1StreamingThread;
 
 // -----------------------------
@@ -602,14 +668,14 @@ void create_interface (void)
 	camera0Buf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 192, 136);
     camera0Image = gtk_image_new_from_pixbuf (camera0Buf);
     gtk_widget_show (camera0Image);
-    gtk_fixed_put (GTK_FIXED (fixed), camera0Image, 232, 136);
+    gtk_fixed_put (GTK_FIXED (fixed), camera0Image, 232, 0);
     gtk_widget_set_size_request (camera0Image, 192, 136);
     gtk_widget_set_sensitive (camera0Image, TRUE);
 
 	camera1Buf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 192, 136);
     camera1Image = gtk_image_new_from_pixbuf (camera1Buf);
     gtk_widget_show (camera1Image);
-    gtk_fixed_put (GTK_FIXED (fixed), camera1Image, 232, 0);
+    gtk_fixed_put (GTK_FIXED (fixed), camera1Image, 232, 136);
     gtk_widget_set_size_request (camera1Image, 192, 136);
     gtk_widget_set_sensitive (camera1Image, TRUE);
 
