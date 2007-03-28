@@ -1,9 +1,10 @@
-// come scrivo un'immagine su file?
+// . ripulire codice dei tre thread di stream: e' tutto duplicato
+// . come scrivo un'immagine su file?
+// . come mandare le immagini di yarpdev su un altro network (i.e., 10.0.1.*) ?
+// . a quel punto, mettere un ratethread nel picolodevicedriver piuttosto che thread+delay?
 
 // investigare strani comportamenti di frequenze di streaming. i dati vanno piu`
 // veloci se su macchine diverse, le immagini... il contrario!
-// . come mandare le immagini di yarpdev su un altro network (i.e., 10.0.1.*) ?
-// . mettere un ratethread nel picolodevicedriver?
 // . provare fra atlas e macchina del setup babybot (cioe` su rete 43 e 10)
 
 // ----------------------------------------------
