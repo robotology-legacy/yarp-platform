@@ -1,5 +1,3 @@
-// . ottenere frequenze ragionevoli (prova atlas+macchina10)
-
 // ----------------------------------------------
 // headers
 // ----------------------------------------------
