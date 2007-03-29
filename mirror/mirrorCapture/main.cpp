@@ -1,8 +1,4 @@
-
 // . ottenere frequenze ragionevoli (prova atlas+macchina10)
-// . a quel punto, mettere un ratethread nel picolodevicedriver piuttosto che thread+delay?
-
-// . incredibile comportamento delle versioni non debug...
 
 // ----------------------------------------------
 // headers
@@ -485,16 +481,15 @@ gboolean refreshData (void*)
     // update textView using numerical data
     _dataSem.wait();
     sprintf(_displayed, "\
-Pressure sensors %5d %5d %5d %5d\n\
-Tracker0 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
-Tracker1 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
+Tr0 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
+Tr1 %3.2f %3.2f %3.2f %3.2f %3.2f %3.2f\n\
 Gaze %1d %3.2f %3.2f\n\
-Glove:\n\
+Glove\n\
 %3d %3d %3d  %3d %3d %3d\n\
 %3d %3d %3d  %3d %3d %3d\n\
 %3d %3d %3d\n\
-%3d %3d %3d %3d - %3d %3d %3d",
-		    _data.pressureData.channelA, _data.pressureData.channelB, _data.pressureData.channelC, _data.pressureData.channelD,
+%3d %3d %3d %3d - %3d %3d %3d\n\
+Press %5d %5d %5d %5d",
 			_data.tracker0Data.x, _data.tracker0Data.y, _data.tracker0Data.z, _data.tracker0Data.azimuth,_data.tracker0Data.elevation, _data.tracker0Data.roll,
 			_data.tracker1Data.x, _data.tracker1Data.y, _data.tracker1Data.z, _data.tracker1Data.azimuth,_data.tracker1Data.elevation, _data.tracker1Data.roll,
 			_data.GTData.valid, _data.GTData.pupilX, _data.GTData.pupilY,
@@ -504,7 +499,8 @@ Glove:\n\
 			_data.gloveData.ring[0], _data.gloveData.ring[1], _data.gloveData.ring[2],
 			_data.gloveData.pinkie[0], _data.gloveData.pinkie[1], _data.gloveData.pinkie[2],
 			_data.gloveData.abduction[0], _data.gloveData.abduction[1], _data.gloveData.abduction[2], _data.gloveData.abduction[3],
-			_data.gloveData.palmArch, _data.gloveData.wristPitch, _data.gloveData.wristYaw
+			_data.gloveData.palmArch, _data.gloveData.wristPitch, _data.gloveData.wristYaw,
+		    _data.pressureData.channelA, _data.pressureData.channelB, _data.pressureData.channelC, _data.pressureData.channelD
 			);
     _dataSem.post();
     GtkTextBuffer* buf = gtk_text_view_get_buffer((GtkTextView*)numDataTextView);
