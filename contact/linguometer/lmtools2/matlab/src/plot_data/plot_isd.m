@@ -8,7 +8,7 @@ end
 
 mtSimpleFig(bfig);
 plot(data.t, ISD, 'r');
-string_title = sprintf('ISD: sensors %d and %d\n', sensor_a, sensor_b);
+string_title = sprintf('ISD - Sensors %d and %d\nMean %.3f, Std %.3f', sensor_a, sensor_b, mean(ISD), std(ISD));
 title(string_title);
 ylabel(['Space [' AG.pars.su ']']);
 xlabel(['Time [' data.tu ']']);
