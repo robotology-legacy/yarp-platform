@@ -5,16 +5,16 @@ root_data   = 'ContactData/Experiments';
 file_amp_t 	= '~/RRRR/experiment_XXXX/AG/Sweeps/amps/SSSS.amp';
 file_pos_t 	= '~/RRRR/experiment_XXXX/AG/Sweeps/lm_pos/SSSS.mat';
 % ---------------------------------------------------------------------------- %
-if (1)
+if (0)
 	exper		= 12;
 	sweep 		= 1;
 	file_pos_t 	= '~/RRRR/experiment_XXXX/AG/Sweeps/m_rawpos/SSSS.mat';
 	root_t		= root_cache;
 end
 
-if (0)
+if (1)
 	exper		= 1;
-	sweep 		= 1;
+	sweep 		= 3;
 	root_t		= root_data;
 end
 
@@ -47,14 +47,19 @@ if (data_amp.samples == data_pos.samples)
 end
 % -----------------------------------------------------------------------------%
 % --- Plot AMP and POS --- 
-if (0)
+if (1)
 	plot_pos (AG, data, sweep, 3000);
 	plot_amp (AG, data, sweep, 4000);
 	
 	plot_pos_3dc(AG, data, sweep,  1, 1001);
 end
 % -----------------------------------------------------------------------------%
-if (1)
+if (0)
 	plot_pos_3dp
+end
+% ---------------------------------------------------------------------------- %
+% --- ISD test --- 
+if (1)
+	ISD = plot_isd (AG, data, sweep, 10, 12, 2);
 end
 
