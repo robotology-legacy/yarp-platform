@@ -2,7 +2,7 @@ function mtPlotFFT (X, sf, bfig)
 
 mtSimpleFig(bfig);
 L = length(X);
-NFFT = 2^nextpow2(L);
+NFFT = 2^nextpow2(L)
 Y = fft(X,NFFT)/L;
 f = sf/2*linspace(0,1,NFFT/2);
 plot(f,2*abs(Y(1:NFFT/2))) 
