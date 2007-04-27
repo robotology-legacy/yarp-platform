@@ -1,0 +1,12 @@
+#!/bin/bash
+# LTC_S0
+# lmtools2 toolchain: step 0
+# Cleans lmtools2 experiment folder
+
+#rm -v cache/us.wav
+#rm -v config/sequences.txt
+rm -v config/sequence_*.txt
+rm -v config/words_*.txt
+rm -v cache/sequence_*.wav
+rm -v cache/segment_*.wav
+rm -v log/*

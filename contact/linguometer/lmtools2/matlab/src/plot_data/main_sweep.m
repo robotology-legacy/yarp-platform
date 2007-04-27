@@ -14,7 +14,7 @@ end
 
 if (1)
 	exper		= 1;
-	sweep 		= 3;
+	sweep 		= 5;
 	root_t		= root_data;
 end
 
@@ -49,10 +49,14 @@ end
 % --- Plot AMP and POS --- 
 if (1)
 	plot_pos (AG, data, sweep, 3000);
-	plot_amp (AG, data, sweep, 4000);
-	
-	plot_pos_3dc(AG, data, sweep,  1, 1001);
+	%plot_amp (AG, data, sweep, 4000);
 end
+% -----------------------------------------------------------------------------%
+% --- Plot Cluster View --- 
+	plot_pos_3dc(AG, data, sweep,  1:3, 1010);
+	plot_pos_3dc(AG, data, sweep,  4:5, 1011);
+	plot_pos_3dc(AG, data, sweep,  6:9, 1012);
+	plot_pos_3dc(AG, data, sweep,  10:12, 1013);
 % -----------------------------------------------------------------------------%
 if (0)
 	plot_pos_3dp
@@ -60,6 +64,6 @@ end
 % ---------------------------------------------------------------------------- %
 % --- ISD test --- 
 if (1)
-	ISD = plot_isd (AG, data, sweep, 10, 12, 2);
+	ISD = plot_isd (AG, data, sweep, 10, 12, 1002);
 end
 

@@ -1,0 +1,25 @@
+#!/bin/bash
+# lmtools2 toolchain: step 1
+# Creates $US/WAV file in order to hand-detect
+# AG500 sequences.
+# Sequences do need to be written in $SEQS_TXT
+
+# export US PCM stream
+US_DV="root/US/stream.dv"
+US_WAV="cache/us.wav"
+if [ -e $US_WAV ]; then
+	echo "File $US_WAV exists"
+else
+	ffmpeg -i $US_DV $US_WAV
+fi
+
+# create sequences.txt template
+SEQS_TXT="config/sequences.txt"
+if [ -e $SEQS_TXT ]; then
+	echo "File $SEQS_TXT exists"
+else
+	for i in `seq 0 8`;
+		do
+		echo "$i//" >> $SEQS_TXT
+	done
+fi

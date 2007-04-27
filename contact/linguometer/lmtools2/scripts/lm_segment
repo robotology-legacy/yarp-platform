@@ -1,0 +1,74 @@
+#! /usr/bin/perl
+# LTC_S4
+# lmtools2 toolchain: step 2
+# Creates config/sequence_XXXX.txt files used 
+# in LTC_S3 to perform per-sequence word 
+# segmentation.
+
+use Getopt::Long;
+use File::Copy;
+use Cwd;
+use Term::ANSIColor;
+use Sys::Hostname;
+
+sub mImportFile
+{
+	my $file = $_[0];
+	
+	open(FID, "< $file") or die "Error ($file): $!\n";
+	my @data = <FID>;
+	close (FID);
+
+	return @data;
+}
+
+
+
+$file_dv = "root/US/stream.dv";
+$words_path = "config";
+$words_regex = "words_*";
+@files_words = `ls -1 $words_path/$words_regex`;
+
+foreach $file_words (@files_words) {
+	chomp($file_words);
+	print "$file_words\n";
+		
+	$file_words =~ /^(.*)(_)(.*)(.txt)$/;
+	$seq_idx = $3;
+
+	@words = mImportFile($file_words);
+	foreach $word (@words) {
+		chomp($word);
+		#print "$word\n";
+
+		$word =~ /^(.*)(\/)(.*)(\/)(.*)$/;
+		$word_idx = $1;
+		$word_f0  = $3;
+		$word_df  = $5;
+		
+		$word_idxf = sprintf("%.4d", $word_idx);
+		print "Word $word_idx, ";
+		print "f0 = $word_f0, ";
+		print "df = $word_df\n";
+		$file_word_log = "seq_" . $seq_idx . "/" . "word_" . $word_idxf . ".log";
+		$file_word_dv  = "seq_" . $seq_idx . "/" . "word_" . $word_idxf . ".dv";
+		$file_word_wav = "seq_" . $seq_idx . "/" . "word_" . $word_idxf . ".wav";
+		print "  File DV:  $file_word_dv\n";
+		print "  File WAV: $file_word_wav\n";
+
+		$shutup = " 1>/dev/null 2>/dev/null";
+		system("dd if=$file_dv of=$file_word_dv bs=144000 skip=$word_f0 count=$word_df $shutup");
+		system("ffmpeg -i $file_word_dv $file_word_wav $shutup");
+
+		open(FID, "> $file_word_log") or die "Error ($file): $!\n";
+		print FID "$word_idx/$word_f0/$word_df\n";
+		close (FID);
+
+	}
+
+
+}
+
+
+
+

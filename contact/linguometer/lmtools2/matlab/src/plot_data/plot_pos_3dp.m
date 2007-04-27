@@ -1,7 +1,7 @@
 %data_max = max(max(max(data.pos)));
 %data_min = min(min(min(data.pos)));
 
-export_movie = 0;
+export_movie = 1;
 fig   = 110;
 frame = 1;
 if (export_movie)

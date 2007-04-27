@@ -14,7 +14,6 @@
 #	include "avformat.h"
 #endif
 
-
 namespace mObjectDV2Tools {
 	/*
 	bool pts2time (int64_t pts) {
@@ -91,23 +90,29 @@ namespace mObjectDV2Tools {
 	}
 	 
 	 int64_t samples2pts (int samples, int sampleRate) {
-		if (samples < 0)
+		if (samples < 0 || sampleRate < 0)
 			return -1;
 		
-		/* This does need to be fixed...
-		 */
 		return (int64_t)((double)samples / (double)sampleRate
 				* AV_TIME_BASE);
 	}
+	 
+	 int pts2samples (int64_t pts, int sampleRate) {
+		if (pts < 0 || sampleRate < 0)
+			return -1;
+		
+		return (pts*sampleRate)/AV_TIME_BASE;
+	}
+
 	bool pts2time (int64_t pts) {
 		int hours = 0, mins = 0, 
 			secs = 0, us = 0;
 		if (!pts2time(pts, hours, mins, secs, us))
 			return false;
-		printf("%02d:%02d:%02d.%.2d",
+		
+		printf("%02d:%02d:%02d.%01d",
 				hours, mins, secs, (10 * us) / AV_TIME_BASE);
 		return true;
 	}
-
 };
 #endif

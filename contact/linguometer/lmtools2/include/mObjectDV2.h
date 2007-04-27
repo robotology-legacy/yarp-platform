@@ -408,7 +408,7 @@ bool mObjectDV2::showProgress (int64_t pts) {
 	if (!mObjectDV2Tools::pts2time(pts, hours, mins, secs, us))
 		return false;
 
-	fprintf(stderr, " Decoding at time: %02d:%02d:%02d.%03d  \r",
+	fprintf(stderr, " Decoding at time: %02d:%02d:%02d.%01d  \r",
 		hours, mins, secs, (10 * us) / AV_TIME_BASE);
 	fflush(stderr);
 	return true;
@@ -444,10 +444,12 @@ int mDecodeDV (char* filename, int64_t pts0, int64_t pts1, mObjectPCM<int16_t> *
 	/* It's time to pass the file we
 	 * wish to work with to the decoder
 	 */
-	stream->setFile(filename);
+	if (!stream->setFile(filename))
+		return -1;
 	
 	/* This method bootstraps the decoder itself */
-	stream->init();
+	if (!stream->init())
+		return -1;
 
 	/* We are working with a DV file.
 	 * This means that we need to handle

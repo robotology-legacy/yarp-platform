@@ -6,7 +6,7 @@ frame = 1;
 for sample = 1:8:length(data.pos)
 	clf (100)
 	hold on;
-	for sensor = 1:12
+	for sensor = [1 2 3 4 5 6 7 8 9 10 12]
 		X = data.pos(sample, 1, sensor);		
 		Y = data.pos(sample, 2, sensor);		
 		Z = data.pos(sample, 3, sensor);
@@ -23,14 +23,14 @@ for sample = 1:8:length(data.pos)
 	xlabel('x');
 	ylabel('y');
 	zlabel('z');
-	view(0,90);
+	%view(0,90);
 	drawnow
 	%F(frame) = getframe(gcf);
 	frame = frame + 1;
 	if (sample >= 100)
 		%break;
 	end
-	%pause (1/25);
+	pause (1/25);
 end
 
 break;

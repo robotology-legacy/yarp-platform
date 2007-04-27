@@ -22,6 +22,12 @@ if (1) % :-(
 	sweep 		= 2;
 	root_t		= root_cache;
 end
+
+if (1) % :-(
+	exper		= 1;
+	sweep 		= 1;
+	root_t		= root_cache;
+end
 % ---------------------------------------------------------------------------- %
 sweep_t 	= sprintf('%.4d', sweep);
 exper_t 	= sprintf('%.4d', exper);

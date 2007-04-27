@@ -243,7 +243,7 @@ bool mObjectEN2::showProgress (int64_t pts) {
 	if (!mObjectDV2Tools::pts2time(pts, hours, mins, secs, us))
 		return false;
 
-	fprintf(stderr, " Encoding at time: %02d:%02d:%02d.%03d  \r",
+	fprintf(stderr, " Encoding at time: %02d:%02d:%02d.%01d  \r",
 		hours, mins, secs, (10 * us) / AV_TIME_BASE);
 	fflush(stderr);
 	return true;

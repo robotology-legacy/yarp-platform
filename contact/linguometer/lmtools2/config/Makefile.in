@@ -1,0 +1,33 @@
+CC=g++
+OBJS = $(patsubst %.cpp, %.o, $(wildcard *.cpp))
+
+default: $(MAIN)
+
+%.o: %.cpp
+	@echo "> Compiling"
+	$(CC) $(CFLAGS) -c $< -o $@ $(FLAGS)
+
+$(MAIN): $(OBJS)
+	@echo "> Linking"
+	$(CC) $(CFLAGS) $(OBJS) -o $(MAIN) $(LIBS) 
+
+clean:
+	@echo "> Cleaning"
+	@rm -f $(OBJS)
+	@rm -f $(MAIN) 
+	@rm -f ../../bin/$(MAIN)
+	@rm -f core*
+
+run:
+	@echo "> Executing"
+	./$(MAIN)
+
+install:
+	@echo "> Installing"
+	@cp  $(MAIN) ../../bin/
+	@chmod  750 ../../bin/$(MAIN)
+
+all: clean default install
+
+work:
+	gvim -geometry 170x45 -O2 main.cpp ../../include/*.h

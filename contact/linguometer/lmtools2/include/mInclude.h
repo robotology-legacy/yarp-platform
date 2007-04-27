@@ -35,9 +35,9 @@ using namespace std;
 
 
 
+#define LMTOOLS_P			"lmtools2"
+#define LMTOOLS_V			"0.0.1"
 
-
-/* I should perform some cleaning over here... */
 #define AUTHOR				"M. Tavella"
 #define MAIL 				"michele@liralab.it"
 #define DISCLAIMER 			"Copyright (C) 2006 Michele Tavella\n \
@@ -47,6 +47,8 @@ see the file named README in the mProcessDV distribution.\n \
 Homepage: http://mt.homelinux.org/mt\n \
 e-mail:   michele@liralab.it\n"
 
+
+/* I should perform some cleaning over here... */
 #define PROJECT				"lmtools - CONTACT Linguometer Tools"
 
 #define PROJECT_MPDV 		"mProcessDV"
