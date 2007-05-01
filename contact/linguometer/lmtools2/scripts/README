@@ -1,0 +1,7 @@
++ root/AG/Sweeps/wav/NNNN.wav
+	cache/ag_sequence_MMMM.wav
+	Where MMMM = NNNN - 1
+
++ root/WS/*.log
+	config/sequence_MMMM.wdb
+	
