@@ -16,7 +16,9 @@ clean:
 	@rm -f $(OBJS)
 	@rm -f $(MAIN) 
 	@rm -f ../../bin/$(MAIN)
-	@rm -f core*
+	@rm -f temp/*
+	@# Assuming I'm not running any threaded code...
+	@rm -f core
 
 run:
 	@echo "> Executing"
@@ -30,4 +32,10 @@ install:
 all: clean default install
 
 work:
-	gvim -geometry 170x45 -O2 main.cpp ../../include/*.h
+	gvim -geometry 170x45 -O2 ../../include/*.h `find ../../ -name "main.cpp"`
+
+debugger:
+	@# Assuming I'm not running any threaded code...
+	ddd $(MAIN) core
+
+test: clean default run

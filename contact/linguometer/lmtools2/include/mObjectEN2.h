@@ -55,7 +55,7 @@ class mObjectEN2 : public mClass {
 	
 	bool isDone(unsigned int audioSamples, unsigned int videoFrames = 0);
 	bool setFormat(void);
-	bool setStreams(bool verbose = true);
+	bool setStreams(void);
 
 	private:
 
@@ -153,7 +153,7 @@ bool mObjectEN2::setFormat(void) {
 	return true;	
 }
 
-bool mObjectEN2::setStreams(bool verbose) {
+bool mObjectEN2::setStreams(void) {
 	/*
 	if (_streamAudio != NULL)
 		delete _streamAudio;
@@ -167,10 +167,11 @@ bool mObjectEN2::setStreams(bool verbose) {
 
     if (av_set_parameters(_formatCtx, NULL) < 0)
 		return false;
-    
-	if (verbose)
-		dump_format(_formatCtx, 0, _filename, 1);
-    
+
+#ifdef VERBOSE
+	dump_format(_formatCtx, 0, _filename, 1);
+#endif
+
 	if (_streamVideo)
         openVideo();
     if (_streamAudio)
@@ -242,8 +243,8 @@ bool mObjectEN2::showProgress (int64_t pts) {
 
 	if (!mObjectDV2Tools::pts2time(pts, hours, mins, secs, us))
 		return false;
-
-	fprintf(stderr, " Encoding at time: %02d:%02d:%02d.%01d  \r",
+	
+	fprintf(stderr, "Encoding at time: %02d:%02d:%02d.%01d  \r",
 		hours, mins, secs, (10 * us) / AV_TIME_BASE);
 	fflush(stderr);
 	return true;

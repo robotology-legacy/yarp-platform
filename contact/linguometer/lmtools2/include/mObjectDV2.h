@@ -54,7 +54,10 @@ class mObjectDV2 : public mClass {
 	int getChannels (void);
 	int getSampleRate (void);
 	int getSampleFormat (void);
- 
+
+	/* This method is buggy.
+	 * Maybe I'll drop it.
+	 */
 	int64_t getPTS (AVPacket *packet);
 	int64_t getPTS (AVPacket *packet, int id);
 	int64_t getVideoPTS (AVPacket *packet);
@@ -221,8 +224,11 @@ bool mObjectDV2::init(void) {
     result &= searchCodecs();
     result &= openCodecs();
     result &= allocBuffers();
-	
-	// dump_format (_formatCtx, 0, _filename, false);
+
+#ifdef VERBOSE
+	dump_format (_formatCtx, 0, _filename, false);
+#endif
+
     return result;
 }
 
@@ -255,13 +261,16 @@ bool mObjectDV2::searchStreams(void) {
 		_streamAudio = true;
 	if (_streamVideoID != -1)
 		_streamVideo = true;
-    return true;
+	return true;
 }
 
 
 bool mObjectDV2::searchCodecs(void) {
+	/* Bug!
+	 *
 	if (!_streamAudio && !_streamVideo)
 		return false;
+	*/
 
 	if (_streamVideo) {
 		_codecCtxVideo = _formatCtx->streams[_streamVideoID]->codec;
@@ -307,11 +316,19 @@ bool mObjectDV2::allocBuffers(void) {
 }
 
 bool mObjectDV2::hasVideo(void) {
-	return _streamVideo > 0 ? true : false;
+	/* Bug: 
+	 * 	was > 0
+	 * 	is > -1
+	 */
+	return _streamVideo > -1 ? true : false;
 };
 
 bool mObjectDV2::hasAudio(void) {
-	return _streamAudio > 0 ? true : false; 
+	/* Bug: 
+	 * 	was > 0
+	 * 	is > -1
+	 */
+	return _streamAudio > -1 ? true : false; 
 };
 
 int mObjectDV2::getVideoID(void) {
@@ -368,7 +385,7 @@ int mObjectDV2::getChannels(void) {
 	return hasAudio() ? _codecCtxAudio->channels : -1;
 }
 
-int64_t mObjectDV2::getPTS (AVPacket *packet) {
+int64_t mObjectDV2::getPTS(AVPacket *packet) {
 	int id = 0;
 	
 	if (hasVideo())
@@ -378,10 +395,10 @@ int64_t mObjectDV2::getPTS (AVPacket *packet) {
 	else
 		return -1;
 
-	return getPTS (packet, id);	
+	return getPTS(packet, id);	
 }
 
-int64_t mObjectDV2::getPTS (AVPacket *packet, int id) {
+int64_t mObjectDV2::getPTS(AVPacket *packet, int id) {
 	if (id == _streamAudioID || id == _streamVideoID)
 		return av_rescale_q (packet->pts, 
 				_formatCtx->streams[id]->time_base, 
@@ -391,24 +408,24 @@ int64_t mObjectDV2::getPTS (AVPacket *packet, int id) {
 }
 
 
-int64_t mObjectDV2::getVideoPTS (AVPacket *packet) { 
+int64_t mObjectDV2::getVideoPTS(AVPacket *packet) { 
 	return getPTS(packet, getVideoID()); 
 };
 
 
-int64_t mObjectDV2::getAudioPTS (AVPacket *packet) { 
+int64_t mObjectDV2::getAudioPTS(AVPacket *packet) { 
 	return getPTS(packet, getAudioID()); 
 };
 	
 
-bool mObjectDV2::showProgress (int64_t pts) {
+bool mObjectDV2::showProgress(int64_t pts) {
 	int hours = 0, mins = 0, 
 			   secs = 0, us = 0;
 
 	if (!mObjectDV2Tools::pts2time(pts, hours, mins, secs, us))
 		return false;
 
-	fprintf(stderr, " Decoding at time: %02d:%02d:%02d.%01d  \r",
+	fprintf(stderr, "Decoding at time: %02d:%02d:%02d.%01d  \r",
 		hours, mins, secs, (10 * us) / AV_TIME_BASE);
 	fflush(stderr);
 	return true;
@@ -437,7 +454,7 @@ bool mObjectDV2::seek(int64_t pts)
 }
 
 
-int mDecodeDV (char* filename, int64_t pts0, int64_t pts1, mObjectPCM<int16_t> *pcm) {
+int mDV2PCM (char* filename, int64_t pts0, int64_t pts1, mObjectPCM<int16_t> *pcm) {
 	/* Let's create a new decoder */
 	mObjectDV2 *stream = new mObjectDV2();
 	
@@ -459,7 +476,7 @@ int mDecodeDV (char* filename, int64_t pts0, int64_t pts1, mObjectPCM<int16_t> *
 	/* Let's check if the stream is A+V */
 	if (!stream->hasAudio() || !stream->hasVideo())
 		return -1;
-	
+
 	/* Let's create a custom PCM stream */
 	///////int channels = stream->getChannels();
 	int sample_format = stream->getSampleFormat();
@@ -547,10 +564,62 @@ int mDecodeDV (char* filename, int64_t pts0, int64_t pts1, mObjectPCM<int16_t> *
 			
 				// Develop //
 				pts = stream->getPTS(packet);
-				if(pts >= pts1 && pts1 > pts0)
-					break;
+					if(pts >= pts1 && pts1 > pts0)
+						break;
 			}
 	}
+	delete stream;
+
+
+	return 0;
+
+}
+
+int mAudio2PCM (char* filename, int64_t pts0, int64_t pts1, mObjectPCM<int16_t> *pcm) {
+	mObjectDV2 *stream = new mObjectDV2();
+	
+	if (!stream->setFile(filename))
+		return -1;
+	if (!stream->init())
+		return -1;
+	if (!stream->hasAudio())
+		return -1;
+	
+	unsigned int channels = stream->getChannels();
+	
+	int sample_format = stream->getSampleFormat();
+	if (sample_format != 2) 
+		return -1;
+
+	AVPacket *packet = new AVPacket;
+
+	int16_t *buffer_PCM = NULL;
+
+	int bytes_PCM = 0;
+	int bytes_PCMr = 0;
+	
+	int cf_PCM = sizeof(int16_t);
+
+	stream->allocBufferPCM (&buffer_PCM, bytes_PCM);
+
+	int64_t pts = 0;
+	if (pts0 > 0)
+		stream->seek(pts0);
+	while (stream->readFrame(packet)) {
+		if (stream->getAudioFrame(packet, &buffer_PCM, bytes_PCMr)) 
+			if (bytes_PCMr) {
+				if (channels == 2)
+					pcm->AddSamplesLR(buffer_PCM, bytes_PCMr/cf_PCM);
+				else 
+					pcm->AddSamplesM(buffer_PCM, bytes_PCMr/cf_PCM);
+				stream->showProgress (stream->getAudioPTS(packet));
+			}
+		pts = stream->getAudioPTS(packet);
+		if(pts0 > 0 && pts1 > 0)
+			if(pts >= pts1 && pts1 > pts0)
+				break;
+	}
+	cout << endl;
 	delete stream;
 
 

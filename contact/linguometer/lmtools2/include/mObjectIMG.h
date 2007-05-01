@@ -19,8 +19,6 @@ using namespace std;
 #define MOBJECTIMG_STD_HEIGHT	240
 #define MOBJECTIMG_STD_BPP		8
 
-//#define VERBOSE
-
 #define MIMAGE_RGB				3
 #define MIMAGE_G				1
 

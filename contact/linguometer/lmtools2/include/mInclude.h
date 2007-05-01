@@ -23,15 +23,8 @@ using namespace std;
 #define	SAT_POS_int16	+32767
 #define	SAT_NEG_int16	-32768
 
-
-
-
-
-
-
-
-
-
+#define	SAT_POS			SAT_POS_int16
+#define	SAT_NEG			SAT_NEG_int16
 
 
 
@@ -46,6 +39,10 @@ For information about the terms of redistribution,\n \
 see the file named README in the mProcessDV distribution.\n \
 Homepage: http://mt.homelinux.org/mt\n \
 e-mail:   michele@liralab.it\n"
+
+void welcome (void) {
+	printf ("%s v%s by %s (%s)\n\n", LMTOOLS_P, LMTOOLS_V, AUTHOR, MAIL);
+}
 
 
 /* I should perform some cleaning over here... */

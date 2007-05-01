@@ -53,6 +53,6 @@ foreach $line (@seqs) {
 	print "  Log:      $file_logt\n";	# pdetect std output
 	print "  Segment:  $file_segt\n";
 	print "  Sequence: $file_seqt\n";
-
-	system("pdetect --stream $file_dv --t0 $t0 --t1 $t1 --log $file_txtt --seg $file_segt --seq $file_seqt 1> $file_logt");
+	$cmd = "pdetect --stream $file_dv --t0 $t0 --t1 $t1 --log $file_txtt --seg $file_segt --seq $file_seqt 1> $file_logt";
+	system($cmd);
 }

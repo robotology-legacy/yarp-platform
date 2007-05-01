@@ -3,6 +3,22 @@
  * web   http://mt.homelinux.org 
  */
 
+
+/* This class has few pros and few cons.
+ * o Pros: 
+ *   + simple to use
+ *   + data is handled correctly, with no bugs ;-)
+ *   + good abstraction, mainly used in 
+ *     codecs/decoders
+ * o Cons:
+ *   - slow access to the data
+ *   - for loops should be replaced my memcpy etc.
+ *   - the interface is not compliant with the other
+ *     lmtools2 interfaces
+ *   - dynamic allocation of buffers is not present,
+ *     that means: this class uses a lot of ram.
+ *     Use Trim() to trim your data and release some memory.
+ */
 #ifndef MOBJECTPCM_H
 #define MOBJECTPCM_H
 
@@ -109,6 +125,7 @@ class mObjectPCM : public mClass
 		void Trim (void);
 		void ExportPCM (char *filename = "audio.pcm");
 		bool ExportBuffers (PCMBits **bufferL, PCMBits **bufferR, unsigned int &samples);	
+		bool ExportBuffer (PCMBits **bufferM, unsigned int &samples);	
 
 	private:
 		PCMBits ** AllocStream (int channels, int samples);
@@ -463,6 +480,11 @@ void mObjectPCM<PCMBits>::ExportPCM (char *filename)
 template <typename PCMBits>  
 bool mObjectPCM<PCMBits>::ExportBuffers (PCMBits **bufferL, PCMBits **bufferR, unsigned int &samples)
 {
+	/* Check:
+	if (M != 0)
+		return false;
+	*/
+
 	assert (*bufferR == NULL);
 	assert (*bufferL == NULL);
 	assert (_streamIDX[R] == _streamIDX[L]);
@@ -481,5 +503,22 @@ bool mObjectPCM<PCMBits>::ExportBuffers (PCMBits **bufferL, PCMBits **bufferR, u
 	return true;
 }
 
+template <typename PCMBits>  
+bool mObjectPCM<PCMBits>::ExportBuffer (PCMBits **bufferM, unsigned int &samples)
+{
+	if (M != 0)
+		return false;
+
+	assert (*bufferM == NULL);
+
+	samples = _streamIDX[M];
+
+	(*bufferM) = (PCMBits *)malloc (samples * sizeof (PCMBits));
+
+	for (unsigned int s = 0; s < samples; s++) 
+		(*bufferM)[s] = _stream [M][s];
+
+	return true;
+}
 
 #endif

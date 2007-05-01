@@ -2,22 +2,14 @@
  * email michele@liralab.it
  * web   http://mt.homelinux.org 
  */
-
-
 #include "mObjectDV2.h"
 #include "mObjectEN2.h"
 #include "mObjectPCM.h"
 #include "mObjectIMG.h"
 #include "mInclude.h"
+#include "mPeakTools.h"
 
-// Sync --> Left Ch.
-// Speech --> Right Ch.
-#define	SAT_POS			SAT_POS_int16
-#define	SAT_NEG			SAT_NEG_int16
-
-#define	SAT_TH			0.95
 #define WD_PEAK_TH		64 + 2
-#define WD_MAX			256
 
 #ifdef USE_CONTACT_CACHE
 #	define FILE_US_STREAM	"/home/michele/ContactCache/experiment_0003/US/stream.dv"
@@ -29,6 +21,8 @@
 
 #define FILE_US_PCM		"/home/michele/ContactCache/pcm_out.wav"
 
+
+
 /* According to the Cartens', the AG500 control pc starts/stops recording
  * data from the 12 sensors as soon as a thread detects that the sync
  * signal reaches saturation.
@@ -38,15 +32,15 @@
  * in the left channel of the decoded US stream.
  * Samples values are stored in s0 and s1.
  */
-void detect_AG_segment (mObjectPCM<int16_t> *pcm, int &s0, int &s1) {
+void detect_AG_segment(mObjectPCM<int16_t> *pcm, int &s0, int &s1) {
 	s0 = -1;
 	s1 = -1;
-	for (unsigned int s = 0; s < pcm->getSamples(); s++) {
-		if (pcm->getL(s) < SAT_TH*SAT_NEG && s0 == -1)
+	for(unsigned int s = 0; s < pcm->getSamples(); s++) {
+		if(pcm->getL(s) < AG_TH*SAT_NEG && s0 == -1)
 			s0 = s;
-		else if (pcm->getL(s) > SAT_TH*SAT_POS && s1 == -1) 
+		else if(pcm->getL(s) > AG_TH*SAT_POS && s1 == -1) 
 			s1 = s;
-		if (s0 > -1 && s1 > -1)
+		if(s0 > -1 && s1 > -1)
 			break;
 	}
 	int64_t pts0 = mObjectDV2Tools::samples2pts(s0, 48000);
@@ -71,23 +65,20 @@ void detect_AG_segment (mObjectPCM<int16_t> *pcm, int &s0, int &s1) {
 	*/
 }
 
-struct WD_peaks {
-	unsigned int tot;
-	unsigned int start  [WD_MAX];	/* Peak start (in samples) */
-	unsigned int stop   [WD_MAX];	/* Peak stop (in samples) */
-	unsigned int length [WD_MAX];	/* Peak length (in samples) */
-	int16_t 	 type   [WD_MAX];	/* Peak type (+/- SAT, 0 means null) */
-};
 
-
-struct WD_word {
-	unsigned int idx;
-	unsigned int p0;			/* Peak: start */
-	unsigned int p1;			/* Peak: stop */
-	unsigned int s0;			/* Word start (in samples) */
-	unsigned int s1;			/* Word stop (in samples) */
-	unsigned int length;		/* Word length (in samples) */
-};
+void help (void) {
+	printf("Usage:\n");
+	printf("  pdetect --stream file.dv --t0 time0 --t1 time1 --log file.log\n");
+	printf("    --seg segment.wav --seq sequence.wav\n");
+	printf("  pdetect --help\n");
+	printf("Where:\n");
+	printf("  file.dv   DV file\n");
+	printf("  time0     AG start-peak position (in seconds, int value)\n");
+	printf("  time1     AG stop-peak position (in seconds, int value)\n");
+	printf("  file.log  file containing dd's segmentation parameters\n");
+	printf("Requirments:\n");
+	printf("  ffmpeg-0.4.9_p2007012 (libavcodec, libavformat)\n\n");
+}
 
 
 /* This method performs a binary treshold on the data and generates
@@ -99,7 +90,6 @@ void detect_WD_peaks (mObjectPCM<int16_t> *pcm, int s0, int s1, WD_peaks &peaksd
 	
 	memset(&peaksd, 0, sizeof(WD_peaks));
 
-
 	unsigned int samples = s1 - s0 + 1;
 	
 	/* Create  the peaks vector and memset it to 0 */
@@ -109,9 +99,9 @@ void detect_WD_peaks (mObjectPCM<int16_t> *pcm, int s0, int s1, WD_peaks &peaksd
 
 	/* Peak detection: threshold on values. */
 	for (int s = s0; s < s1; s++) {
-		if (pcm->getR(s) > SAT_TH*SAT_POS)
+		if (pcm->getR(s) > AG_TH*SAT_POS)
 			peaks[s - s0] = SAT_POS;
-		else if (pcm->getR(s) < SAT_TH*SAT_NEG)
+		else if (pcm->getR(s) < AG_TH*SAT_NEG)
 			peaks[s - s0] = SAT_NEG;
 	}
 	
@@ -182,7 +172,8 @@ void detect_WD_peaks (mObjectPCM<int16_t> *pcm, int s0, int s1, WD_peaks &peaksd
 	//mEncodePCM16(, peaks, NULL, samples, 48000, 1);
 }	
 
-void cook_ffmpeg_params (unsigned int s0, unsigned int sw0, unsigned int sw1,
+
+void cook_dd_params (unsigned int s0, unsigned int sw0, unsigned int sw1,
 	int64_t &f0, int64_t &f1) {
 	unsigned int sf    = 48000;
 	unsigned int vfPTS = 40000;
@@ -233,23 +224,6 @@ void cook_ffmpeg_params (unsigned int s0, unsigned int sw0, unsigned int sw1,
 #endif
 }
 
-void help (void) {
-	printf("Usage:\n");
-	printf("  pdetect --stream file.dv --t0 time0 --t1 time1 --log file.log\n");
-	printf("    --seg segment.wav --seq sequence.wav\n");
-	printf("  pdetect --help\n");
-	printf("Where:\n");
-	printf("  file.dv   DV file\n");
-	printf("  time0     AG start-peak position (in seconds, int value)\n");
-	printf("  time1     AG stop-peak position (in seconds, int value)\n");
-	printf("  file.log  file containing dd's segmentation parameters\n");
-	printf("Requirments:\n");
-	printf("  ffmpeg-0.4.9_p2007012 (libavcodec, libavformat)\n\n");
-}
-
-void welcome (void) {
-	printf ("%s v%s by %s (%s)\n\n", LMTOOLS_P, LMTOOLS_V, AUTHOR, MAIL);
-}
 
 int main (int argc, char *argv[]) {
 	int t0 = 0, t1 = 0;
@@ -295,7 +269,7 @@ int main (int argc, char *argv[]) {
 	mObjectPCM<int16_t> *pcm;
 	pcm = new mObjectPCM<int16_t>(MPCM_STEREO, MPCM_STREAM_SMALL);
 	
-	mDecodeDV(file_dv, AG_pts0, AG_pts1, pcm);
+	mDV2PCM(file_dv, AG_pts0, AG_pts1, pcm);
 	pcm->Trim();
 	
 #ifdef DEBUG_ALG
@@ -360,18 +334,9 @@ int main (int argc, char *argv[]) {
 	int64_t f0 = 0;
 	int64_t f1 = 0;
 	for (unsigned int w = 0; w < words; w++) {
-		cook_ffmpeg_params(s0, wordsd[w].s0 - 6000, wordsd[w].s1 + 6000,
+		cook_dd_params(s0, wordsd[w].s0 - 6000, wordsd[w].s1 + 6000,
 			f0, f1);
-		
-		//cout << w << "/";
-		//cout << f0 << "/";
-		//cout << f1 - f0 + 1 << endl;
 		fprintf(FILE_LOG, "%d/%d/%d\n", w, (int)f0, (int)(f1 - f0 + 1));
-		/*
-		printf("%d/", w);
-		printf("%d/", f0);
-		printf("%d\n", f1 - f0 + 1);
-		*/
 	}
 	fclose(FILE_LOG);
 	delete pcm;
