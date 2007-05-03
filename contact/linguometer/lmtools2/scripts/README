@@ -4,4 +4,85 @@
 
 + root/WS/*.log
 	config/sequence_MMMM.wdb
-	
+
+##################
+# LTC_S2         #
+# lm_pdetect     #
+##################
+Detects the segments, the  sequences and then the words in the US stream.
+Produces a .dd file used for word segmentation using the dd command.
+
+                              --------------
+                              |            |
+                              |            | ---> (O1) config/wd_SSSS_sequence.dd
+(I1) root/US/stream.dv   ---> | lm_pdetect | ---> (O2) cache/wd_SSSS_segment.wav 
+(I2) config/segments.txt ---> |            | ---> (O3) cache/wd_SSSS_sequence.wav
+                              |            | ---> (O4) log/wd_SSSS_log.pd
+                              --------------
+Inputs:
+	I1.	US stream
+	I2.	Position (in seconds) of the segments 
+Outputs:
+	O1.	Position (in frames) of the words of a particular (SSSS) sequence.
+	    dd will perform the word basis segmentation.
+	O2.	Segment
+	O3.	Sequence
+	04.	pdetect log file
+
+
+##################
+# LTC_S3         #
+# lm_segment     #
+##################
+Peroforms word segmentation using config/wd_SSSS_sequence.dd files.
+For each word, creates a .dv file and a .wav file.
+Should also create a .tng file, with tongue parametrization. 
+
+                                     --------------
+                                     |            |
+                                     |            | ---> (O1) seq_SSSS/wd_WWWW.dv 
+(I1) config/wd_SSSS_sequence.dd ---> | lm_segment | ---> (O2) seq_SSSS/wd_WWWW.wav
+                                     |            | ---> (O3) seq_SSSS/wd_WWWW.tng
+                                     |            |
+                                     --------------
+Inputs:
+	I1.	dd parameters created in LTC_S2 via lm_pdetect
+Outputs:
+	O1.	DV movie with US frames and PCM speech + sync (WD segmentation signals included)
+	O2. WAV file with DV PCM stereo
+	O3.	If Paul will like the idea, should be a .txt file with a per-frame parametrization
+		of the tongue.
+
+
+##################
+# LTC_S4         #
+# lm_align       #
+##################
+lm_align is the core of the sync process.
+It reads a "seq_SSSS/wd_WWWW.wav" file, looks at the word occurrence number (WWWW) and tries
+to find an optimal alignment with a processed version of the .wav files recorded by the AG500.
+"Processed version of..." means: peak detection + peak extension + resampling.
+Matching works well, and looses few samples (2-5) at 48kHz.
+Note: drift in the streams had me write the piece-wise alignement code. I rely on this assumption:
+ "The drift exist, but its effect is neglegible inside a word since it
+  lasts few seconds, segmentation peaks included." 
+
+word_align --sequence cache/ag_sequence_0008.wav --wd ./seq_0008/wd_0073_ag.wav --num ag --out ./seq_0008/wd_ag_ag.wav --log ./seq_0008/wd_ag.aln
+
+
+                                     --------------
+                                     |            |
+(I1) cache/ag_sequence_SSSS.wav ---> |            | ---> (O1) seq_SSSS/wd_WWWW_ag.wav 
+(I2) seq_SSSS/wd_WWWW.wav       ---> |  lm_align  | ---> (O2) seq_SSSS/wd_WWWW.aln
+(I3) WWWW                       ---> |            | 
+                                     |            |
+                                     --------------
+Inputs:
+	I1. AG500 PCM sequence (aka reference signal for alignement)
+	I2. Segmented word PCM file (aka what we are trying to align)
+	I3. Word number (occurrence in AG500 PCM sequence)
+Outputs:
+	O1. Segmented word (found in AG500 PCM sequence)
+	O2. Alignement data. It is necessair to align other data sources (e.g.: AG500 pos/amp)
+
+

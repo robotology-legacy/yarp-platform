@@ -1,9 +1,7 @@
 #! /usr/bin/perl
-# LTC_S4
-# lmtools2 toolchain: step 2
-# Creates config/sequence_XXXX.txt files used 
-# in LTC_S3 to perform per-sequence word 
-# segmentation.
+# LTC_S3
+# lmtools2 toolchain: step 3
+# Performs segmentation
 
 use Getopt::Long;
 use File::Copy;
@@ -23,19 +21,21 @@ sub mImportFile
 }
 
 
-
 $file_dv = "root/US/stream.dv";
 $words_path = "config";
-$words_regex = "words_*";
-@files_words = `ls -1 $words_path/$words_regex`;
+$words_regex = "wd_*_sequence.dd";
+@files_words_ns= `find $words_path -iname "$words_regex"`;
+@files_words = sort {$a cmp $b} @files_words_ns;
 
 foreach $file_words (@files_words) {
 	chomp($file_words);
 	print "$file_words\n";
 		
-	$file_words =~ /^(.*)(_)(.*)(.txt)$/;
+	$file_words =~ /^(.*)(_)(.*)(_)(.*)$/;
 	$seq_idx = $3;
-
+	print "$seq_idx\n";
+	
+	if (1) {
 	@words = mImportFile($file_words);
 	foreach $word (@words) {
 		chomp($word);
@@ -50,9 +50,9 @@ foreach $file_words (@files_words) {
 		print "Word $word_idx, ";
 		print "f0 = $word_f0, ";
 		print "df = $word_df\n";
-		$file_word_log = "seq_" . $seq_idx . "/" . "word_" . $word_idxf . ".log";
-		$file_word_dv  = "seq_" . $seq_idx . "/" . "word_" . $word_idxf . ".dv";
-		$file_word_wav = "seq_" . $seq_idx . "/" . "word_" . $word_idxf . ".wav";
+		$file_word_log = "seq_" . $seq_idx . "/" . "wd_" . $word_idxf . ".log";
+		$file_word_dv  = "seq_" . $seq_idx . "/" . "wd_" . $word_idxf . ".dv";
+		$file_word_wav = "seq_" . $seq_idx . "/" . "wd_" . $word_idxf . ".wav";
 		print "  File DV:  $file_word_dv\n";
 		print "  File WAV: $file_word_wav\n";
 
@@ -60,15 +60,9 @@ foreach $file_words (@files_words) {
 		system("dd if=$file_dv of=$file_word_dv bs=144000 skip=$word_f0 count=$word_df $shutup");
 		system("ffmpeg -i $file_word_dv $file_word_wav $shutup");
 
-		open(FID, "> $file_word_log") or die "Error ($file): $!\n";
-		print FID "$word_idx/$word_f0/$word_df\n";
-		close (FID);
-
+		#open(FID, "> $file_word_log") or die "Error ($file): $!\n";
+		#print FID "$word_idx/$word_f0/$word_df\n";
+		#close (FID);
 	}
-
-
+	}
 }
-
-
-
-

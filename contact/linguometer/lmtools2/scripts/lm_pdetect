@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# LTC_S3
+# LTC_S2
 # lmtools2 toolchain: step 2
 # Creates config/sequence_XXXX.txt files used 
 # in LTC_S3 to perform per-sequence word 
@@ -25,7 +25,7 @@ sub mImportFile
 
 
 $file_dv   = "root/US/stream.dv";
-$file_seqs = "config/sequences.txt";
+$file_seqs = "config/segments.txt";
 
 my @seqs = mImportFile($file_seqs);
 
@@ -40,10 +40,10 @@ foreach $line (@seqs) {
 	print "Sequence $txt, ";
 	print "t0 = $t0, ";
 	print "t1 = $t1\n";
-	$file_txt = "words_" . $txtf . ".txt";
-	$file_log = "words_" . $txtf . ".log";
-	$file_seg = "words_segment_"  . $txtf . ".wav";
-	$file_seq = "words_sequence_" . $txtf . ".wav";
+	$file_txt = "wd_" . $txtf . "_sequence" . ".dd";
+	$file_log = "wd_" . $txtf . "_log"      . ".pd";
+	$file_seg = "wd_" . $txtf . "_segment"  . ".wav";
+	$file_seq = "wd_" . $txtf . "_sequence" . ".wav";
 	
 	$file_txtt = "config/$file_txt";
 	$file_logt = "log/$file_log";

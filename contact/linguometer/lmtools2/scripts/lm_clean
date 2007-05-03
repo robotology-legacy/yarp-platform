@@ -7,15 +7,17 @@ for dummy in `find . -iname "dummy.txt"`; do
 	rm -v $dummy;
 done
 
-#rm -v cache/us.wav
+rm -v cache/wd_*
+rm -v config/wd_*
+rm -v log/*
 #rm -v config/sequences.txt
 #rm -v config/words_*.wdb
-rm -v config/sequence_*.txt
-rm -v config/words_*.txt
-rm -v cache/sequence_*.wav
-rm -v cache/segment_*.wav
-rm -v cache/words_*.wav
-rm -v log/*
+#rm -v config/sequence_*.txt
+#rm -v config/words_*.txt
+#rm -v cache/sequence_*.wav
+#rm -v cache/segment_*.wav
+#rm -v cache/words_*.wav
+#rm -v log/*
 
 for folder in `find . -iname "seq_*"`; do
 	rm -v $folder/*;
