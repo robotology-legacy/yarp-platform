@@ -70,22 +70,22 @@ AG.dcl (6) = 'k';
 % Styles: sensors
 %---------------------
 % Tongue, sagittal
-AG.sst {1} = 'ob';
+AG.sst {1} = 'or';
 AG.sst {2} = 'og';
-AG.sst {3} = 'or';
+AG.sst {3} = 'ob';
 % Tongue, coronal
-AG.sst {4} = '+c';
-AG.sst {5} = '+m';
+AG.sst {4} = '+r';
+AG.sst {5} = '+g';
 % Theeth
 AG.sst {6} = 'xr';
-AG.sst {7} = 'xk';
+AG.sst {7} = 'xg';
 % Lips
-AG.sst {8} = 'xm';
-AG.sst {9} = 'xb';
+AG.sst {8} = 'xr';
+AG.sst {9} = 'xg';
 % Glasses
-AG.sst {10} = 'ob';
-AG.sst {11} = 'or';
-AG.sst {12} = 'ok';
+AG.sst {10} = 'or';
+AG.sst {11} = 'og';
+AG.sst {12} = 'ob';
 
 
 %---------------------

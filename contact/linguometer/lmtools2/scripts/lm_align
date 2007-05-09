@@ -1,0 +1,53 @@
+#! /usr/bin/perl
+# LTC_S4
+# lmtools2 toolchain: step 2
+# Creates config/sequence_XXXX.txt files used 
+# in LTC_S3 to perform per-sequence word 
+# segmentation.
+
+use Getopt::Long;
+use File::Copy;
+use Cwd;
+use Term::ANSIColor;
+use Sys::Hostname;
+
+sub mImportFile {
+	my $file = $_[0];
+	
+	open(FID, "< $file") or die "Error ($file): $!\n";
+	my @data = <FID>;
+	close (FID);
+
+	return @data;
+}
+
+$folders_regex = "seq_*";
+@folders_seq_ns = `find . -iname "$folders_regex"`;
+@folders_seq = sort {$a cmp $b} @folders_seq_ns;
+
+foreach $folder_seq (@folders_seq) {
+	chomp($folder_seq);
+	print "$folder_seq\n";
+	
+	$word_regex = "wd_*.wav";
+	@word_files_ns = `find $folder_seq/ -iname "$word_regex"`;
+	@word_files = sort {$a cmp $b} @word_files_ns;
+		
+	$folder_seq =~ /^(.*)(_)(.*)$/;
+	$seq_idx = $3;
+	
+	$ag_file = "cache/ag_sequence_$seq_idx.wav";
+
+	foreach $word_file (@word_files) {
+		chomp($word_file);
+	
+		$word_file =~ /^(.*)(_)(.*)(.wav)$/;
+		$word_idx = $3;
+		print "[$word_idx] $word_file  ($ag_file)\n";
+	
+		$out_file = $folder_seq . "/wd_" . $word_idx . "_ag.wav";
+		$log_file = $folder_seq . "/wd_" . $word_idx . ".aln";
+		$cmd = "word_align --sequence $ag_file --wd $word_file --num $word_idx --out $out_file --log $log_file";
+		system($cmd);
+	}
+}

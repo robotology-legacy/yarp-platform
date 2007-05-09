@@ -15,12 +15,12 @@ else
 fi
 
 # create sequences.txt template
-SEQS_TXT="config/segments.txt"
-if [ -e $SEQS_TXT ]; then
-	echo "File $SEQS_TXT exists"
-else
-	for i in `seq 0 8`;
-		do
-		echo "$i//" >> $SEQS_TXT
-	done
-fi
+#SEQS_TXT="config/segments.txt"
+#if [ -e $SEQS_TXT ]; then
+#	echo "File $SEQS_TXT exists"
+#else
+#	for i in `seq 0 8`;
+#		do
+#		echo "$i//" >> $SEQS_TXT
+#	done
+#fi

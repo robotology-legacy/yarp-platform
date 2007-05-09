@@ -261,7 +261,6 @@ int main (int argc, char *argv[]) {
 			return 0;
 			break;
 	}
-
 	int64_t AG_pts0 = mObjectDV2Tools::secs2pts(t0);
 	int64_t AG_pts1 = mObjectDV2Tools::secs2pts(t1);
 	unsigned int AG_s0 = mObjectDV2Tools::pts2samples(AG_pts0, 48000);

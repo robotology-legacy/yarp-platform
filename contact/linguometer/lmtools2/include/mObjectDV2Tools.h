@@ -86,7 +86,11 @@ namespace mObjectDV2Tools {
 		if (secs < 0)
 			return -1;
 
-		return secs * AV_TIME_BASE;
+		/* Nasty bug that made me choke.
+		 * Bug: return  secs * AV_TIME_BASE;
+		 * If secs >= 2400, returns a negative value.
+		 */
+		return  (int64_t)(secs) * AV_TIME_BASE;
 	}
 	 
 	 int64_t samples2pts (int samples, int sampleRate) {

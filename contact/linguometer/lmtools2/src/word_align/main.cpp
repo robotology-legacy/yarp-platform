@@ -162,8 +162,8 @@ int main (int argc, char *argv[]) {
 			stopAGR &= false;
 
 	/* Assert! */
-	assert(startAGR); 
-	assert(stopAGR);
+	//assert(startAGR); 
+	//assert(stopAGR);
 
 	/* Alignment starts here */
 	unsigned int p0AG = 3 + 2*num_WD + 0;
