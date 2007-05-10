@@ -36,7 +36,7 @@ Outputs:
 ##################
 Peroforms word segmentation using config/wd_SSSS_sequence.dd files.
 For each word, creates a .dv file and a .wav file.
-Should also create a .tng file, with tongue parametrization. 
+Should also create a .tng file, with tongue parametrization, if Paul agrees. 
 
                                      --------------
                                      |            |

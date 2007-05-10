@@ -1,0 +1,93 @@
+#!/usr/bin/perl
+
+use Getopt::Long;
+use File::Copy;
+use Cwd;
+use Term::ANSIColor;
+use Sys::Hostname;
+
+
+sub mImportFile
+{
+	my $file = $_[0];
+	
+	open(FID, "< $file") or die "Error ($file): $!\n";
+	my @data = <FID>;
+	close (FID);
+
+	return @data;
+}
+
+$path_cache = "temp";
+
+# Experiment paths
+$path_AG = "root/AG/Sweeps/lm_amps";
+$path_WA = "root/AG/Sweeps/wav";
+$path_LG = "root/LG";
+$path_WS = "root/WS";
+
+# Regex: source
+$regex_AGs = "NNNN.mat";
+$regex_WAs = "NNNN.wav";
+$regex_LGs = "track_NN.wav";
+
+# Regex: target
+$regex_AGt = "ag_sequence_SSSS.mat";
+$regex_WAt = "ag_sequence_SSSS.wav";
+$regex_LGt = "lg_sequence_SSSS.wav";
+$regex_WSt = "ws_sequence_SSSS.txt";
+
+# WS files (no pattern in filename)
+@files_WS = `find $path_WS/*`;
+
+$file = "config/collect_data.cfg";
+my @lines = mImportFile($file);
+
+
+foreach $line (@lines) {
+	chomp($line);
+    $line =~ /^(.*)(\/)(.*)$/;
+	$idt = $1;
+	$ids = $3;
+	$idsf = sprintf("%.4d", $ids);
+	$idtf = sprintf("%.4d", $idt);
+	
+	#LG files: track_NN.wav
+	$idsf2 = sprintf("%.2d", $ids);
+	
+	#print "$line: $idsf ---> $idtf\n";
+	print "Collecting sequence $idtf ($idsf)\n";
+
+	# AG AMP files
+	$file_AGs = $path_AG . "/" . $regex_AGs;
+	$file_AGs =~ s/NNNN/$idsf/g;
+	$file_AGt = $path_cache . "/" . $regex_AGt;
+	$file_AGt =~ s/SSSS/$idtf/g;
+	print " AG AMP   $file_AGs --> $file_AGt\n";
+	copy($file_AGs, $file_AGt) or die "File cannot be copied ($file_AGs, $file_AGt)";	
+	
+	# AG WAV files
+	$file_WAs = $path_WA . "/" . $regex_WAs;
+	$file_WAs =~ s/NNNN/$idsf/g;
+	$file_WAt = $path_cache . "/" . $regex_WAt;
+	$file_WAt =~ s/SSSS/$idtf/g;
+	print " AG WAV   $file_WAs --> $file_WAt\n";
+	copy($file_WAs, $file_WAt) or die "File cannot be copied ($file_WAs, $file_WAt)";	
+	
+	# LG files
+	$file_LGs = $path_LG . "/" . $regex_LGs;
+	$file_LGs =~ s/NN/$idsf2/g;
+	$file_LGt = $path_cache . "/" . $regex_LGt;
+	$file_LGt =~ s/SSSS/$idtf/g;
+	print " LG       $file_LGs --> $file_LGt\n";
+	copy($file_LGs, $file_LGt) or die "File cannot be copied ($file_LGs, $file_LGt)";	
+	
+	# WS files
+	$file_WSs = @files_WS[$ids - 1];
+	chomp($file_WSs);
+	$file_WSt = $path_cache . "/" . $regex_WSt;
+	$file_WSt =~ s/SSSS/$idtf/g;
+	print " WS       $file_WSs --> $file_WSt\n";
+	copy($file_WSs, $file_WSt) or die "File cannot be copied ($file_WSs, $file_WSt)";	
+}
+
