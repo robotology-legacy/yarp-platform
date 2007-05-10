@@ -25,7 +25,7 @@ sub mImportFile
 
 
 $file_dv   = "root/US/stream.dv";
-$file_seqs = "config/segments.txt";
+$file_seqs = "config/lm_pdetect.cfg";
 
 my @seqs = mImportFile($file_seqs);
 
@@ -45,7 +45,7 @@ foreach $line (@seqs) {
 	$file_seg = "wd_" . $txtf . "_segment"  . ".wav";
 	$file_seq = "wd_" . $txtf . "_sequence" . ".wav";
 	
-	$file_txtt = "config/$file_txt";
+	$file_txtt = "cache/$file_txt";
 	$file_logt = "log/$file_log";
 	$file_segt = "cache/$file_seg";
 	$file_seqt = "cache/$file_seq";

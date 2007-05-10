@@ -5,22 +5,56 @@
 # AG500 sequences.
 # Sequences do need to be written in $SEQS_TXT
 
-# export US PCM stream
-US_DV="root/US/stream.dv"
-US_WAV="cache/us_track.wav"
-if [ -e $US_WAV ]; then
-	echo "File $US_WAV exists"
+PATH_ROOT="root"
+if [ -e $PATH_ROOT ]; then
+	echo "File $PATH_ROOT (symlink) exists"
+	
+	# Export US PCM stream
+	DV_US="root/US/stream.dv"
+	WA_US="cache/us_track.wav"
+	if [ -e $WA_US ]; then
+		echo "File $WA_US exists"
+	else
+		echo "File $WA_US does not exist"
+		ffmpeg -i $DV_US $WA_US
+	fi
+
+	# Export CC PCM stream
+	DV_CC="root/CC/stream.dv"
+	WA_CC="cache/cc_track.wav"
+	if [ -e $WA_CC ]; then
+		echo "File $WA_CC exists"
+	else
+		echo "File $WA_CC does not exist"
+		ffmpeg -i $DV_CC $WA_CC
+	fi
+
+	# Create configuration file for lm_collect
+	CFG_CD="config/lm_collect.cfg"
+	if [ -e $CFG_CD ]; then
+		echo "File $CFG_CD exists"
+	else
+		echo "File $CFG_CD does not exist: creating empty pattern"
+		for idx in `seq 0 8`; do
+			echo "$idx/" >> $CFG_CD
+		done
+	fi
+
+
+	# Create configuration file for lm_segment
+	CFG_PD="config/lm_pdetect.cfg"
+	if [ -e $CFG_PD ]; then
+		echo "File $CFG_PD exists"
+	else
+		echo "File $CFG_PD does not exist: creating empty pattern"
+		for idx in `seq 0 8`; do
+			echo "$idx//" >> $CFG_CD
+		done
+	fi
 else
-	ffmpeg -i $US_DV $US_WAV
+	echo "File $PATH_ROOT (symlink) does not exist. Please create it!"
 fi
 
-# create sequences.txt template
-#SEQS_TXT="config/segments.txt"
-#if [ -e $SEQS_TXT ]; then
-#	echo "File $SEQS_TXT exists"
-#else
-#	for i in `seq 0 8`;
-#		do
-#		echo "$i//" >> $SEQS_TXT
-#	done
-#fi
+
+
+

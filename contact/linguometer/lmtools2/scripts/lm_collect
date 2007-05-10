@@ -40,7 +40,7 @@ $regex_WSt = "ws_sequence_SSSS.txt";
 # WS files (no pattern in filename)
 @files_WS = `find $path_WS/*`;
 
-$file = "config/collect_data.cfg";
+$file = "config/lm_collect.cfg";
 my @lines = mImportFile($file);
 
 
@@ -63,7 +63,7 @@ foreach $line (@lines) {
 	$file_AGs =~ s/NNNN/$idsf/g;
 	$file_AGt = $path_cache . "/" . $regex_AGt;
 	$file_AGt =~ s/SSSS/$idtf/g;
-	print " AG AMP   $file_AGs --> $file_AGt\n";
+	print " AG AMP   $file_AGt <-- $file_AGs\n";
 	copy($file_AGs, $file_AGt) or die "File cannot be copied ($file_AGs, $file_AGt)";	
 	
 	# AG WAV files
@@ -71,7 +71,7 @@ foreach $line (@lines) {
 	$file_WAs =~ s/NNNN/$idsf/g;
 	$file_WAt = $path_cache . "/" . $regex_WAt;
 	$file_WAt =~ s/SSSS/$idtf/g;
-	print " AG WAV   $file_WAs --> $file_WAt\n";
+	print " AG WAV   $file_WAt <-- $file_WAs\n";
 	copy($file_WAs, $file_WAt) or die "File cannot be copied ($file_WAs, $file_WAt)";	
 	
 	# LG files
@@ -79,7 +79,7 @@ foreach $line (@lines) {
 	$file_LGs =~ s/NN/$idsf2/g;
 	$file_LGt = $path_cache . "/" . $regex_LGt;
 	$file_LGt =~ s/SSSS/$idtf/g;
-	print " LG       $file_LGs --> $file_LGt\n";
+	print " LG       $file_LGt <-- $file_LGs\n";
 	copy($file_LGs, $file_LGt) or die "File cannot be copied ($file_LGs, $file_LGt)";	
 	
 	# WS files
@@ -87,7 +87,7 @@ foreach $line (@lines) {
 	chomp($file_WSs);
 	$file_WSt = $path_cache . "/" . $regex_WSt;
 	$file_WSt =~ s/SSSS/$idtf/g;
-	print " WS       $file_WSs --> $file_WSt\n";
+	print " WS       $file_WSt <-- $file_WSs\n";
 	copy($file_WSs, $file_WSt) or die "File cannot be copied ($file_WSs, $file_WSt)";	
 }
 

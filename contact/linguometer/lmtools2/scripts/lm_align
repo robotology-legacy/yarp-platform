@@ -36,7 +36,7 @@ foreach $folder_seq (@folders_seq) {
 	$folder_seq =~ /^(.*)(_)(.*)$/;
 	$seq_idx = $3;
 	
-	$ag_file = "cache/ag_sequence_$seq_idx.wav";
+	$ag_file = "temp/ag_sequence_$seq_idx.wav";
 
 	foreach $word_file (@word_files) {
 		chomp($word_file);
