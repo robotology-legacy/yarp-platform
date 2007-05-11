@@ -54,7 +54,3 @@ if [ -e $PATH_ROOT ]; then
 else
 	echo "File $PATH_ROOT (symlink) does not exist. Please create it!"
 fi
-
-
-
-

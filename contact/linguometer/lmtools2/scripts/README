@@ -1,3 +1,26 @@
+##########################
+# Folder Structure       #
+#                        #
+##########################
+	exp_0003
+	|
+	|------- cache
+	|------- config
+	|------- log
+	|------- root
+	|------- seq_0000
+	|------- [...]
+	|------- seq_0008
+	|------- temp
+	|------- Makefile
+
+
+
+
+
+
+
+
 ##################
 # LTC_S2         #
 # lm_pdetect     #
@@ -12,6 +35,7 @@ Produces a .dd file used for word segmentation using the dd command.
 (I2) config/lm_pdetect.cfg ---> |            | ---> (O3) cache/wd_SSSS_sequence.wav
                                 |            | ---> (O4) log/wd_SSSS_log.pd
                                 --------------
+
 Inputs:
 	I1.	US stream
 	I2.	Position (in seconds) of the segments 
@@ -60,13 +84,13 @@ Note: drift in the streams had me write the piece-wise alignement code.
 I rely on this assumption: the drift exist, but its effect is neglegible inside a word since 
 it lasts few seconds, segmentation peaks included." 
 
-                                     --------------
-                                     |            |
-(I1) temp/ag_sequence_SSSS.wav  ---> |            | ---> (O1) seq_SSSS/wd_WWWW_ag.wav 
-(I2) seq_SSSS/wd_WWWW.wav       ---> |  lm_align  | ---> (O2) seq_SSSS/wd_WWWW.aln
-(I3) WWWW                       ---> |            | 
-                                     |            |
-                                     --------------
+                                    --------------
+                                    |            |
+(I1) temp/ag_sequence_SSSS.wav ---> |            | ---> (O1) seq_SSSS/wd_WWWW_ag.wav 
+(I2) seq_SSSS/wd_WWWW.wav      ---> |  lm_align  | ---> (O2) seq_SSSS/wd_WWWW.aln
+(I3) WWWW                      ---> |            | 
+                                    |            |
+                                    --------------
 Inputs:
 	I1. AG500 PCM sequence (aka reference signal for alignement)
 	I2. Segmented word PCM file (aka what we are trying to align)
@@ -74,5 +98,3 @@ Inputs:
 Outputs:
 	O1. Segmented word (found in AG500 PCM sequence)
 	O2. Alignement data. It is necessair to align other data sources (e.g.: AG500 pos/amp)
-
-
