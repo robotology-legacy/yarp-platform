@@ -5,11 +5,12 @@ default: $(MAIN)
 
 %.o: %.cpp
 	@echo "> Compiling"
+	@#$(CC) $(CFLAGS) -c $< -o $@ $(FLAGS)
 	$(CC) $(CFLAGS) -c $< -o $@ $(FLAGS)
 
 $(MAIN): $(OBJS)
 	@echo "> Linking"
-	$(CC) $(CFLAGS) $(OBJS) -o $(MAIN) $(LIBS) 
+	$(CC) $(LDFLAGS) $(CFLAGS) $(OBJS) -o $(MAIN) $(LIBS) 
 
 clean:
 	@echo "> Cleaning"

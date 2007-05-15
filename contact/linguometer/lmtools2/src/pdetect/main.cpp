@@ -227,7 +227,7 @@ void cook_dd_params (unsigned int s0, unsigned int sw0, unsigned int sw1,
 
 int main (int argc, char *argv[]) {
 	int t0 = 0, t1 = 0;
-	char *file_dv = NULL, *file_log = NULL;
+	char *file_dv = NULL, *file_log = NULL, *file_aln = NULL;
 	char *file_seg = NULL, *file_seq = NULL;
 
 	switch (argc) {
@@ -238,19 +238,21 @@ int main (int argc, char *argv[]) {
 				return 0;
 			}
 			break;
-		case 13:
+		case 15:
 			if (strcmp(argv [1], "--stream") == 0 &&
 					strcmp(argv [3], "--t0") == 0 &&
 					strcmp(argv [5], "--t1") == 0 &&
 					strcmp(argv [7], "--log") == 0 &&
 					strcmp(argv [9], "--seg") == 0 &&
-					strcmp(argv [11], "--seq") == 0) {
+					strcmp(argv [11], "--seq") == 0 &&
+					strcmp(argv [13], "--aln") == 0) {
 				file_dv = argv [2];
 				assert(sscanf(argv [4], "%d", &t0) == 1);
 				assert(sscanf(argv [6], "%d", &t1) == 1);
 				file_log = argv [8];
 				file_seg = argv [10];
 				file_seq = argv [12];
+				file_aln = argv [14];
 			}
 			else
 				return -1;
@@ -286,6 +288,14 @@ int main (int argc, char *argv[]) {
 	detect_AG_segment(pcm, s0, s1);
 	assert (s0 > -1);
 	assert (s1 > -1);
+
+
+	FILE *FILE_ALN = fopen(file_aln, "w");
+	if (FILE_ALN == NULL)
+		return -1;
+	fprintf(FILE_ALN, "%d\n", t0*48000 + s0);
+	fclose(FILE_ALN);
+
 #ifdef DEBUG_ALG
 	bufferR = (int16_t *)malloc((s1 - s0 + 1) * sizeof(int16_t));
 	for (unsigned int s = (unsigned int)s0; s < (unsigned int)s1; s++) 
@@ -328,7 +338,6 @@ int main (int argc, char *argv[]) {
 	FILE *FILE_LOG = fopen(file_log, "w");
 	if (FILE_LOG == NULL)
 		return -1;
-	
 
 	int64_t f0 = 0;
 	int64_t f1 = 0;
@@ -338,6 +347,8 @@ int main (int argc, char *argv[]) {
 		fprintf(FILE_LOG, "%d/%d/%d\n", w, (int)f0, (int)(f1 - f0 + 1));
 	}
 	fclose(FILE_LOG);
+	
+	
 	delete pcm;
 	return 0;
 }

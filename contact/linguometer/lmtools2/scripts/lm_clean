@@ -1,16 +1,27 @@
 #!/bin/bash
-# LTC_S0
-# lmtools2 toolchain: step 0
-# Cleans lmtools2 experiment folder
 
+# If the experiment folder has been created
+# using the repo/exp_* archive, clean dummy 
+# files.
 for dummy in `find . -iname "dummy.txt"`; do
 	rm -v $dummy;
 done
 
-rm -v cache/*
+# If you are almost ready for a (long) coffee 
+# break, nuke everything in the cache folder:
+#rm -v cache/*
+# If you are on hurry, keep the *_track.wav files:
+for entry in `find cache/ | grep -v "track.wav"`; do
+	rm -v $entry;
+done
+
+# Log and Tmp files could stay where they are, but performing
+# some cleaning is a good idea
 rm -v log/*
 rm -v temp/*
 
+# Cleaning the SEQ folders is NECESSARY and cannot
+# be avoided.
 for folder in `find . -iname "seq_*"`; do
 	rm -v $folder/*;
 done

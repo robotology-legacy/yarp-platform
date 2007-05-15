@@ -1,0 +1,40 @@
+###############################################################
+#                                                             #
+# lm_postcc.png rough tutorial                                #
+# How to determine the ALCC value (file config/lm_postcc.cfg) #
+#                                                             #
+# Draft by M. Tavella                                         #
+#                                                             #
+###############################################################
+
+1.  Open praat
+
+2.  Load cache/us_track.wav, "view" it
+
+3.  Load cache/cc_track.wav, "view" it
+
+4.  As you see in the image, the winwows contain the same amount
+    of samples.
+
+4.  <lm_postcc_01.png>
+    Look for the AG -SAT Peak, aka the ALR reference frame 
+    (top window)
+	
+5.  Look for the beginning of the firts word and...
+
+6.  <lm_postcc_02.png>
+    ...measure the delay between ARG reference frame and the 
+    envelope of the first word (in the example, Dt = 5.31 seconds)
+
+7.  Now, look at the window on the bottom (CC track)
+
+8.  <lm_postcc_03.png>
+    Look for the onset of the first word and...
+    ... place the "signal cursor" there
+
+9.  <lm_postcc_04.png>
+    Go Dt seconds backward and write the delay value in the 
+    ALCC file (config/lm_postcc.cfg), in this case the delay
+	value is 407.55 seconds.
+
+10. Done! You will successfully perform the US<-->CC sync!
