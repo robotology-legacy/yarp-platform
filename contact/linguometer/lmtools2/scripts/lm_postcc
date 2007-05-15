@@ -1,0 +1,287 @@
+#! /usr/bin/perl
+# LTC_S4
+# lmtools2 toolchain: step 2
+# Creates config/sequence_XXXX.txt files used 
+# in LTC_S3 to perform per-sequence word 
+# segmentation.
+
+use Getopt::Long;
+use File::Copy;
+use Cwd;
+use Term::ANSIColor;
+use Sys::Hostname;
+
+sub mImportFile {
+	my $file = $_[0];
+	
+	open(FID, "< $file") or die "Error ($file): $!\n";
+	my @data = <FID>;
+	close (FID);
+
+	return @data;
+}
+
+sub pAlign {
+	my $target_offset = $_[0];
+	my $file_wd = $_[1];
+	my $file_cc = $_[2];
+	my $file_cc_est = $_[3];
+	my $file_aln = $_[4];
+	my $track_cc = $_[5];
+
+	print "Performing alignment\n";
+	print "  Offset     $target_offset\n";
+	
+	# Sample rates of US, AGWAV, AGAMP
+	my @sampleRates = (48000, 16000, 200);
+	# Sample rate of audiodump.wav
+	my $targetRate = 48000;
+	my $targetFPS = 25;
+
+	# Names of files we'll be working with
+	#my $refWavFileName = sprintf("wd_%04d.wav",$wordNumber);
+	#my $estWavFileName = sprintf("wd_%04d_cc_est.wav",$wordNumber);
+	#my $outWavFileName = sprintf("wd_%04d_cc.wav",$wordNumber);
+	#my $alnFileName = sprintf("wd_%04d.aln",$wordNumber);
+
+	# Get word sample stop/start information from alignment file
+	my $aln = `cat $file_aln`;
+	chomp($aln);
+	my @sampleOffsets = split('/',$aln);
+	#my $startFromUS = $targetRate*($sampleOffsets[0]+16675317)/$sampleRates[0];
+	#my $stopFromUS = $targetRate*($sampleOffsets[1]+16675317)/$sampleRates[0];
+	my $startFromUS = $targetRate*$sampleOffsets[0]/$sampleRates[0] ;
+	my $stopFromUS = $targetRate*$sampleOffsets[1]/$sampleRates[0];
+	#my $startFromAGWAV = $targetRate*$sampleOffsets[2]/$sampleRates[1];
+	#my $stopFromAGWAV = $targetRate*$sampleOffsets[3]/$sampleRates[1];
+	#my $startFromAGAMP = $targetRate*$sampleOffsets[4]/$sampleRates[2];
+	#my $stopFromAGAMP = $targetRate*$sampleOffsets[5]/$sampleRates[2];
+	#print "US predicts start/stop of $startFromUS/$stopFromUS samples\n";
+	#print "AGWAV predicts start/stop of $startFromAGWAV/$stopFromAGWAV samples\n";
+	#print "AGAMP predicts start/stop of $startFromAGAMP/$stopFromAGAMP samples\n";
+	# ignore AGWAV and AGAMP, assume they agree with US
+
+	# Guess where word will start/stop in audiodump.wav
+	my $start = int($startFromUS);
+	my $stop = int($stopFromUS);
+	#print "US predicts start/stop of $start/$stop samples\n";
+	my $len = $stop - $start + 1;
+	$start = $start + $target_offset;
+
+	# add a second before and after, just to be safe
+	my $padSeconds = 0.5;
+	my $padStart = $start  - $padSeconds*$targetRate;
+	my $padLen = $len + 2*$padSeconds*$targetRate;
+
+	# crop our estimate of where the audio is
+	print "  WDCC (est) $track_cc --> $file_cc_est (${padStart} + ${padLen} samples)\n";
+	my $cmd = "sox $track_cc $file_cc_est trim ${padStart}s ${padLen}s";
+
+	my $t0 = $padStart/48000;
+	my $t1 = $padLen/48000;
+	my $cmd2 = "sox $track_cc $file_cc_est trim ${t0}s ${t1}s";
+	#print "$cmd\n";
+	print "$cmd2\n";
+	system($cmd);
+
+	# Matlab complains for the "./" inherited from the "find" command.
+	# Let's make Matlab happy.
+	my $matlab_file_wd = $file_wd;
+	my $matlab_file_cc_est = $file_cc_est;
+	$matlab_file_wd =~ s/\.\/seq/seq/g;
+	$matlab_file_cc_est =~ s/\.\/seq/seq/g;
+	print "  Matlab     $matlab_file_wd, $matlab_file_cc_est\n";
+
+	# get more exact match from correlation
+    #  (aka pipe madness, could not work for earlier matlab versions!)
+	my $correction = `echo "lmWAVAlign('$matlab_file_wd', '$matlab_file_cc_est')" | matlab -nosplash -nojvm | grep "myans ="`;
+	chomp($correction);
+	$correction =~ s/myans = //;
+	print "  Correction $correction samples\n";
+	$start = $padStart-$correction;
+
+	# generate final crop
+	print "  WDCC       $track_cc --> $file_cc (${start} + ${len} samples)\n";
+	$cmd = "sox $track_cc $file_cc trim ${start}s ${len}s";
+	system($cmd);
+
+	my $tstop = $start + $len;
+	my $f0 = int($start/$targetRate*$targetFPS);
+	my $f1 = int($tstop/$targetRate*$targetFPS);
+	my $df = $f1 - $f0;
+	#print "> $start --> $f0\n";
+	#print "> $tstop --> $f1\n";
+	#print "> --> $df\n";
+
+	# report
+	#system("echo $wordNumber $correction >> report.txt");
+	#print "Correction was $correction samples\n";
+	#print "This should be roughly constant for nearby words\n";
+	my @return_values;
+	@return_values[0] = $correction;
+	@return_values[1] = $f0;
+	@return_values[2] = $df;
+	return @return_values;
+}
+
+# CC track file (that means, PCM Stereo, 48kHz)
+# This file is created by lm_prepare
+my $track_cc = "cache/cc_track.wav";
+
+# Look for SEQ folders
+my $folders_regex = "seq_*";
+my @folders_seq_ns = `find . -iname "$folders_regex"`;
+my @folders_seq = sort {$a cmp $b} @folders_seq_ns;
+
+# Read configuration files
+my @cfg_postcc  = mImportFile("config/lm_postcc.cfg");
+my @cfg_pdetect = mImportFile("config/lm_pdetect.cfg");
+
+# Each SSSS sequence has got a .dd file that will be
+# used by binary dd to perform the segmentation of the DV
+# stream.
+my $file_dd_cc_regex = "cache/wd_SSSS_cc_sequence.dd";
+
+# Introducing the brand new ALR file:
+# ALR means ALignmentReference. 
+# Its value correspond to the starting point, in samples,
+# of the sequences. The ALRF file stands for ALR frame.
+# Look at doc/lm_postcc.txt, since a human (or a well trained
+# ape) is required for this step.
+my $file_ALRF = "cache/wd_0000_sequence.alr";
+my @values_ALRF = mImportFile($file_ALRF);
+my $value_ALRF = @values_ALRF[0];
+chomp($value_ALRF);
+$value_ALRF = int($value_ALRF);
+#print "$value_ALRF\n";
+#die;
+
+# ALR value should be now loaded. We need to 
+# load relative ALR values, one for each sequence.
+# As usual, I rely on a regex-ready string. 
+my $file_ALR_regex = "cache/wd_SSSS_sequence.alr";
+
+# Log File regex. If the alignement is performed 
+# correcly, you should observe a low variance in
+# the printed values, that are delays, one for
+# each word of each sequence 
+# (WD_tot * SEQ_tot values).
+my $file_LOG_regex = "log/lm_postcc_SSSS.log";
+
+# Parse each SEQ folder
+foreach $folder_seq (@folders_seq) {
+	# Nuke the carrier return char
+	chomp($folder_seq);
+
+	# Look for WD files
+	my $word_regex = "wd_*.wav";
+	my @word_files_ns = `find $folder_seq/ -iname "$word_regex" | grep -v "ag"`;
+	my @word_files = sort {$a cmp $b} @word_files_ns;
+		
+	# Look for WD files
+	$folder_seq =~ /^(.*)(_)(.*)$/;
+	my $idx_seq = $3;
+	my $t_idx_seq = int($idx_seq);
+		
+	
+	# Let's load the relative ALR value and re-align the 
+	# offset value (aka ALRCC).
+	my $file_ALR = $file_ALR_regex;
+	$file_ALR =~ s/SSSS/$idx_seq/g;
+	# Value exctraction (cat is easier, but this method is flexible 
+	# and allows easier workflow additions/modifications)
+	my @values_ALR = mImportFile($file_ALR);
+	my $value_ALR = @values_ALR[0];
+	chomp($value_ALR);
+	$value_ALR = int($value_ALR);
+
+	# What about some useful spam (ham?)
+	print "Alignement reference\n";
+	print "  ALRF       $value_ALRF ($file_ALRF)\n";
+	print "  ALR        $value_ALR ($file_ALR)\n";
+
+ 	# Cook a proper name for the LOG file...
+	my $file_log = $file_LOG_regex;
+	$file_log =~ s/SSSS/$idx_seq/g;
+	open(FILE_LOG, ">$file_log");
+
+	# Cook a proper name for the CC .dd file...
+	my $file_dd_cc = $file_dd_cc_regex;
+	$file_dd_cc =~ s/SSSS/$idx_seq/g;
+	# ... and open it up!
+	open(FILE_DD_CC, ">$file_dd_cc");
+	#print "$file_dd_cc\n";
+
+
+	# Parse each WD in the current SEQ folder
+	foreach $file_wd (@word_files) {
+		# Nuke the carrier return char
+		chomp($file_wd);
+	
+		# Those are the names of the files I'll write/read
+		my $file_aln = $file_wd;
+		my $file_cc = $file_wd;
+		my $file_cc_est = $file_wd;
+		$file_aln =~ s/.wav/.aln/g;
+		$file_cc =~ s/.wav/_cc.wav/g;
+		$file_cc_est =~ s/.wav/_cc_est.wav/g;
+
+		# Word index
+		$file_wd =~ /^(.*)(_)(.*)(.wav)$/;
+		my $idx_wd = $3;
+
+		# Spam
+		print "Processing WD $idx_wd from SEQ $idx_seq\n";
+		print "  WDUS       $file_wd\n";
+		print "  WDCC       $file_cc\n";
+		print "  WDCC (est) $file_cc_est\n";
+		print "  ALN        $file_aln\n";
+		print "  TCC        $track_cc\n";
+		
+		# Read configuration files and determine
+		# the (singleton, in samples) CC offset (ALCC) and the US offsets (one
+		# offset value for each sequence, in seconds).
+		my $cc_offset = int(@cfg_postcc[0]);
+		my @us_params = split('/', @cfg_pdetect[int($idx_seq)]);
+		my $us_offset = @us_params[1] * 48000;
+
+
+		# Here I call Paul's alignement routine.
+		# For the sake of simplicity, Matlab is launced
+		# for each word (sorry).
+		#my $target_offset = $cc_offset + 16667375 - 1456309;
+		my $test = 48000*$cc_offset;
+		print "$test\n";
+		my $target_offset = int(48000*$cc_offset) + $value_ALR - $value_ALRF;
+		my @dd_values = pAlign($target_offset, $file_wd, $file_cc, $file_cc_est, $file_aln, $track_cc);
+
+		# Paul's script returns some cool values 
+		# used here to generate an appropriate configuration
+		# file for the dd binary.
+		print "Alignement parameters\n";
+		print "  Correction @dd_values[0]\n";
+		print "  dd f0      @dd_values[1]\n";
+		print "  dd df      @dd_values[2]\n";
+
+
+		# Prepare and write the CC .dd values...
+		my $t_idx_wd = int($idx_wd);
+		print FILE_DD_CC "$t_idx_wd/@dd_values[1]/@dd_values[2]\n";
+		print FILE_LOG "$t_idx_wd/@dd_values[0]\n";
+	
+		# Elegant spam on the term
+		print "\n";
+	}
+	# .. and close the CC .dd file
+	close(FILE_LOG);
+	close(FILE_DD_CC);
+}
+
+if (0) {
+	open(FILEAMP, ">>$file_AMP");
+	for (my $l = $l0; $l <= $l1; $l++) {
+	#print FILEAMP "$l @lines_AG[$l]";
+		print FILEAMP "@lines_AG[$l]";
+	}
+	close(FILEAMP);
+}
