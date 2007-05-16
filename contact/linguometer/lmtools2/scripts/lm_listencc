@@ -1,0 +1,25 @@
+#!/usr/bin/perl
+
+my $folder = 0;
+if ($#ARGV>=0) {
+    $folder = $ARGV[0];
+}
+
+my @audio_files_ns = `find $folder/ -iname "*cc.wav"`;
+my @audio_files = sort {$a cmp $b} @audio_files_ns;
+
+
+foreach $file (@audio_files) {
+	chomp($file);
+	print "$file\n";
+
+	my $file_source = $file;
+	$file_source =~ s/_cc.wav/.wav/g;
+	
+	print "--> $file_source\n";
+	print "--> $file\n";
+	system("play $file_source");
+	system("play $file");
+	system("sleep 1");
+	print "------------------------\n";
+}

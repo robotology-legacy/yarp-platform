@@ -1,0 +1,2 @@
+#!/bin/bash
+for i in `find seq* | grep cc `; do rm $i; done
