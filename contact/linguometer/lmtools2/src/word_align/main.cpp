@@ -8,7 +8,7 @@
 #include "mInclude.h"
 #include "mPeakTools.h"
 
-//#define DEVELOP
+#define DEVELOP
 void help (void) {
 	printf("Usage:\n");
 	printf(" word_align --sequence sequence.wav --wd word_in.wav --num 10\n");
@@ -97,13 +97,24 @@ int main (int argc, char *argv[]) {
 	
 	/* Threshold */
 	threshold(bufferWD, samplesWD, US_TH);
-	threshold(bufferAG, samplesAG, AG_TH);
+	threshold(bufferWD, samplesWD, 0.50);
+	//threshold(bufferAG, samplesAG, AG_TH);
 	
 	/* Remove spikes and artifacts */
 	unsigned int peaksWD;
 	unsigned int peaksAG;
 	peaksWD = clean_spikes(bufferWD, samplesWD, US_DS_PEAK, US_DS_ARTI);
-	
+	/*	
+	#define AG_DS_PEAK 20
+	#define AG_DS_ARTI 40
+
+	#define US_DS_PEAK 40
+	#define US_DS_ARTI 80
+
+	#define AG_TH 0.60 
+	#define US_TH 0.95
+	*/
+
 	/* AG peaks are not so trivial to detect in the context of batch
 	 * processing. 
 	 */
