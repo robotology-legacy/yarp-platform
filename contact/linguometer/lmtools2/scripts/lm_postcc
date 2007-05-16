@@ -262,8 +262,8 @@ foreach $folder_seq (@folders_seq) {
 		print "## Offset: $cc_offset\n";
 		print "## ALRF:   $value_ALR\n";
 		print "## ALR:    $value_ALRF\n";
-		#my $target_offset = int(48000*$cc_offset) + int($value_ALR) - int($value_ALRF);
-		my $target_offset = int(48000*$cc_offset) + $value_ALR - $value_ALRF;
+		my $target_offset = int(48000*$cc_offset) + int($value_ALR) - int($value_ALRF);
+		#my $target_offset = int(48000*$cc_offset) + $value_ALR - $value_ALRF;
 		print "## TOffset: $target_offset\n";
 		
 		my @dd_values = pAlign($target_offset, $file_wd, $file_cc, $file_cc_est, $file_aln, $track_cc);

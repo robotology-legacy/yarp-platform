@@ -28,7 +28,12 @@ wav1 = wav1(:,2);
 % compute something energy-like -- easier to compare
 sig0 = abs(wav0);
 sig1 = abs(wav1);
-f = ones(round(rate*0.01),1);  % really dumb smoothing
+
+% Paul's Watt-Friendly choice
+%f_factor = 0.01; 
+% Michele Coffee-break friendly choice:
+f_factor = 0.1; 
+f = ones(round(rate*f_factor),1);  % really dumb smoothing
 sig0 = filter2(f,sig0,'same');
 sig1 = filter2(f,sig1,'same');
 
