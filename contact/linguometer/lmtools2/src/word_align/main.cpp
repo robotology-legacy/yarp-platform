@@ -8,17 +8,20 @@
 #include "mInclude.h"
 #include "mPeakTools.h"
 
-
+//#define DEVELOP
 void help (void) {
 	printf("Usage:\n");
 	printf(" word_align --sequence sequence.wav --wd word_in.wav --num 10\n");
-	printf("            --out word_out.wav --log file.log\n");
+	printf("            --out word_out.wav --log file.aln\n");
 	printf("Where:\n");
 	printf("  sequence.wav   AG sequence (16kHz, Mono)\n");
 	printf("  word_in.wav    US word  (48kHz, Stereo)\n");
 	printf("  10             US word number (in sequence)\n");
 	printf("  word_out.wav   AG segmented word (16kHz, Mono)\n");
-	printf("  file.log       Sync informations\n");
+	printf("  file.aln       Sync informations\n");
+	printf("Error handling:\n");
+	printf("  word_align: main.cpp:XXX: int main(int, char**): Assertion `startAGR' failed.\n");
+	printf("  Choose a lower/an even lower value for AG_DS_PEAK. Look for threshold().\n");
 }
 
 
@@ -100,7 +103,12 @@ int main (int argc, char *argv[]) {
 	unsigned int peaksWD;
 	unsigned int peaksAG;
 	peaksWD = clean_spikes(bufferWD, samplesWD, US_DS_PEAK, US_DS_ARTI);
-	peaksAG = clean_spikes(bufferAG, samplesAG, AG_DS_PEAK, AG_DS_ARTI);
+	
+	/* AG peaks are not so trivial to detect in the context of batch
+	 * processing. 
+	 */
+	//peaksAG = clean_spikes(bufferAG, samplesAG, AG_DS_PEAK, AG_DS_ARTI);
+	peaksAG = clean_spikes(bufferAG, samplesAG, 10, AG_DS_ARTI);
 	
 #ifdef DEVELOP
 	/* Now is time to look at the signals */
@@ -146,6 +154,10 @@ int main (int argc, char *argv[]) {
 	/* Let's check if:
 	 * + the first 3 peaks are +SAT
 	 * + the last 3 peaks are -SAT
+	 * HUGE BUG OVER HERE! Patched May 16, 2007
+	 * The test does not take in account that 
+	 * the 4th value HAS TO BE -SAT, 
+	 * at least for the startAGR value!
 	 */
 	bool startAGR = true;
 	for(unsigned int p = 0; p < 3; p++)
@@ -153,16 +165,33 @@ int main (int argc, char *argv[]) {
 			startAGR &= true;
 		else
 			startAGR &= false;
-	
+	/* Patch begins here */
+	if(startAGR && peaks_dataAGR.type[4] == SAT_NEG)
+		startAGR = true;
+	else
+		startAGR = false;
+	/* Patch stops here */
+	assert(startAGR); 
+
+
 	bool stopAGR = true;
-	for(unsigned int p = peaks_dataAGR.tot - 3; p < peaks_dataAGR.tot; p++)
+	/* Patch begins here */
+	//for(unsigned int p = peaks_dataAGR.tot - 3; p < peaks_dataAGR.tot; p++)
+	for(unsigned int p = peaks_dataAGR.tot - 4; p < peaks_dataAGR.tot; p++)
+	/* Patch stops here */
 		if(peaks_dataAGR.type[p] == SAT_NEG)
 			stopAGR &= true;
 		else
 			stopAGR &= false;
-
-	/* Assert! */
-	//assert(startAGR); 
+	/* This assert is not stricly necessaire for alignment purposes.
+	 * It could trow errors that will not break the lmtools/lmscritps 
+	 * workflow.
+	 * The lmtools  code has been written resist to poor stops 
+	 * in the recording sessions. I do not really care "that much" 
+	 * for the end of the sequences. 
+	 * This assert require a "strict" checking on segmentation 
+	 * signals. 
+	 */
 	//assert(stopAGR);
 
 	/* Alignment starts here */
