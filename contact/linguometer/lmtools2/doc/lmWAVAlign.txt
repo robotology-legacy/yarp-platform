@@ -1,0 +1,72 @@
+###############################################################
+#                                                             #
+# lmWAVAlign.m rough tutorial                                 #
+# How to choose a Watt friendly                               #
+#                                                             #
+# Draft by M. Tavella                                         #
+#                                                             #
+###############################################################
+Paul suggests to use a "really dumb" filter for smoothing. 
+A little bit of tuning is necessary.
+
+Give a look at matlab/lmmatlab/lmWAVAlign.m.
+
+You should find something similar to:
+	% Paul's Watt-Friendly choice
+	%f_factor = 0.01; 
+	% Michele Coffee-break friendly choice:
+	f_factor = 0.1; 
+	f = ones(round(rate*0.01),1);  % really dumb smoothing
+	sig0 = filter2(f,sig0,'same');
+	sig1 = filter2(f,sig1,'same');
+
+Now, choosing an appropriate f_factor value is critical for CC<-->US 
+alignement.
+If f_factor gets bigger, than the filter (f) gets bigger. 
+A large f_factor will literally melt down your cpu(s), but produces an higher
+quality smoothing (in the case of the "dumb filter").
+
+I found helpful performing a little better smoothing (let's say, f_factor =
+10).
+Now, give a look at <lmWAVAlign_1.png> and <lmWAVAlign_2.png>.
+Left signal: target. Right signal: source.
+Please look at the very bottom of the white (Matlab) window, it sais:
+ myans = $VALUE
+
+Now, look again at the right signal: it is made up by two energy-like chunks
+of data. The one on the very left is another word, the one on the very right
+is the correct word to align.
+
+In <lmWAVAlign_1.png>, myans ~= 26000, and that's wrong. 
+In <lmWAVAlign_2.png>, myans ~= -70000, and that's correct. 
+
+But, hey, how can I tell when lmWAVAlign.m fails? Well, lmWAVAlign.m is 
+used by lm_postcc (and maybe by lm_postlg [still to write the code]).
+lm_postcc performs the CC<-->US alignment and logs the delay values
+(the previous myans) in seq_SSSS/log/lm_postcc.log
+
+Let's give a look at a seq_SSSS/log/lm_postcc.log file produced by 
+low-quality alignment:
+	0/-78398
+	1/-78466
+	2/-78550
+	3/26589
+	4/-70952
+	5/13946
+	6/-80937
+	7/13583
+	8/13773
+	9/13732
+	10/-86195
+	11/-98477
+	12/13703
+	13/13534
+	14/-85147
+	15/15927
+	[...]
+As you can see, the values are not really constant. Well, the variance would
+be quite high.
+
+Now, let's give a look at the same log file after some better filtering:
+ {I'm tired...}
+
