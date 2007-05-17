@@ -21,6 +21,8 @@
 
 #define FILE_US_PCM		"/home/michele/ContactCache/pcm_out.wav"
 
+#define GHOST_PEAK_DS_MIN 	38400
+#define GHOST_PEAK_DS_MAX 	48000
 
 
 /* According to the Cartens', the AG500 control pc starts/stops recording
@@ -102,10 +104,11 @@ void detect_WD_peaks (mObjectPCM<int16_t> *pcm, int s0, int s1, WD_peaks &peaksd
 	/* Peak detection: threshold on values. */
 	for (int s = s0; s < s1; s++) {
 		if (pcm->getR(s) > AG_TH*SAT_POS)
-		//if (pcm->getR(s) > US_TH*SAT_POS)
+		//if (pcm->getR(s) > US_TH*SAT_POS) last
 			peaks[s - s0] = SAT_POS;
-		if (pcm->getR(s) < AG_TH*SAT_NEG)
-		//else if (pcm->getR(s) < US_TH*SAT_NEG)
+		//else if (pcm->getR(s) < 0.20*SAT_NEG)
+		//if (pcm->getR(s) < AG_TH*SAT_NEG) last
+		else if (pcm->getR(s) < AG_TH*SAT_NEG)
 			peaks[s - s0] = SAT_NEG;
 	}
 	
@@ -120,17 +123,71 @@ void detect_WD_peaks (mObjectPCM<int16_t> *pcm, int s0, int s1, WD_peaks &peaksd
 				peaksd.start[peaksd.tot] = s + S0;
 			}
 			else if (peaks[s - 1] == SAT_POS) {
-				if (peaks[s + 1] == SAT_POS)
+				if (peaks[s + 1] == SAT_POS) {
 					++satp;
+				}
 				else {
 					 /* If peak is consistent and 
 					  * not a spurious spiky spike, accept the 
 					  * peak
 					  */
-					if (satp > 1) {
-						//unsure about this, pls check
-						//++satp;
+					/*
+					   if (satp >= 20) {
+					   if (satp >= 20 && satp < US_DS_ARTI) {
+					   if (satp > 1) {
+					 */
+					if (satp >= US_DS_PEAK && satp < US_DS_ARTI) {
+						/* Unsure about this 
+						   ++satp;
+						*/
 						
+						/* /GHOST PEAKS DETECTION */
+						unsigned int this_peak = peaksd.tot;
+						unsigned int prev_peak = peaksd.tot - 1;
+						/* This peak is +SAT. 
+						 * If the previous peak is +SAT, two 
+						 * things may be appened:
+						 * 1. We are in the middle of the 3 peaks at
+						 *    the beginning of each sequence
+						 * 2. Maybe we skipped a -SAT ghost-peak.
+						 *    Ghost-peaks exists since the cable 
+						 *    that did bring the sync singnal
+						 *    did wear out and sometimes it moved,
+						 *    resulting in VERY SHORT peaks at
+						 *    VERY LOW amplitudes. 
+						 *    Cheap cables definetely suck (I 
+						 *    was supposed to be out right now).
+						 */
+						if (peaksd.type[prev_peak] == SAT_POS) {
+							//cout << "ghost peak, bitch! ";
+							//cout << "at sample " << s + S0 << " 
+							//with ptot = " << peaksd.tot << "\n";
+							unsigned int delta_samples =
+								peaksd.start[this_peak] - peaksd.stop[prev_peak];
+
+							/* If the previous peak did end less
+							 * than GHOST_PEAK_DS samples before
+							 * this peak start, well, that's not a 
+							 * ghost peak!
+							 */
+							if ((peaksd.tot <= 3 &&
+									peaksd.type[prev_peak - 1] == SAT_POS && 
+									peaksd.type[prev_peak - 2] == SAT_POS) || 
+									delta_samples < GHOST_PEAK_DS_MIN) {
+								printf("--> WD-Start Peak detected: peak %d at sample %d\n", 
+										peaksd.tot, S0 + s);
+							}
+							/* If the previous condition is not validated,
+							 * look for the ghost peak.
+							 */
+							else {
+								printf("--> Ghost-Peak detected: peak %d at sample %d\n", 
+										peaksd.tot, S0 + s);
+							}
+						}
+						/* GHOST PEAKS DETECTION  */
+
+
 						/* -SAT peak stop detected */
 						peaksd.stop[peaksd.tot] = s + S0;
 						peaksd.length[peaksd.tot] = satp;
@@ -138,8 +195,11 @@ void detect_WD_peaks (mObjectPCM<int16_t> *pcm, int s0, int s1, WD_peaks &peaksd
 						peaksd.tot = peaksd.tot + 1;
 						satp = 0;
 					}
-					else
+					else {
+						cout << "Dropping +peak: length " << satp;
+						cout << " at sample " << s << endl;
 						satp = 0;
+					}
 				}
 			}
 		}
@@ -157,8 +217,15 @@ void detect_WD_peaks (mObjectPCM<int16_t> *pcm, int s0, int s1, WD_peaks &peaksd
 					  * not a spurious spiky spike, accept the 
 					  * peak
 					  */
-					if (satn > 1) {
-						//++satn;
+					/*
+					   if (satn > 1) {
+					   if (satn >= 20) {
+					   if (satn >= 20 && satn < US_DS_ARTI) {
+					 */
+					if (satn >= US_DS_PEAK && satn < US_DS_ARTI) {
+						/* Unsure about this 
+						   ++satn;
+						*/
 						
 						/* +SAT peak stop detected */
 						peaksd.stop[peaksd.tot] = s + S0;
@@ -167,8 +234,11 @@ void detect_WD_peaks (mObjectPCM<int16_t> *pcm, int s0, int s1, WD_peaks &peaksd
 						peaksd.tot = peaksd.tot + 1;
 						satn = 0;
 					}
-					else
+					else {
+						cout << "Dropping -peak: length " << satn;
+						cout << " at sample " << s << endl;
 						satn = 0;
+					}
 				}
 			}
 		}

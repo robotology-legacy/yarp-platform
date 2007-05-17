@@ -8,7 +8,7 @@
 #include "mInclude.h"
 #include "mPeakTools.h"
 
-//#define DEVELOP
+#define DEVELOP
 void help (void) {
 	printf("Usage:\n");
 	printf(" word_align --sequence sequence.wav --wd word_in.wav --num 10\n");

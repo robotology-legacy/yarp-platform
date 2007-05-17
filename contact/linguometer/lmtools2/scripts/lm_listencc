@@ -23,5 +23,5 @@ foreach $file (@audio_files) {
 	print "-------------------------------------\n";
 	system("play $file_source");
 	system("play $file");
-	system("sleep 0.5");
+	#system("sleep 0.5");
 }
