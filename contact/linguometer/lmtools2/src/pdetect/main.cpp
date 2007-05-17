@@ -37,8 +37,10 @@ void detect_AG_segment(mObjectPCM<int16_t> *pcm, int &s0, int &s1) {
 	s1 = -1;
 	for(unsigned int s = 0; s < pcm->getSamples(); s++) {
 		if(pcm->getL(s) < AG_TH*SAT_NEG && s0 == -1)
+		//if(pcm->getL(s) < US_TH*SAT_NEG && s0 == -1)
 			s0 = s;
 		else if(pcm->getL(s) > AG_TH*SAT_POS && s1 == -1) 
+		//else if(pcm->getL(s) > US_TH*SAT_POS && s1 == -1) 
 			s1 = s;
 		if(s0 > -1 && s1 > -1)
 			break;
@@ -100,8 +102,10 @@ void detect_WD_peaks (mObjectPCM<int16_t> *pcm, int s0, int s1, WD_peaks &peaksd
 	/* Peak detection: threshold on values. */
 	for (int s = s0; s < s1; s++) {
 		if (pcm->getR(s) > AG_TH*SAT_POS)
+		//if (pcm->getR(s) > US_TH*SAT_POS)
 			peaks[s - s0] = SAT_POS;
-		else if (pcm->getR(s) < AG_TH*SAT_NEG)
+		if (pcm->getR(s) < AG_TH*SAT_NEG)
+		//else if (pcm->getR(s) < US_TH*SAT_NEG)
 			peaks[s - s0] = SAT_NEG;
 	}
 	
@@ -119,15 +123,23 @@ void detect_WD_peaks (mObjectPCM<int16_t> *pcm, int s0, int s1, WD_peaks &peaksd
 				if (peaks[s + 1] == SAT_POS)
 					++satp;
 				else {
-					//unsure about this, pls check
-					//++satp;
-					
-					/* -SAT peak stop detected */
-					peaksd.stop[peaksd.tot] = s + S0;
-					peaksd.length[peaksd.tot] = satp;
-					peaksd.type[peaksd.tot] = SAT_POS;
-					peaksd.tot = peaksd.tot + 1;
-					satp = 0;
+					 /* If peak is consistent and 
+					  * not a spurious spiky spike, accept the 
+					  * peak
+					  */
+					if (satp > 1) {
+						//unsure about this, pls check
+						//++satp;
+						
+						/* -SAT peak stop detected */
+						peaksd.stop[peaksd.tot] = s + S0;
+						peaksd.length[peaksd.tot] = satp;
+						peaksd.type[peaksd.tot] = SAT_POS;
+						peaksd.tot = peaksd.tot + 1;
+						satp = 0;
+					}
+					else
+						satp = 0;
 				}
 			}
 		}
@@ -141,14 +153,22 @@ void detect_WD_peaks (mObjectPCM<int16_t> *pcm, int s0, int s1, WD_peaks &peaksd
 				if (peaks[s + 1] == SAT_NEG)
 					++satn;
 				else {
-					//++satn;
-					
-					/* +SAT peak stop detected */
-					peaksd.stop[peaksd.tot] = s + S0;
-					peaksd.length[peaksd.tot] = satn;
-					peaksd.type[peaksd.tot] = SAT_NEG;
-					peaksd.tot = peaksd.tot + 1;
-					satn = 0;
+					 /* If peak is consistent and 
+					  * not a spurious spiky spike, accept the 
+					  * peak
+					  */
+					if (satn > 1) {
+						//++satn;
+						
+						/* +SAT peak stop detected */
+						peaksd.stop[peaksd.tot] = s + S0;
+						peaksd.length[peaksd.tot] = satn;
+						peaksd.type[peaksd.tot] = SAT_NEG;
+						peaksd.tot = peaksd.tot + 1;
+						satn = 0;
+					}
+					else
+						satn = 0;
 				}
 			}
 		}

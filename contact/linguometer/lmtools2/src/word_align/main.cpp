@@ -8,7 +8,7 @@
 #include "mInclude.h"
 #include "mPeakTools.h"
 
-#define DEVELOP
+//#define DEVELOP
 void help (void) {
 	printf("Usage:\n");
 	printf(" word_align --sequence sequence.wav --wd word_in.wav --num 10\n");
@@ -96,9 +96,14 @@ int main (int argc, char *argv[]) {
 	free(bufferSN);
 	
 	/* Threshold */
-	threshold(bufferWD, samplesWD, US_TH);
-	threshold(bufferWD, samplesWD, 0.50);
-	//threshold(bufferAG, samplesAG, AG_TH);
+	//threshold(bufferWD, samplesWD, US_TH);
+	threshold(bufferWD, samplesWD, AG_TH);
+	threshold(bufferAG, samplesAG, AG_TH);
+#ifdef DEVELOP
+	/* Now is time to look at the signals */
+	mEncodePCM16("temp/th_wd.wav", bufferWD, NULL, samplesWD, 48000, 1);
+	mEncodePCM16("temp/th_ag.wav", bufferAG, NULL, samplesAG, 16000, 1);
+#endif
 	
 	/* Remove spikes and artifacts */
 	unsigned int peaksWD;

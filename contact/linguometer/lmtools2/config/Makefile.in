@@ -17,7 +17,6 @@ clean:
 	@rm -f $(OBJS)
 	@rm -f $(MAIN) 
 	@rm -f ../../bin/$(MAIN)
-	@rm -f temp/*
 	@# Assuming I'm not running any threaded code...
 	@rm -f core
 

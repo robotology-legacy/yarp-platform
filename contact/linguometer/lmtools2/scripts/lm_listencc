@@ -11,15 +11,17 @@ my @audio_files = sort {$a cmp $b} @audio_files_ns;
 
 foreach $file (@audio_files) {
 	chomp($file);
-	print "$file\n";
+#	print "$file\n";
 
 	my $file_source = $file;
 	$file_source =~ s/_cc.wav/.wav/g;
 	
-	print "--> $file_source\n";
-	print "--> $file\n";
+	system("clear");
+	print "-------------------------------------\n";
+	print "WD file $file_source\n";
+	print "CC file $file\n";
+	print "-------------------------------------\n";
 	system("play $file_source");
 	system("play $file");
-	system("sleep 1");
-	print "------------------------\n";
+	system("sleep 0.5");
 }
