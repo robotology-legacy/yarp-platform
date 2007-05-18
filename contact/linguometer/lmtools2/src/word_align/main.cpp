@@ -152,12 +152,12 @@ int main (int argc, char *argv[]) {
 	/* Peak detection on AGR data */
 	WD_peaks peaks_dataAGR;
 	memset(&peaks_dataAGR, 0, sizeof(WD_peaks));
-	find_peaks(bufferAGR, samplesAGR, peaks_dataAGR);
+	find_peaks(bufferAGR, samplesAGR, peaks_dataAGR, 0);
 	
 	/* Peak detection on WD data */
 	WD_peaks peaks_dataWD;
 	memset(&peaks_dataWD, 0, sizeof(WD_peaks));
-	find_peaks(bufferWD, samplesWD, peaks_dataWD);
+	find_peaks(bufferWD, samplesWD, peaks_dataWD, 0);
 
 #ifdef DEVELOP
 	printf("Peaks AGR:\n");

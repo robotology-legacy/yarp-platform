@@ -158,6 +158,7 @@ void detect_WD_peaks (mObjectPCM<int16_t> *pcm, int s0, int s1, WD_peaks &peaksd
 						 *    Cheap cables definetely suck (I 
 						 *    was supposed to be out right now).
 						 */
+						//bool peak_is_ghost = false;
 						if (peaksd.type[prev_peak] == SAT_POS) {
 							//cout << "ghost peak, bitch! ";
 							//cout << "at sample " << s + S0 << " 
@@ -174,25 +175,44 @@ void detect_WD_peaks (mObjectPCM<int16_t> *pcm, int s0, int s1, WD_peaks &peaksd
 									peaksd.type[prev_peak - 1] == SAT_POS && 
 									peaksd.type[prev_peak - 2] == SAT_POS) || 
 									delta_samples < GHOST_PEAK_DS_MIN) {
-								printf("--> WD-Start Peak detected: peak %d at sample %d\n", 
-										peaksd.tot, S0 + s);
+								//printf("--> WD-Start Peak detected: peak %d when dealing with +SAT-end at sample %d\n", 
+								//		peaksd.tot, S0 + s);
+								printf("--> WD-Start Peak detected (+SAT):\n");
+								printf("    Current peak:     %d\n", this_peak);
+								printf("    WD-Start peak:    %d\n", prev_peak);
+								printf("    Current position: %d\n", S0 + s);
 							}
 							/* If the previous condition is not validated,
 							 * look for the ghost peak.
 							 */
 							else {
-								printf("--> Ghost-Peak detected: peak %d at sample %d\n", 
-										peaksd.tot, S0 + s);
+								printf("--> Ghost Peak detected (+SAT):\n");
+								printf("    Current peak:     %d\n", this_peak);
+								printf("    WD-Start peak:    %d\n", prev_peak);
+								printf("    Current position: %d\n", S0 + s);
+								printf("    Ghost-recovery:   %d --> %d samples\n", S0 + s - delta_samples, S0 + s);
+								
+								/*
+								for (unsigned int sp = S0 + s -delta_samples; sp < S0 + s; sp++) {
+									//if (pcm->getR(s + s0) > 0.1*SAT_POS)
+									//	peaks[s] = SAT_POS;
+									if (pcm->getR(sp + s0) < 0.1*SAT_NEG)
+										peaks[sp] = SAT_NEG;
+								}
+								peak_is_ghost = true;
+								s -= S0 - delta_samples;
+								*/
 							}
 						}
 						/* GHOST PEAKS DETECTION  */
 
-
+						//if (!peak_is_ghost) {
 						/* -SAT peak stop detected */
 						peaksd.stop[peaksd.tot] = s + S0;
 						peaksd.length[peaksd.tot] = satp;
 						peaksd.type[peaksd.tot] = SAT_POS;
 						peaksd.tot = peaksd.tot + 1;
+						//}
 						satp = 0;
 					}
 					else {
@@ -395,7 +415,7 @@ int main (int argc, char *argv[]) {
 	
 	WD_peaks peaksd;
 	detect_WD_peaks(pcm, s0, s1, peaksd, AG_s0);
-
+	printf("\n\n\n");
 	unsigned int words = 0;
 	WD_word wordsd [WD_MAX];
 	memset (wordsd, 0, WD_MAX * sizeof(WD_word));
