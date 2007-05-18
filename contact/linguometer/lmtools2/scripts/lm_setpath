@@ -14,6 +14,6 @@ if [ "`pwd | grep lmtools2`" == "$CURRENT_PATH" ]; then
 	if [ "$USER_CHOICE" == "Yes" ]; then
 		echo "Adding lmtools path to ~/.bashrc";
 		echo "# lmtools2 path" >> ~/.bashrc;
-		echo -e "export PATH=\"$CURRENT_PATH:$CURRENT_PATH/scripts:\${PATH}\"" >> ~/.bashrc;
+		echo -e "export PATH=\"$CURRENT_PATH/bin:$CURRENT_PATH/scripts:\${PATH}\"" >> ~/.bashrc;
 	fi
 fi
