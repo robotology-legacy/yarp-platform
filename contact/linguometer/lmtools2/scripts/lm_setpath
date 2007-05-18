@@ -1,0 +1,19 @@
+#!/bin/bash
+CURRENT_PATH=`pwd`
+echo "Current path: $CURRENT_PATH";
+
+if [ "`pwd | grep lmtools2`" == "$CURRENT_PATH" ]; then
+	if [ "`pwd | grep scripts`" == "$CURRENT_PATH" ]; then
+		echo "     Warning: Script executed inside the lmtools2/script folder"
+		cd ../
+		CURRENT_PATH=`pwd`
+		echo "Correct path: $CURRENT_PATH"
+	fi
+	echo -e '\nAre you sure this is correct (Yes/no)? \c'
+    read USER_CHOICE;
+	if [ "$USER_CHOICE" == "Yes" ]; then
+		echo "Adding lmtools path to ~/.bashrc";
+		echo "# lmtools2 path" >> ~/.bashrc;
+		echo -e "export PATH=\"$CURRENT_PATH:$CURRENT_PATH/scripts:\${PATH}\"" >> ~/.bashrc;
+	fi
+fi
