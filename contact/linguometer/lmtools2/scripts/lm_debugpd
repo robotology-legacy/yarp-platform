@@ -1,0 +1,3 @@
+#!/bin/bash
+gvim temp/ws_*
+gvim log/lm_pdetect*

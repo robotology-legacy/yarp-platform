@@ -15,12 +15,14 @@
 #define TEMP_DD		"temp/sequence.dd"
 #define	TEMP_SEG	"temp/US_segment.wav"
 #define	TEMP_SEQ	"temp/US_sequence.wav"
+#define	TEMP_PKS	"temp/US_peaks.wav"
 #define	TEMP_ALR	"temp/sequence.alr"
 
 void help (void) {
 	printf("Usage:\n");
 	printf("  pdetect2 --stream file.dv --t0 time0 --t1 time1 --dd file.dd\n");
-	printf("           --seg segment.wav --seq sequence.wav --alr sequence.alr\n");
+	printf("           --seg segment.wav --seq sequence.wav --pks peaks.wav --alr sequence.alr\n");
+	printf("           --th 0.60\n");
 	printf("  pdetect2 --help\n");
 	printf("Input:\n");
 	printf("  file.dv       DV file\n");
@@ -30,7 +32,9 @@ void help (void) {
 	printf("  file.dd       file containing dd's segmentation parameters\n");
 	printf("  segment.wav   WAV file with the extracted segment\n");
 	printf("  sequence.wav  WAV file with the extracted sequence\n");
+	printf("  peaks.wav     WAV file with the extracted sequence and the peaks found\n");
 	printf("  sequence.alr  ALR file with the alignement frame of reference (in samples)");
+	printf("  0.60          threshold on amplitude (double)");
 	printf("Requirments:\n");
 	printf("  ffmpeg-0.4.9_p2007012 (libavcodec, libavformat)\n\n");
 }
@@ -79,14 +83,18 @@ bool detect_segment(mObjectPCM<int16_t> *pcm,
 
 int main (int argc, char *argv[]) {
 	unsigned int rateUS = 48000;
-
+#ifdef DEBUG_ALG
+	printf("--> Running in DEBUG_ALG mode. Unpredictable behavior if no temp/ folder exists\n");
+#endif
 	int segmentRough_t0 = 0;
 	int segmentRough_t1 = 0;
+	float segment_th = 0.00;
 	char *filename_US = NULL;
 	char *filename_DD = NULL;
 	char *filename_SEG = NULL;
 	char *filename_SEQ = NULL;
 	char *filename_ALR = NULL;
+	char *filename_PKS = NULL;
 #ifdef DEVELOP	
 	segmentRough_t0 = TEMP_T0;
 	segmentRough_t1 = TEMP_T1;
@@ -96,6 +104,7 @@ int main (int argc, char *argv[]) {
 	filename_SEG = TEMP_SEG;
 	filename_SEQ = TEMP_SEQ;
 	filename_ALR = TEMP_ALR;
+	filename_PKS = TEMP_PKS;
 #else
 	/* Parsing starts here */
 	switch (argc) {
@@ -106,21 +115,25 @@ int main (int argc, char *argv[]) {
 				return 0;
 			}
 			break;
-		case 15:
+		case 19:
 			if (strcmp(argv [1], "--stream") == 0 &&
 					strcmp(argv [3], "--t0") == 0 &&
 					strcmp(argv [5], "--t1") == 0 &&
 					strcmp(argv [7], "--dd") == 0 &&
 					strcmp(argv [9], "--seg") == 0 &&
 					strcmp(argv [11], "--seq") == 0 &&
-					strcmp(argv [13], "--alr") == 0) {
+					strcmp(argv [13], "--pks") == 0 &&
+					strcmp(argv [15], "--alr") == 0 &&
+					strcmp(argv [17], "--th") == 0) {
 				filename_US = argv [2];
 				assert(sscanf(argv [4], "%d", &segmentRough_t0) == 1);
 				assert(sscanf(argv [6], "%d", &segmentRough_t1) == 1);
 				filename_DD = argv [8];
 				filename_SEG = argv [10];
 				filename_SEQ = argv [12];
-				filename_ALR = argv [14];
+				filename_PKS = argv [14];
+				filename_ALR = argv [16];
+				assert(sscanf(argv [18], "%f", &segment_th) == 1);
 			}
 			else
 				return -1;
@@ -225,24 +238,46 @@ int main (int argc, char *argv[]) {
 	bPeaksSEQ = (int16_t *)malloc(samplesSEQ * sizeof(int16_t));
 	memcpy(bPeaksSEQ, bufferSEQ, samplesSEQ * sizeof(int16_t));	
 
+	/* Threshold on amplitudes:
+	 * Easily detect the spikes. The lower is the threshold
+	 * value, the higher will be the number of the detected peaks.
+	 * Those peaks could be Ham (if the lenght ~ 60samples) 
+	 * or Spam (if the lenght </> 60samples) or could even 
+	 * be ghost peaks.
+	 * Since ghost-peak recovery could be expensive in terms
+	 * of resources, it is quite useful to adopt this
+	 * strategy:
+	 * - Use a "lower" threshold, e.g. 60% of the max value.
+	 *   The ideal value is 80%, but we could skip peaks 
+	 *   that are not that bad...
+	 * - Using lower threshold values means that we'll collect
+	 *   ham and lots of spam, the spam filtering is done 
+	 *   on the peaks durations (clean_spikes)
+	 */
+	threshold(bPeaksSEQ, samplesSEQ, (double)segment_th);
+	
+	/* Threshold on duration 
+	 * A peak, ideally, is 64 samples. 
+	 */
+	unsigned int my_peaks = 0;
+	clean_spurious_spikes(bPeaksSEQ, samplesSEQ);
+	my_peaks = clean_spikes(bPeaksSEQ, samplesSEQ, US_DS_PEAK, US_DS_ARTI);
+	clean_spurious_spikes(bPeaksSEQ, samplesSEQ);
+	mEncodePCM16(filename_PKS, bufferSEQ, bPeaksSEQ, samplesSEQ, rateUS, 2);
+	
+	
 
-	/* Threshold */
-	//threshold(bPeaksSEQ, samplesSEQ, US_TH);
-	threshold(bPeaksSEQ, samplesSEQ, 0.80);
-	mEncodePCM16("temp/sequence_th.wav", bufferSEQ, bPeaksSEQ, samplesSEQ, rateUS, 2);
-
-	/* Peak detection */
+	/* Peak detection 
+	 * Peak frame of reference referred to the beginning of the sequence
+	 */
 	WD_peaks sPeaksSEQ;
 	memset(&sPeaksSEQ, 0, sizeof(WD_peaks));
-	/* Peak frame of reference referred to the beginning of US stream */
-	//find_peaks(bPeaksSEQ, samplesSEQ, sPeaksSEQ, delta_s);
-	/* Peak frame of reference referred to the beginning of the sequence */
 	find_peaks(bPeaksSEQ, samplesSEQ, sPeaksSEQ, 0);
 	
 	/* Sequence peak-consistency check */
 	bool start_ok = check_sequence_start(sPeaksSEQ);
 	bool stop_ok = check_sequence_stop(sPeaksSEQ);
-	printf("Sequency peak-consistency:\n");
+	printf("Sequence peak-consistency:\n");
 	printf("     Start: %s\n", start_ok ? "passed" : "failed");
 	printf("     Stop:  %s\n", stop_ok ? "passed" : "failed");
 	
@@ -295,8 +330,9 @@ int main (int argc, char *argv[]) {
 					int16_t *bufferGST = NULL;
 					bufferGST = (int16_t *)malloc(recovery_ds * sizeof(int16_t));
 					memcpy(bufferGST, bufferSEQ_copy + recovery_s0, recovery_ds * sizeof(int16_t));	
+#ifdef DEBUG_ALG 
 					mEncodePCM16("temp/ghost_found.wav", bufferGST, NULL, recovery_ds, rateUS, 1);
-
+#endif
 					/* Fetch for the peak. I use few threshold values and 
 					 * then I look for the values higher thant the threshold.
 					 */
@@ -328,8 +364,10 @@ int main (int argc, char *argv[]) {
 						if(bufferSEQ_copy[sg] <= thresholds[ghost_th]*SAT_NEG)
 							bPeaksSEQ[sg] = SAT_NEG;
 					}
+#ifdef DEBUG_ALG
 					mEncodePCM16("temp/ghost_recovered.wav", bufferGST,
 							bPeaksSEQ + recovery_s0, recovery_ds, rateUS, 2);
+#endif
 
 					printf("    Peak sequence recovered. Running peak detection again\n");
 					memset(&sPeaksSEQ, 0, sizeof(WD_peaks));
@@ -363,13 +401,16 @@ int main (int argc, char *argv[]) {
 		if(sPeaksSEQ.type[p] == SAT_POS && sPeaksSEQ.type[p + 1] == SAT_NEG) {
 			++word;
 			cook_dd_params(delta_s + sequence_s0,
-			//cook_dd_params(sequence_s0,
 					sPeaksSEQ.start[p] - 6000, sPeaksSEQ.stop[p + 1] + 6000,
 					dd_f0, dd_f1);
 		fprintf(FILE_DD, "%d/%d/%d\n", word, (int)dd_f0, (int)(dd_f1 - dd_f0 + 1));
 		}
 	}
 	fclose(FILE_DD);
+	
+	printf("Exiting:\n");
+	printf("    Total number of peaks:    %d\n", sPeaksSEQ.tot);
+	printf("    Expected number of words: %d\n", (sPeaksSEQ.tot - 6)/2);
 
 	/* Cleaning... */
 	free(bufferSEG_SN);

@@ -31,32 +31,37 @@ my @seqs = mImportFile($file_seqs);
 
 foreach $line (@seqs) {
 	chomp($line);
-    $line =~ /^(.*)(\/)(.*)(\/)(.*)$/;
+    $line =~ /^(.*)(\/)(.*)(\/)(.*)(\/)(.*)$/;
 	$txt  = $1;
 	$t0   = $3;
 	$t1   = $5;
+	$th   = $7;
 	
 	$txtf = sprintf("%.4d", $txt);
 	print "Sequence $txt, ";
 	print "t0 = $t0, ";
 	print "t1 = $t1\n";
 	$file_txt = "wd_" . $txtf . "_sequence" . ".dd";
-	$file_log = "wd_" . $txtf . "_log"      . ".pd";
+	$file_log = "lm_pdetect2_" . $txtf . ".log";
 	$file_seg = "wd_" . $txtf . "_segment"  . ".wav";
 	$file_seq = "wd_" . $txtf . "_sequence" . ".wav";
 	$file_aln = "wd_" . $txtf . "_sequence" . ".alr";
+	$file_pks = "wd_" . $txtf . "_sequence_peaks" . ".wav";
 	
 	$file_txtt = "cache/$file_txt";
 	$file_logt = "log/$file_log";
 	$file_segt = "cache/$file_seg";
 	$file_seqt = "cache/$file_seq";
 	$file_alnt = "cache/$file_aln";
-	print "  Sequence  $file_txtt\n";	# pdetect words
-	print "  Log:      $file_logt\n";	# pdetect std output
-	print "  Segment:  $file_segt\n";
-	print "  Sequence: $file_seqt\n";
-	print "  ALN:      $file_alnt\n";	# pdetect sequence alignment reference
-	$cmd = "pdetect --stream $file_dv --t0 $t0 --t1 $t1 --dd $file_txtt --seg $file_segt --seq $file_seqt --aln $file_alnt 1> $file_logt";
+	$file_pkst = "cache/$file_pks";
+	print "  Sequence   $file_txtt\n";
+	print "  Log:       $file_logt\n";
+	print "  Segment:   $file_segt\n";
+	print "  Sequence:  $file_seqt\n";
+	print "  ALR:       $file_alnt\n";
+	print "  PKS:       $file_pkst\n";
+	print "  Threshold: $th\n";
+	$cmd = "pdetect2 --stream $file_dv --t0 $t0 --t1 $t1 --dd $file_txtt --seg $file_segt --seq $file_seqt --pks $file_pkst --alr $file_alnt --th $th 1> $file_logt";
 	#print "$cmd\n";
 	system($cmd);
 }
