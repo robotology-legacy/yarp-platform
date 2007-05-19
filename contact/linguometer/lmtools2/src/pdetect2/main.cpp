@@ -19,14 +19,18 @@
 
 void help (void) {
 	printf("Usage:\n");
-	printf("  pdetect --stream file.dv --t0 time0 --t1 time1 --log file.log\n");
-	printf("    --seg segment.wav --seq sequence.wav\n");
-	printf("  pdetect --help\n");
-	printf("Where:\n");
-	printf("  file.dv   DV file\n");
-	printf("  time0     AG start-peak position (in seconds, int value)\n");
-	printf("  time1     AG stop-peak position (in seconds, int value)\n");
-	printf("  file.log  file containing dd's segmentation parameters\n");
+	printf("  pdetect2 --stream file.dv --t0 time0 --t1 time1 --dd file.dd\n");
+	printf("           --seg segment.wav --seq sequence.wav --alr sequence.alr\n");
+	printf("  pdetect2 --help\n");
+	printf("Input:\n");
+	printf("  file.dv       DV file\n");
+	printf("  time0         AG start-peak position (in seconds, int value)\n");
+	printf("  time1         AG stop-peak position (in seconds, int value)\n");
+	printf("Output:\n");
+	printf("  file.dd       file containing dd's segmentation parameters\n");
+	printf("  segment.wav   WAV file with the extracted segment\n");
+	printf("  sequence.wav  WAV file with the extracted sequence\n");
+	printf("  sequence.alr  ALR file with the alignement frame of reference (in samples)");
 	printf("Requirments:\n");
 	printf("  ffmpeg-0.4.9_p2007012 (libavcodec, libavformat)\n\n");
 }
@@ -74,24 +78,61 @@ bool detect_segment(mObjectPCM<int16_t> *pcm,
 }
 
 int main (int argc, char *argv[]) {
-	char *filename_US = TEMP_USDV;
-	int segmentRough_t0 = TEMP_T0;
-	int segmentRough_t1 = TEMP_T1;
-	
-	char *filename_DD = TEMP_DD;
-	char *filename_SEG = TEMP_SEG;
-	char *filename_SEQ = TEMP_SEQ;
-	char *filename_ALR = TEMP_ALR;
-
 	unsigned int rateUS = 48000;
 
+	int segmentRough_t0 = 0;
+	int segmentRough_t1 = 0;
+	char *filename_US = NULL;
+	char *filename_DD = NULL;
+	char *filename_SEG = NULL;
+	char *filename_SEQ = NULL;
+	char *filename_ALR = NULL;
+#ifdef DEVELOP	
+	segmentRough_t0 = TEMP_T0;
+	segmentRough_t1 = TEMP_T1;
 
+	filename_US = TEMP_USDV;
+	filename_DD = TEMP_DD;
+	filename_SEG = TEMP_SEG;
+	filename_SEQ = TEMP_SEQ;
+	filename_ALR = TEMP_ALR;
+#else
 	/* Parsing starts here */
-	/*
-	 *
-	 *
-	 */
+	switch (argc) {
+		case 2:
+			if (strcmp(argv [1], "--help") == 0) {
+				welcome();
+				help();
+				return 0;
+			}
+			break;
+		case 15:
+			if (strcmp(argv [1], "--stream") == 0 &&
+					strcmp(argv [3], "--t0") == 0 &&
+					strcmp(argv [5], "--t1") == 0 &&
+					strcmp(argv [7], "--dd") == 0 &&
+					strcmp(argv [9], "--seg") == 0 &&
+					strcmp(argv [11], "--seq") == 0 &&
+					strcmp(argv [13], "--alr") == 0) {
+				filename_US = argv [2];
+				assert(sscanf(argv [4], "%d", &segmentRough_t0) == 1);
+				assert(sscanf(argv [6], "%d", &segmentRough_t1) == 1);
+				filename_DD = argv [8];
+				filename_SEG = argv [10];
+				filename_SEQ = argv [12];
+				filename_ALR = argv [14];
+			}
+			else
+				return -1;
+			break;
+		default:
+			welcome();
+			help();
+			return 0;
+			break;
+	}
 	/* Parsing stops here */
+#endif
 
 	/* We need to convert the rough time values (in seconds) into
 	 * pts values (in u-seconds)
