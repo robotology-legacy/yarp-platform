@@ -664,6 +664,9 @@ void mEncodePCM16 (char *filename,
 		int16_t *bufferL, int16_t *bufferR, 
 		unsigned int samples, unsigned int bitRate, unsigned int channels) {
 
+	if (channels == 2 && bufferR == NULL)
+		return;
+
 	mObjectEN2 *encoder = new mObjectEN2;
 	encoder->setFile(filename);
 	encoder->setAudio(bitRate, channels);

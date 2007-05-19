@@ -31,6 +31,23 @@ void help (void) {
 	printf("  ffmpeg-0.4.9_p2007012 (libavcodec, libavformat)\n\n");
 }
 
+void cook_dd_params (unsigned int s0, unsigned int sw0, unsigned int sw1,
+	int64_t &f0, int64_t &f1) {
+	unsigned int sf    = 48000;
+	unsigned int vfPTS = 40000;
+	int64_t p0 = mObjectDV2Tools::samples2pts(s0 + sw0, sf);
+	int64_t p1 = mObjectDV2Tools::samples2pts(s0 + sw1, sf);
+	
+	f0 = p0/vfPTS;
+	f1 = p1/vfPTS;
+	int64_t f0r = p0%vfPTS;
+	int64_t f1r = p1%vfPTS;
+	
+	if (f0r > 40000/2)
+		--f0;
+	if (f1r > 40000/2)
+		++f1;
+}
 
 bool detect_segment(mObjectPCM<int16_t> *pcm,
 		unsigned int &sequence_s0, unsigned int &sequence_s1) {
@@ -188,9 +205,6 @@ int main (int argc, char *argv[]) {
 	printf("     Start: %s\n", start_ok ? "passed" : "failed");
 	printf("     Stop:  %s\n", stop_ok ? "passed" : "failed");
 	
-	/* Spam */
-	printf("Found peaks:\n");
-	//print_peaks(sPeaksSEQ);
 	bool ghost_nuked = false;	
 	unsigned int delta_p = 2;
 	do{
@@ -283,13 +297,38 @@ int main (int argc, char *argv[]) {
 					delta_p = 2;
 				}
 				else {
-					printf("Sorry, a Ghost-Peak exists but I cannot recover it\n");
+					printf("Sorry, a Ghost-Peak exists but cannot be recovered.\n");
 					delta_p = 1;
 				}
 			}
 		}
 	} while(ghost_nuked == false);
+	
+	/* Spam */
+	printf("Found peaks:\n");
 	print_peaks(sPeaksSEQ);
+	
+	/* Open dd log file and write, for each word, the pevious and the 
+	 * next video frame
+	 */
+	FILE *FILE_DD = fopen(filename_DD, "w");
+	if(FILE_DD == NULL)
+		return -1;
+	
+	unsigned int word = 0;
+	int64_t dd_f0 = 0;
+	int64_t dd_f1 = 0;
+	for(unsigned int p = 3; p < sPeaksSEQ.tot - 3; p += 2) {
+		if(sPeaksSEQ.type[p] == SAT_POS && sPeaksSEQ.type[p + 1] == SAT_NEG) {
+			++word;
+			cook_dd_params(delta_s + sequence_s0,
+			//cook_dd_params(sequence_s0,
+					sPeaksSEQ.start[p] - 6000, sPeaksSEQ.stop[p + 1] + 6000,
+					dd_f0, dd_f1);
+		fprintf(FILE_DD, "%d/%d/%d\n", word, (int)dd_f0, (int)(dd_f1 - dd_f0 + 1));
+		}
+	}
+	fclose(FILE_DD);
 
 	/* Cleaning... */
 	free(bufferSEG_SN);

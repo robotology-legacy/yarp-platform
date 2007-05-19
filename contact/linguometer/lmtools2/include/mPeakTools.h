@@ -160,9 +160,11 @@ unsigned int find_peak_values(int16_t *buffer,unsigned int samples,
 	return p;
 }
 
-
+/* Find peaks in a sequence. Each shift_s samples are 
+ * added to each peak sample value
+ */
 void find_peaks(int16_t *buffer,unsigned int samples, 
-		WD_peaks &peaks) {
+		WD_peaks &peaks, unsigned int shift_s) {
 	unsigned int satp = 0;
 	unsigned int satn = 0;
 	for (unsigned int s = 0; s < samples; s++) {
@@ -170,17 +172,15 @@ void find_peaks(int16_t *buffer,unsigned int samples,
 			if (buffer[s - 1] == 0) {
 				satp = 1;
 				/* +SAT peak start detected */
-				peaks.start[peaks.tot] = s;
+				peaks.start[peaks.tot] = s + shift_s;
 			}
 			else if (buffer[s - 1] == SAT_POS) {
 				if (buffer[s + 1] == SAT_POS)
 					++satp;
 				else {
-					//unsure about this, pls check
 					//++satp;
-					
 					/* -SAT peak stop detected */
-					peaks.stop[peaks.tot] = s;
+					peaks.stop[peaks.tot] = s + shift_s;
 					peaks.length[peaks.tot] = satp;
 					peaks.type[peaks.tot] = SAT_POS;
 					peaks.tot = peaks.tot + 1;
@@ -192,16 +192,15 @@ void find_peaks(int16_t *buffer,unsigned int samples,
 			if (buffer[s - 1] == 0) {
 				satn = 1;
 				/* -SAT peak start detected */
-				peaks.start[peaks.tot] = s;
+				peaks.start[peaks.tot] = s + shift_s;
 			}
 			else if (buffer[s - 1] == SAT_NEG) {
-				if (buffer[s + 1] == SAT_NEG)
+				if (buffer[s + 1] == SAT_NEG) 
 					++satn;
 				else {
 					//++satn;
-					
 					/* +SAT peak stop detected */
-					peaks.stop[peaks.tot] = s;
+					peaks.stop[peaks.tot] = s + shift_s;
 					peaks.length[peaks.tot] = satn;
 					peaks.type[peaks.tot] = SAT_NEG;
 					peaks.tot = peaks.tot + 1;
@@ -275,7 +274,36 @@ void resample_linear(int16_t *buffer_in, int16_t *buffer_out,
 				buffer_out[samples_hold*s + h] = buffer_in[s];
 }
 
+/* Checks if the WD_peaks sequence starts correcly,
+ * that means:
+ * +SAT +SAT +SAT    +SAT              -SAT
+ * <------------>    <-------------------->
+ *   SEQ start            First word
+ */
+bool check_sequence_start(WD_peaks peaks) {
+	bool start_ok = true;
+	for(unsigned int p = 0; p < 4; p++) 
+		start_ok &= (peaks.type[p] == SAT_POS);
+	start_ok &= (peaks.type[4] == SAT_NEG);
 
+	return start_ok;
+}
+
+/* Checks if the WD_peaks sequence stops correcly,
+ * that means:
+ *
+ * +SAT              -SAT      -SAT -SAT -SAT    
+ * <-------------------->      <------------>    
+ *   Last word                   SEQ stop            
+ */
+bool check_sequence_stop(WD_peaks peaks) {
+	bool stop_ok = true;
+	for(unsigned int p = peaks.tot - 4; p < peaks.tot; p++)
+		stop_ok &= (peaks.type[p] == SAT_NEG);
+	stop_ok &= peaks.type[peaks.tot - 5] == SAT_POS;
+
+	return stop_ok;
+}
 
 
 
