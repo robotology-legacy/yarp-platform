@@ -46,14 +46,14 @@ foreach $folder_seq (@folders_seq) {
 	chomp($folder_seq);
 	
 	# Look for WD files
-	my $word_regex = "wd_*.wav";
-	my @word_files_ns = `find $folder_seq/ -iname "$word_regex" | grep -v "ag"`;
+	my $word_regex = "wd_*_us.wav";
+	my @word_files_ns = `find $folder_seq/ -iname "$word_regex"`; #| grep -v "ag"`;
 	my @files_wd = sort {$a cmp $b} @word_files_ns;
 		
 	# Extract sequence number (SSSS) from each SEQ folder
 	$folder_seq =~ /^(.*)(_)(.*)$/;
 	$idx_seq = $3;
-
+	
 	# Cook the ALS file name
 	my $file_als = $file_als_regex;
 	$file_als =~ s/SSSS/$idx_seq/g;
@@ -79,7 +79,7 @@ foreach $folder_seq (@folders_seq) {
 		chomp($file_wd);
 		
 		# Extract useful infos from WD filename
-		$file_wd =~ /^(.*)(_)(.*)(.wav)$/;
+		$file_wd =~ /^(.*)(_)(.*)(_us.wav)$/;
 		$idx_wd = $3;
 	
 		
@@ -92,7 +92,7 @@ foreach $folder_seq (@folders_seq) {
 		
 		# Cook output files
 		my $file_out = $folder_seq . "/wd_" . $idx_wd . "_ag.wav";
-		my $file_aln = $folder_seq . "/wd_" . $idx_wd . ".aln";
+		my $file_aln = $folder_seq . "/wd_" . $idx_wd . "_ag.aln";
 		
 
 		# Now I do have enough informations 
@@ -109,8 +109,8 @@ foreach $folder_seq (@folders_seq) {
 		print "  LOG     $file_log\n";
 
 		my $cmd = "walign2 --sequence $file_ag --wd $file_wd --num $idx_wd --out $file_out --aln $file_aln --th 0.60 --pwd $pWD --pag $pAG 1>> $file_log";
-		#print "$cmd\n\n";
-		system($cmd);
+		print "$cmd\n\n";
+		#system($cmd);
 		print "\n";
 	}
 }

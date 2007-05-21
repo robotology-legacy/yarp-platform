@@ -73,6 +73,11 @@ int main (int argc, char *argv[]) {
 			return 0;
 			break;
 	}
+	/* The num_WD variable is not needed any more.
+	 * I keep it just for because it helps me while 
+	 * reading at the log files.
+	 */
+	printf("Working on WD %d\n", num_WD);
 
 	/* Here I create the PCM objects, crucial for
 	 * PCM data import.
@@ -241,10 +246,14 @@ int main (int argc, char *argv[]) {
 	unsigned int s0AGR = peaks_dataAGR.start[p0AG] - peaks_dataWD.start[p0WD_idx];
 	unsigned int s1AGR = s0AGR + samplesWD;
 
+	/*
 	if(p0WD == 0)
 		assert(peaks_dataWD.tot == 2);
-	else if(p0WD == 1)
+		*/
+	if(p0WD == 1) {
+		printf("Error: user supplied pwd does not match WD peak data\n");
 		assert(peaks_dataWD.tot == 1);
+	}
 
 	/*
 	unsigned int s0AGR = 0;

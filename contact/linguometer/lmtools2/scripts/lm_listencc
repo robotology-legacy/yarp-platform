@@ -9,19 +9,23 @@ my @audio_files_ns = `find $folder/ -iname "*cc.wav"`;
 my @audio_files = sort {$a cmp $b} @audio_files_ns;
 
 
-foreach $file (@audio_files) {
-	chomp($file);
+foreach $file_cc (@audio_files) {
+	chomp($file_cc);
 #	print "$file\n";
 
-	my $file_source = $file;
-	$file_source =~ s/_cc.wav/.wav/g;
+	my $file_wd = $file_cc;
+	$file_wd =~ s/_cc.wav/.wav/g;
+	my $file_ag = $file_cc;
+	$file_ag =~ s/_cc.wav/_ag.wav/g;
 	
 	system("clear");
 	print "-------------------------------------\n";
-	print "WD file $file_source\n";
-	print "CC file $file\n";
+	print "WD file $file_wd\n";
+	print "AG file $file_ag\n";
+	print "CC file $file_cc\n";
 	print "-------------------------------------\n";
-	system("play $file_source");
-	system("play $file");
+	system("play $file_wd");
+	system("play $file_ag");
+	system("play $file_cc");
 	#system("sleep 0.5");
 }

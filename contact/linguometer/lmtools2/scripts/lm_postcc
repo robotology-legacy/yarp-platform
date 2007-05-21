@@ -88,9 +88,8 @@ sub pAlign {
 	my $t1 = $padLen/48000;
 	my $cmd2 = "sox $track_cc $file_cc_est trim ${t0}s ${t1}s";
 	my $tt = $t0 . "/" . $t1;
-	system ("echo $tt >> /home/michele/Desktop/CuloR8.txt");
-	print "$cmd\n";
-	print "$cmd2\n";
+	#print "$cmd\n";
+	#print "$cmd2\n";
 
 	# Matlab complains for the "./" inherited from the "find" command.
 	# Let's make Matlab happy.
@@ -182,7 +181,7 @@ foreach $folder_seq (@folders_seq) {
 	chomp($folder_seq);
 
 	# Look for WD files
-	my $word_regex = "wd_*.wav";
+	my $word_regex = "wd_*_us.wav";
 	my @word_files_ns = `find $folder_seq/ -iname "$word_regex" | grep -v "ag"`;
 	my @word_files = sort {$a cmp $b} @word_files_ns;
 		
@@ -230,12 +229,12 @@ foreach $folder_seq (@folders_seq) {
 		my $file_aln = $file_wd;
 		my $file_cc = $file_wd;
 		my $file_cc_est = $file_wd;
-		$file_aln =~ s/.wav/.aln/g;
-		$file_cc =~ s/.wav/_cc.wav/g;
-		$file_cc_est =~ s/.wav/_cc_est.wav/g;
+		$file_aln =~ s/_us.wav/_ag.aln/g;
+		$file_cc =~ s/_us.wav/_cc_tmp.wav/g;
+		$file_cc_est =~ s/_us.wav/_cc_est.wav/g;
 
 		# Word index
-		$file_wd =~ /^(.*)(_)(.*)(.wav)$/;
+		$file_wd =~ /^(.*)(_)(.*)(_us.wav)$/;
 		my $idx_wd = $3;
 
 		# Spam
@@ -259,12 +258,12 @@ foreach $folder_seq (@folders_seq) {
 		# For the sake of simplicity, Matlab is launced
 		# for each word (sorry).
 		#my $target_offset = $cc_offset + 16667375 - 1456309;
-		print "## Offset: $cc_offset\n";
-		print "## ALRF:   $value_ALR\n";
-		print "## ALR:    $value_ALRF\n";
+		print "  Paul's Offset:  $cc_offset\n";
+		print "  Paul's ALRF:    $value_ALR\n";
+		print "  Paul's ALR:     $value_ALRF\n";
 		my $target_offset = int(48000*$cc_offset) + int($value_ALR) - int($value_ALRF);
 		#my $target_offset = int(48000*$cc_offset) + $value_ALR - $value_ALRF;
-		print "## TOffset: $target_offset\n";
+		print "  Paul's TOffset: $target_offset\n";
 		
 		my @dd_values = pAlign($target_offset, $file_wd, $file_cc, $file_cc_est, $file_aln, $track_cc);
 

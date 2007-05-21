@@ -26,7 +26,7 @@ $regex_SEQ 		= "seq_*";
 @folders_SEQ 	= sort {$a cmp $b} `find . -iname "$regex_SEQ"`;
 
 $ext_ALN		= "aln";
-$regex_ALN		= "wd_SSSS.aln";
+$regex_ALN		= "wd_SSSS_ag.aln";
 
 $ext_AMP		= "amp";
 

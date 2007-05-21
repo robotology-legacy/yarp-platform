@@ -21,11 +21,13 @@ sub mImportFile
 }
 
 
-$file_dv = "root/US/stream.dv";
-$words_path = "cache";
-$words_regex = "wd_*_sequence.dd";
-@files_words_ns= `find $words_path -iname "$words_regex"`;
-@files_words = sort {$a cmp $b} @files_words_ns;
+my $file_dv = "root/US/stream.dv";
+my $words_path = "cache";
+my $words_regex = "wd_*_sequence.dd";
+my @files_words_ns= `find $words_path -iname "$words_regex"`;
+my @files_words = sort {$a cmp $b} @files_words_ns;
+
+my $cmd_shutup = " 1>/dev/null 2>/dev/null";
 
 foreach $file_words (@files_words) {
 	chomp($file_words);
@@ -41,26 +43,27 @@ foreach $file_words (@files_words) {
 		#print "$word\n";
 
 		$word =~ /^(.*)(\/)(.*)(\/)(.*)$/;
-		$word_idx = $1;
-		$word_f0  = $3;
-		$word_df  = $5;
+		my $word_idx = $1;
+		my $word_f0  = $3;
+		my $word_df  = $5;
 		
-		$word_idxf = sprintf("%.4d", $word_idx);
+		my $word_idxf = sprintf("%.4d", $word_idx);
 		print "Word $word_idx, ";
 		print "f0 = $word_f0, ";
 		print "df = $word_df\n";
-		$file_word_log = "seq_" . $seq_idx . "/" . "wd_" . $word_idxf . ".log";
-		$file_word_dv  = "seq_" . $seq_idx . "/" . "wd_" . $word_idxf . ".dv";
-		$file_word_wav = "seq_" . $seq_idx . "/" . "wd_" . $word_idxf . ".wav";
+		#my $file_word_log = "seq_" . $seq_idx . "/" . "wd_" . $word_idxf . ".log";
+		my $file_word_dv  = "seq_" . $seq_idx . "/" . "wd_" . $word_idxf . "_us.dv";
+		my $file_word_wav = "seq_" . $seq_idx . "/" . "wd_" . $word_idxf . "_us.wav";
 		print "  File DV:  $file_word_dv\n";
 		print "  File WAV: $file_word_wav\n";
 
-		$shutup = " 1>/dev/null 2>/dev/null";
-		system("dd if=$file_dv of=$file_word_dv bs=144000 skip=$word_f0 count=$word_df $shutup");
-		system("ffmpeg -i $file_word_dv $file_word_wav $shutup");
 
-		#open(FID, "> $file_word_log") or die "Error ($file): $!\n";
-		#print FID "$word_idx/$word_f0/$word_df\n";
-		#close (FID);
+		my $cmd_dd = "dd if=$file_dv of=$file_word_dv bs=144000 skip=$word_f0 count=$word_df $cmd_shutup";
+		my $cmd_ffmpeg = "ffmpeg -i $file_word_dv $file_word_wav $cmd_shutup";
+		
+		#print "$cmd_dd\n";
+		#print "$cmd_ffmpeg\n";
+		system($cmd_dd);
+		system($cmd_ffmpeg);
 	}
 }
