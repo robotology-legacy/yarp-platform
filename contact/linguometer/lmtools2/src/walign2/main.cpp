@@ -12,7 +12,7 @@
 void help (void) {
 	printf("Usage:\n");
 	printf(" word_align --sequence sequence.wav --wd word_in.wav --num 10\n");
-	printf("            --out word_out.wav --log file.aln --pwd 0 --pag 89\n");
+	printf("            --out word_out.wav --aln file.aln --pwd 0 --pag 89\n");
 	printf("Where:\n");
 	printf("  sequence.wav   AG sequence (16kHz, Mono)\n");
 	printf("  word_in.wav    US word  (48kHz, Stereo)\n");
@@ -51,7 +51,7 @@ int main (int argc, char *argv[]) {
 					strcmp(argv [3], "--wd") == 0 &&
 					strcmp(argv [5], "--num") == 0 &&
 					strcmp(argv [7], "--out") == 0 &&
-					strcmp(argv [9], "--log") == 0 &&
+					strcmp(argv [9], "--aln") == 0 &&
 					strcmp(argv [11], "--th") == 0 &&
 					strcmp(argv [13], "--pwd") == 0 &&
 					strcmp(argv [15], "--pag") == 0) {

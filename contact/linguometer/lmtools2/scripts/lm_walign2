@@ -21,49 +21,96 @@ sub mImportFile {
 	return @data;
 }
 
-$folders_regex = "seq_*";
-@folders_seq_ns = `find . -iname "$folders_regex"`;
-@folders_seq = sort {$a cmp $b} @folders_seq_ns;
+# Look for SEQ folders
+my $folders_regex = "seq_*";
+my @folders_seq_ns = `find . -iname "$folders_regex"`;
+my @folders_seq = sort {$a cmp $b} @folders_seq_ns;
 
+# Read configuration files. 
+# We need to extract the threshold value from 
+# lm_pdetect.cfg. Should be the last one.
+my @cfg_pdetect = mImportFile("config/lm_pdetect.cfg");
+
+# For each SSSS sequence, load the appropriate
+# ALS file. It contains the WD/AG peaks that
+# walign2 will use to align WD with AG data.
 my $file_als_regex = "cache/wd_SSSS_sequence.als";
 
-foreach $folder_seq (@folders_seq) {
-	chomp($folder_seq);
-	print "$folder_seq\n";
-	
-	$word_regex = "wd_*.wav";
-	@word_files_ns = `find $folder_seq/ -iname "$word_regex"`;
-	@word_files = sort {$a cmp $b} @word_files_ns;
-		
-	$folder_seq =~ /^(.*)(_)(.*)$/;
-	$seq_idx = $3;
-	
-	my $file_als = $file_als_regex;
-	$file_als =~ s/SSSS/$seq_idx/g;
-	my @params_als = mImportFile($file_als);
-	print "$file_als\n";
-	
-	$ag_file = "temp/ag_sequence_$seq_idx.wav";
-	
+# For each SSSS sequence, load the appropriate
+# AG SEQ file.
+my $file_ag_regex = "temp/ag_sequence_SSSS.wav";
 
-	foreach $word_file (@word_files) {
-		chomp($word_file);
+# Parse each SEQ folder
+foreach $folder_seq (@folders_seq) {
+	# Nuke the carrier return char
+	chomp($folder_seq);
 	
-		$word_file =~ /^(.*)(_)(.*)(.wav)$/;
-		$word_idx = $3;
-		print "[$word_idx] $word_file  ($ag_file)\n";
+	# Look for WD files
+	my $word_regex = "wd_*.wav";
+	my @word_files_ns = `find $folder_seq/ -iname "$word_regex" | grep -v "ag"`;
+	my @files_wd = sort {$a cmp $b} @word_files_ns;
+		
+	# Extract sequence number (SSSS) from each SEQ folder
+	$folder_seq =~ /^(.*)(_)(.*)$/;
+	$idx_seq = $3;
+
+	# Cook the ALS file name
+	my $file_als = $file_als_regex;
+	$file_als =~ s/SSSS/$idx_seq/g;
+	my @params_als = mImportFile($file_als);
+
+	# Cook the AG SEQ file name
+	#	my $ag_file = "temp/ag_sequence_$idx_seq.wav";
+	my $file_ag = $file_ag_regex;
+	$file_ag =~ s/SSSS/$idx_seq/g;
+		
+	# Extract the WD threshold value from the lm_pdetect.cfg file
+	my $param_pdetect = @cfg_pdetect[int($idx_seq)];
+	$param_pdetect =~ /^(.*)(\/)(.*)(\/)(.*)(\/)(.*)$/;
+	my $thWD = $7;	
+		
+	# Log file. Cook the name and make it empty.
+	my $file_log = "log/lm_walign2_" . $idx_seq . ".log";
+	my $cmd_log = `echo "" > $file_log`;
+	system($cmd_log);
 	
-		my $param_als = @params_als[int($word_idx)];
+	# Parse each WD file
+	foreach $file_wd (@files_wd) {
+		chomp($file_wd);
+		
+		# Extract useful infos from WD filename
+		$file_wd =~ /^(.*)(_)(.*)(.wav)$/;
+		$idx_wd = $3;
+	
+		
+		# Extract AG and WD peaks from the ALS file
+		my $param_als = @params_als[int($idx_wd)];
 		chomp($param_als);
-		#print "$param_als\n";
 		$param_als =~ /^(.*)(\/)(.*)(\/)(.*)$/;
 		my $pWD = $3;
 		my $pAG = $5;
-	
-		$out_file = $folder_seq . "/wd_" . $word_idx . "_ag.wav";
-		$log_file = $folder_seq . "/wd_" . $word_idx . ".aln";
-		$cmd = "walign2 --sequence $ag_file --wd $word_file --num $word_idx --out $out_file --log $log_file --th 0.60 --pwd $pWD --pag $pAG";
-		print "$cmd\n\n";
-		#system($cmd);
+		
+		# Cook output files
+		my $file_out = $folder_seq . "/wd_" . $idx_wd . "_ag.wav";
+		my $file_aln = $folder_seq . "/wd_" . $idx_wd . ".aln";
+		
+
+		# Now I do have enough informations 
+
+		print "Processing WD $idx_wd from SEQ $idx_seq\n";
+		print "  AG      $file_ag\n";
+		print "  WD      $file_wd\n";
+		print "  WD num. $idx_wd\n";
+		print "  AGWD    $file_out\n";
+		print "  ALN     $file_aln\n";
+		print "  WD th.  $thWD\n";
+		print "  Peak WD $pWD\n";
+		print "  Peak AG $pAG\n";
+		print "  LOG     $file_log\n";
+
+		my $cmd = "walign2 --sequence $file_ag --wd $file_wd --num $idx_wd --out $file_out --aln $file_aln --th 0.60 --pwd $pWD --pag $pAG 1>> $file_log";
+		#print "$cmd\n\n";
+		system($cmd);
+		print "\n";
 	}
 }
