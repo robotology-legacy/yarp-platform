@@ -32,7 +32,7 @@ int main (int argc, char *argv[]) {
 	int num_WD = 0;
 	char *filename_AGWD = NULL;
 	char *filename_log = NULL;
-
+	float threshold_WD = 0.00;
 
 	switch (argc) {
 		case 2:
@@ -42,17 +42,19 @@ int main (int argc, char *argv[]) {
 				return 0;
 			}
 			break;
-		case 11:
+		case 13:
 			if (strcmp(argv [1], "--sequence") == 0 &&
 					strcmp(argv [3], "--wd") == 0 &&
 					strcmp(argv [5], "--num") == 0 &&
 					strcmp(argv [7], "--out") == 0 &&
-					strcmp(argv [9], "--log") == 0) {
+					strcmp(argv [9], "--log") == 0 &&
+					strcmp(argv [11], "--th") == 0) {
 				filename_AG = argv[2];
 				filename_WD = argv[4];
 				assert(sscanf(argv [6], "%d", &num_WD) == 1);
 				filename_AGWD = argv[8];
 				filename_log = argv[10];
+				assert(sscanf(argv [12], "%f", &threshold_WD) == 1);
 			}
 			else
 				return -1;
@@ -97,39 +99,26 @@ int main (int argc, char *argv[]) {
 	
 	/* Threshold */
 	//threshold(bufferWD, samplesWD, US_TH);
-	threshold(bufferWD, samplesWD, AG_TH);
+	threshold(bufferWD, samplesWD, threshold_WD);
 	threshold(bufferAG, samplesAG, AG_TH);
 #ifdef DEVELOP
 	/* Now is time to look at the signals */
-	mEncodePCM16("temp/th_wd.wav", bufferWD, NULL, samplesWD, 48000, 1);
-	mEncodePCM16("temp/th_ag.wav", bufferAG, NULL, samplesAG, 16000, 1);
+	mEncodePCM16("debug/th_wd.wav", bufferWD, NULL, samplesWD, 48000, 1);
+	mEncodePCM16("debug/th_ag.wav", bufferAG, NULL, samplesAG, 16000, 1);
 #endif
 	
 	/* Remove spikes and artifacts */
 	unsigned int peaksWD;
 	unsigned int peaksAG;
 	peaksWD = clean_spikes(bufferWD, samplesWD, US_DS_PEAK, US_DS_ARTI);
-	/*	
-	#define AG_DS_PEAK 20
-	#define AG_DS_ARTI 40
 
-	#define US_DS_PEAK 40
-	#define US_DS_ARTI 80
-
-	#define AG_TH 0.60 
-	#define US_TH 0.95
-	*/
-
-	/* AG peaks are not so trivial to detect in the context of batch
-	 * processing. 
-	 */
 	//peaksAG = clean_spikes(bufferAG, samplesAG, AG_DS_PEAK, AG_DS_ARTI);
 	peaksAG = clean_spikes(bufferAG, samplesAG, 10, AG_DS_ARTI);
 	
 #ifdef DEVELOP
 	/* Now is time to look at the signals */
-	mEncodePCM16("temp/p_wd.wav", bufferWD, NULL, samplesWD, 48000, 1);
-	mEncodePCM16("temp/p_ag.wav", bufferAG, NULL, samplesAG, 16000, 1);
+	mEncodePCM16("debug/p_wd.wav", bufferWD, NULL, samplesWD, 48000, 1);
+	mEncodePCM16("debug/p_ag.wav", bufferAG, NULL, samplesAG, 16000, 1);
 #endif
 
 
@@ -146,7 +135,7 @@ int main (int argc, char *argv[]) {
 	
 #ifdef DEVELOP
 	/* Now is time to look at the resampled signal */
-	mEncodePCM16("temp/p_agr.wav", bufferAGR, NULL, samplesAGR, 48000, 1);
+	mEncodePCM16("debug/p_agr.wav", bufferAGR, NULL, samplesAGR, 48000, 1);
 #endif
 
 	/* Peak detection on AGR data */
@@ -158,7 +147,11 @@ int main (int argc, char *argv[]) {
 	WD_peaks peaks_dataWD;
 	memset(&peaks_dataWD, 0, sizeof(WD_peaks));
 	find_peaks(bufferWD, samplesWD, peaks_dataWD, 0);
-
+	
+	printf("Peaks found:\n");
+	printf("  WD data:  %d\n", peaks_dataWD.tot);
+	printf("  AGR data: %d\n", peaks_dataAGR.tot);
+	
 #ifdef DEVELOP
 	printf("Peaks AGR:\n");
 	print_peaks(peaks_dataAGR);

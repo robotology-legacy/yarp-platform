@@ -35,7 +35,6 @@ foreach $file_words (@files_words) {
 	$seq_idx = $3;
 	print "$seq_idx\n";
 	
-	if (1) {
 	@words = mImportFile($file_words);
 	foreach $word (@words) {
 		chomp($word);
@@ -63,6 +62,5 @@ foreach $file_words (@files_words) {
 		#open(FID, "> $file_word_log") or die "Error ($file): $!\n";
 		#print FID "$word_idx/$word_f0/$word_df\n";
 		#close (FID);
-	}
 	}
 }

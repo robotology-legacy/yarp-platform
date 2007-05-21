@@ -17,12 +17,13 @@
 #define	TEMP_SEQ	"temp/US_sequence.wav"
 #define	TEMP_PKS	"temp/US_peaks.wav"
 #define	TEMP_ALR	"temp/sequence.alr"
+#define	TEMP_ALS	"temp/sequence.als"
 
 void help (void) {
 	printf("Usage:\n");
 	printf("  pdetect2 --stream file.dv --t0 time0 --t1 time1 --dd file.dd\n");
 	printf("           --seg segment.wav --seq sequence.wav --pks peaks.wav --alr sequence.alr\n");
-	printf("           --th 0.60\n");
+	printf("           --th 0.60 --als sequence.als\n");
 	printf("  pdetect2 --help\n");
 	printf("Input:\n");
 	printf("  file.dv       DV file\n");
@@ -35,6 +36,7 @@ void help (void) {
 	printf("  peaks.wav     WAV file with the extracted sequence and the peaks found\n");
 	printf("  sequence.alr  ALR file with the alignement frame of reference (in samples)");
 	printf("  0.60          threshold on amplitude (double)");
+	printf("  sequence.als  ALS file with few alignement suggestions");
 	printf("Requirments:\n");
 	printf("  ffmpeg-0.4.9_p2007012 (libavcodec, libavformat)\n\n");
 }
@@ -95,6 +97,7 @@ int main (int argc, char *argv[]) {
 	char *filename_SEQ = NULL;
 	char *filename_ALR = NULL;
 	char *filename_PKS = NULL;
+	char *filename_ALS = NULL;
 #ifdef DEVELOP	
 	segmentRough_t0 = TEMP_T0;
 	segmentRough_t1 = TEMP_T1;
@@ -105,6 +108,7 @@ int main (int argc, char *argv[]) {
 	filename_SEQ = TEMP_SEQ;
 	filename_ALR = TEMP_ALR;
 	filename_PKS = TEMP_PKS;
+	filename_ALS = TEMP_ALS;
 #else
 	/* Parsing starts here */
 	switch (argc) {
@@ -115,7 +119,7 @@ int main (int argc, char *argv[]) {
 				return 0;
 			}
 			break;
-		case 19:
+		case 21:
 			if (strcmp(argv [1], "--stream") == 0 &&
 					strcmp(argv [3], "--t0") == 0 &&
 					strcmp(argv [5], "--t1") == 0 &&
@@ -124,7 +128,8 @@ int main (int argc, char *argv[]) {
 					strcmp(argv [11], "--seq") == 0 &&
 					strcmp(argv [13], "--pks") == 0 &&
 					strcmp(argv [15], "--alr") == 0 &&
-					strcmp(argv [17], "--th") == 0) {
+					strcmp(argv [17], "--th") == 0 &&
+					strcmp(argv [19], "--als") == 0) {
 				filename_US = argv [2];
 				assert(sscanf(argv [4], "%d", &segmentRough_t0) == 1);
 				assert(sscanf(argv [6], "%d", &segmentRough_t1) == 1);
@@ -134,6 +139,7 @@ int main (int argc, char *argv[]) {
 				filename_PKS = argv [14];
 				filename_ALR = argv [16];
 				assert(sscanf(argv [18], "%f", &segment_th) == 1);
+				filename_ALS = argv [20];
 			}
 			else
 				return -1;
@@ -263,9 +269,11 @@ int main (int argc, char *argv[]) {
 	clean_spurious_spikes(bPeaksSEQ, samplesSEQ);
 	my_peaks = clean_spikes(bPeaksSEQ, samplesSEQ, US_DS_PEAK, US_DS_ARTI);
 	clean_spurious_spikes(bPeaksSEQ, samplesSEQ);
-	mEncodePCM16(filename_PKS, bufferSEQ, bPeaksSEQ, samplesSEQ, rateUS, 2);
-	
-	
+
+#ifdef DEBUG_ALG 
+	/* Save peak detection results, with broken peaks */
+	mEncodePCM16("temp/US_threshold.wav", bufferSEQ, bPeaksSEQ, samplesSEQ, rateUS, 2);
+#endif	
 
 	/* Peak detection 
 	 * Peak frame of reference referred to the beginning of the sequence
@@ -281,11 +289,21 @@ int main (int argc, char *argv[]) {
 	printf("     Start: %s\n", start_ok ? "passed" : "failed");
 	printf("     Stop:  %s\n", stop_ok ? "passed" : "failed");
 	
-	bool ghost_nuked = false;	
+	/* Open the ALS file */
+	FILE *FILE_ALS = fopen(filename_ALS, "w");
+	if(FILE_ALS == NULL)
+		return -1;
+	
+	bool ghost_nuked = false;
+	unsigned int ghost_total = 0;
 	unsigned int delta_p = 2;
 	do{
 		for(unsigned int p = 3; p < sPeaksSEQ.tot - 3; p += delta_p) {
 			if(sPeaksSEQ.type[p] == SAT_POS && sPeaksSEQ.type[p + 1] == SAT_NEG) {
+				
+				/* Format: word, peak in WD data, peak in SEQ data*/
+				//printf("[NN] --> %d/%d/%d\n", (p - 3)/2, 0, p);
+				fprintf(FILE_ALS, "%d/%d/%d\n", (p - 3)/2, 0, p - ghost_total);
 				/*
 				   printf("Word detected:\n");
 				   printf("    Peaks:   %d and %d\n", p, p + 1);
@@ -310,11 +328,14 @@ int main (int argc, char *argv[]) {
 				printf("    This peak: %d peak, type %d\n", this_peak, sPeaksSEQ.type[this_peak]);
 				printf("    Next peak: %d peak, type %d\n", next_peak, sPeaksSEQ.type[next_peak]);
 
-				if(sPeaksSEQ.type[prev_peak] == SAT_NEG && sPeaksSEQ.type[next_peak] == SAT_POS) {
-					printf("    Ghost peak: between %d-%d peak, type should be %d\n",
+				if(sPeaksSEQ.type[prev_peak] == SAT_NEG && sPeaksSEQ.type[this_peak] == SAT_POS && sPeaksSEQ.type[next_peak] == SAT_POS) {
+					printf("    Ghost peak [-SAT]: between %d-%d peak, type should be %d\n",
 							this_peak, next_peak,
 							int16_t(SAT_NEG));
 
+					fprintf(FILE_ALS, "%d/%d/%d\n", (this_peak - 3)/2, 0, this_peak - ghost_total);
+					ghost_total++;
+					
 					/* Ghost peak recovery */
 					/* The peak should be circa bewteen recovery_s0 and *_s1 */
 					unsigned int recovery_s1 = sPeaksSEQ.start[next_peak] - (unsigned int)(0.35 * rateUS);
@@ -374,6 +395,77 @@ int main (int argc, char *argv[]) {
 					find_peaks(bPeaksSEQ, samplesSEQ, sPeaksSEQ, 0);
 					printf("    Peak detection completed!\n");
 					delta_p = 2;
+					free(bufferGST);
+				}
+				else if(sPeaksSEQ.type[prev_peak] == SAT_NEG && sPeaksSEQ.type[this_peak] == SAT_NEG && sPeaksSEQ.type[next_peak] == SAT_POS) {
+					printf("    Ghost peak [+SAT]: between %d-%d peak, type should be %d\n",
+							prev_peak, this_peak,
+							int16_t(SAT_POS));
+
+					fprintf(FILE_ALS, "%d/%d/%d\n", (this_peak - 4)/2, 1, this_peak - ghost_total);
+					ghost_total++;
+				
+					/* Ghost peak recovery */
+					/* The peak should be circa bewteen recovery_s0 and *_s1 */
+					unsigned int recovery_s0 = sPeaksSEQ.stop[prev_peak] + (unsigned int)(0.25 * rateUS);
+					unsigned int recovery_s1 = recovery_s0 + (unsigned int)(0.70 * rateUS);
+					unsigned int recovery_ds = recovery_s1 - recovery_s0 + 1;
+					printf("       Looking: between %d-%d peak (delta = %d)\n",
+							recovery_s0, recovery_s1, recovery_ds);
+					
+					/* Allocate a Ghost-Buffer and copy over there the 
+					 * ghost-peak interval.
+					 * Also, dump the buffer on the disk.
+					 */
+					int16_t *bufferGST = NULL;
+					bufferGST = (int16_t *)malloc(recovery_ds * sizeof(int16_t));
+					memcpy(bufferGST, bufferSEQ_copy + recovery_s0, recovery_ds * sizeof(int16_t));	
+#ifdef DEBUG_ALG 
+					mEncodePCM16("temp/ghost_found.wav", bufferGST, NULL, recovery_ds, rateUS, 1);
+#endif
+					/* Fetch for the peak. I use few threshold values and 
+					 * then I look for the values higher thant the threshold.
+					 */
+					double thresholds[5] = {0.05, 0.10, 0.20, 0.40, 0.60};
+					unsigned int ghost_samples[5] = {0, 0, 0, 0, 0};
+					for(unsigned int th = 0; th < 5; th++) {
+						for(unsigned int sg = recovery_s0; sg < recovery_s1; sg++) {
+							if(bufferSEQ_copy[sg] >= thresholds[th]*SAT_POS) 
+								ghost_samples[th]++;
+						}
+						printf("    Fetching with th=%f, found samples=%d\n", 
+								thresholds[th], ghost_samples[th]);
+					}
+
+					unsigned int ghost_th = 0;
+					unsigned int ghost_diff = 2*rateUS;
+					for(unsigned int th = 0; th < 5; th++) {
+						if(70 - ghost_samples[th] < ghost_diff) {
+							ghost_diff = 70 - ghost_samples[th];
+							ghost_th = th;
+						}
+					}
+					printf("    Winner th=%f, found samples=%d\n", 
+							thresholds[ghost_th], ghost_samples[ghost_th]);
+					if(ghost_samples[ghost_th] > 50 && ghost_samples[ghost_th] < 80) 
+						printf("    Ghost peak validated. Recovering\n");
+
+					for(unsigned int sg = recovery_s0; sg < recovery_s1; sg++) {
+						if(bufferSEQ_copy[sg] >= thresholds[ghost_th]*SAT_POS)
+							bPeaksSEQ[sg] = SAT_POS;
+					}
+#ifdef DEBUG_ALG
+					mEncodePCM16("temp/ghost_recovered.wav", bufferGST,
+							bPeaksSEQ + recovery_s0, recovery_ds, rateUS, 2);
+#endif
+
+					printf("    Peak sequence recovered. Running peak detection again\n");
+					memset(&sPeaksSEQ, 0, sizeof(WD_peaks));
+					find_peaks(bPeaksSEQ, samplesSEQ, sPeaksSEQ, 0);
+					printf("    Peak detection completed!\n");
+				
+					delta_p = 2;
+					free(bufferGST);
 				}
 				else {
 					printf("Sorry, a Ghost-Peak exists but cannot be recovered.\n");
@@ -382,6 +474,10 @@ int main (int argc, char *argv[]) {
 			}
 		}
 	} while(ghost_nuked == false);
+	fclose(FILE_ALS);
+	
+	
+	mEncodePCM16(filename_PKS, bufferSEQ, bPeaksSEQ, samplesSEQ, rateUS, 2);
 	
 	/* Spam */
 	printf("Found peaks:\n");
@@ -399,11 +495,11 @@ int main (int argc, char *argv[]) {
 	int64_t dd_f1 = 0;
 	for(unsigned int p = 3; p < sPeaksSEQ.tot - 3; p += 2) {
 		if(sPeaksSEQ.type[p] == SAT_POS && sPeaksSEQ.type[p + 1] == SAT_NEG) {
-			++word;
 			cook_dd_params(delta_s + sequence_s0,
 					sPeaksSEQ.start[p] - 6000, sPeaksSEQ.stop[p + 1] + 6000,
 					dd_f0, dd_f1);
-		fprintf(FILE_DD, "%d/%d/%d\n", word, (int)dd_f0, (int)(dd_f1 - dd_f0 + 1));
+			fprintf(FILE_DD, "%d/%d/%d\n", word, (int)dd_f0, (int)(dd_f1 - dd_f0 + 1));
+			word++;
 		}
 	}
 	fclose(FILE_DD);

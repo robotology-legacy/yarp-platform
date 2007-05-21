@@ -25,6 +25,8 @@ $folders_regex = "seq_*";
 @folders_seq_ns = `find . -iname "$folders_regex"`;
 @folders_seq = sort {$a cmp $b} @folders_seq_ns;
 
+my $file_als_regex = "cache/wd_SSSS_sequence.als";
+
 foreach $folder_seq (@folders_seq) {
 	chomp($folder_seq);
 	print "$folder_seq\n";
@@ -36,7 +38,13 @@ foreach $folder_seq (@folders_seq) {
 	$folder_seq =~ /^(.*)(_)(.*)$/;
 	$seq_idx = $3;
 	
+	my $file_als = $file_als_regex;
+	$file_als =~ s/SSSS/$seq_idx/g;
+	my @params_als = mImportFile($file_als);
+	print "$file_als\n";
+	
 	$ag_file = "temp/ag_sequence_$seq_idx.wav";
+	
 
 	foreach $word_file (@word_files) {
 		chomp($word_file);
@@ -45,10 +53,17 @@ foreach $folder_seq (@folders_seq) {
 		$word_idx = $3;
 		print "[$word_idx] $word_file  ($ag_file)\n";
 	
+		my $param_als = @params_als[int($word_idx)];
+		chomp($param_als);
+		#print "$param_als\n";
+		$param_als =~ /^(.*)(\/)(.*)(\/)(.*)$/;
+		my $pWD = $3;
+		my $pAG = $5;
+	
 		$out_file = $folder_seq . "/wd_" . $word_idx . "_ag.wav";
 		$log_file = $folder_seq . "/wd_" . $word_idx . ".aln";
-		$cmd = "word_align --sequence $ag_file --wd $word_file --num $word_idx --out $out_file --log $log_file --th 0.60";
-		#print "$cmd\n";
-		system($cmd);
+		$cmd = "walign2 --sequence $ag_file --wd $word_file --num $word_idx --out $out_file --log $log_file --th 0.60 --pwd $pWD --pag $pAG";
+		print "$cmd\n\n";
+		#system($cmd);
 	}
 }
