@@ -14,7 +14,7 @@ foreach $file_cc (@audio_files) {
 #	print "$file\n";
 
 	my $file_wd = $file_cc;
-	$file_wd =~ s/_cc.wav/.wav/g;
+	$file_wd =~ s/_cc.wav/_us.wav/g;
 	my $file_ag = $file_cc;
 	$file_ag =~ s/_cc.wav/_ag.wav/g;
 	

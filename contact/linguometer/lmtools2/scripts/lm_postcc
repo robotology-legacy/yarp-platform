@@ -1,9 +1,4 @@
 #!/usr/bin/perl
-# LTC_S4
-# lmtools2 toolchain: step 2
-# Creates config/sequence_XXXX.txt files used 
-# in LTC_S3 to perform per-sequence word 
-# segmentation.
 
 use Getopt::Long;
 use File::Copy;
