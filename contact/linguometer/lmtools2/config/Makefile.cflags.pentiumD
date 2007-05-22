@@ -3,3 +3,4 @@ CFLAGS += -Wall
 #CFLAGS += -Wall -march=pentium-m -O3 -pipe -fomit-frame-pointer -ffast-math
 #CFLAGS += -Wall -march=pentium4  -O3 -pipe -fomit-frame-pointer -ffast-math
 CFLAGS += -march=prescott -O2 -pipe -fomit-frame-pointer 
+
