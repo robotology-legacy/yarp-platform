@@ -1,0 +1,9 @@
+lmLogCC('log/lm_postcc_0000.log', 'log/img_lm_postcc_0000', 0);
+lmLogCC('log/lm_postcc_0001.log', 'log/img_lm_postcc_0001', 1);
+lmLogCC('log/lm_postcc_0002.log', 'log/img_lm_postcc_0002', 2);
+lmLogCC('log/lm_postcc_0003.log', 'log/img_lm_postcc_0003', 3);
+lmLogCC('log/lm_postcc_0004.log', 'log/img_lm_postcc_0004', 4);
+lmLogCC('log/lm_postcc_0005.log', 'log/img_lm_postcc_0005', 5);
+lmLogCC('log/lm_postcc_0006.log', 'log/img_lm_postcc_0006', 6);
+lmLogCC('log/lm_postcc_0007.log', 'log/img_lm_postcc_0007', 7);
+lmLogCC('log/lm_postcc_0008.log', 'log/img_lm_postcc_0008', 8);

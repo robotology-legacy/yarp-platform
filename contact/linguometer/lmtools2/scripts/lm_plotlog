@@ -1,0 +1,2 @@
+#!/bin/bash
+echo "lmLogCCProxy; quit" | matlab -nosplash -nojvm

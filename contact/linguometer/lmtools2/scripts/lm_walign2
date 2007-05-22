@@ -109,8 +109,8 @@ foreach $folder_seq (@folders_seq) {
 		print "  LOG     $file_log\n";
 
 		my $cmd = "walign2 --sequence $file_ag --wd $file_wd --num $idx_wd --out $file_out --aln $file_aln --th 0.60 --pwd $pWD --pag $pAG 1>> $file_log";
-		print "$cmd\n\n";
-		#system($cmd);
+		#print "$cmd\n\n";
+		system($cmd);
 		print "\n";
 	}
 }
