@@ -1,0 +1,69 @@
+#! /usr/bin/perl
+# LTC_S3
+# lmtools2 toolchain: step 3
+# Performs segmentation
+
+use Getopt::Long;
+use File::Copy;
+use Cwd;
+use Term::ANSIColor;
+use Sys::Hostname;
+
+sub mImportFile
+{
+	my $file = $_[0];
+	
+	open(FID, "< $file") or die "Error ($file): $!\n";
+	my @data = <FID>;
+	close (FID);
+
+	return @data;
+}
+
+
+my $file_dv = "root/CC/stream.dv";
+my $words_path = "cache";
+my $words_regex = "wd_*_cc_sequence.dd";
+my @files_words_ns= `find $words_path -iname "$words_regex"`;
+my @files_words = sort {$a cmp $b} @files_words_ns;
+
+my $cmd_shutup = " 1>/dev/null 2>/dev/null";
+
+foreach $file_words (@files_words) {
+	chomp($file_words);
+	print "$file_words\n";
+	
+	$file_words =~ /^(.*)(_)(.*)(_)(.*)(_)(.*)$/;
+	$seq_idx = $3;
+	print "$seq_idx\n";
+	
+	@words = mImportFile($file_words);
+	foreach $word (@words) {
+		chomp($word);
+		print "> $word\n";
+
+		$word =~ /^(.*)(\/)(.*)(\/)(.*)$/;
+		my $word_idx = $1;
+		my $word_f0  = $3;
+		my $word_df  = $5;
+		
+		my $word_idxf = sprintf("%.4d", $word_idx);
+		print "Word $word_idx, ";
+		print "f0 = $word_f0, ";
+		print "df = $word_df\n";
+		#my $file_word_log = "seq_" . $seq_idx . "/" . "wd_" . $word_idxf . "_cc.log";
+		my $file_word_dv  = "seq_" . $seq_idx . "/" . "wd_" . $word_idxf . "_cc.dv";
+		my $file_word_wav = "seq_" . $seq_idx . "/" . "wd_" . $word_idxf . "_cc.wav";
+		print "  File DV:  $file_word_dv\n";
+		print "  File WAV: $file_word_wav\n";
+
+
+		my $cmd_dd = "dd if=$file_dv of=$file_word_dv bs=144000 skip=$word_f0 count=$word_df $cmd_shutup";
+		my $cmd_ffmpeg = "ffmpeg -i $file_word_dv $file_word_wav $cmd_shutup";
+		
+		#print "$cmd_dd\n";
+		#print "$cmd_ffmpeg\n";
+		system($cmd_dd);
+		system($cmd_ffmpeg);
+	}
+}
