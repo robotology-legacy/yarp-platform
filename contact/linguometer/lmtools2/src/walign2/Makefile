@@ -12,7 +12,8 @@ FLAGS+=-DDEBUG_ALG
 #FLAGS+=-DCONTACT_DATA=/home/michele/ContactData/
 #FLAGS+=-DCONTACT_ROOT="/home/michele/ContactRoot/"
 #FLAGS+=-DCONTACT_CACHE="/home/michele/ContactCache/"
-LIBS =  -lm -lz -lavformat -lavcodec -lz
+#LIBS =  -lm -lz -lavformat -lavcodec -lz
+LIBS =  -lm -lz -ldl -lavformat -lavcodec -lavutil
 CFLAGS = -I../../include/ 
 
 include ../../config/Makefile.cflags
