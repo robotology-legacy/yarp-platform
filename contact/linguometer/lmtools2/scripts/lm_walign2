@@ -91,7 +91,8 @@ foreach $folder_seq (@folders_seq) {
 		my $pAG = $5;
 		
 		# Cook output files
-		my $file_out = $folder_seq . "/wd_" . $idx_wd . "_ag.wav";
+		my $file_agwt = $folder_seq . "/wd_" . $idx_wd . "_ag_tmp.wav";
+		my $file_agwn  = $folder_seq . "/wd_" . $idx_wd . "_ag.wav";
 		my $file_aln = $folder_seq . "/wd_" . $idx_wd . "_ag.aln";
 		
 
@@ -101,16 +102,25 @@ foreach $folder_seq (@folders_seq) {
 		print "  AG      $file_ag\n";
 		print "  WD      $file_wd\n";
 		print "  WD num. $idx_wd\n";
-		print "  AGWD    $file_out\n";
+		print "  AGWD    $file_agwt\n";
 		print "  ALN     $file_aln\n";
 		print "  WD th.  $thWD\n";
 		print "  Peak WD $pWD\n";
 		print "  Peak AG $pAG\n";
 		print "  LOG     $file_log\n";
 
-		my $cmd = "walign2 --sequence $file_ag --wd $file_wd --num $idx_wd --out $file_out --aln $file_aln --th 0.60 --pwd $pWD --pag $pAG 1>> $file_log";
+		my $cmd = "walign2 --sequence $file_ag --wd $file_wd --num $idx_wd --out $file_agwt --aln $file_aln --th 0.60 --pwd $pWD --pag $pAG 1>> $file_log";
 		#print "$cmd\n\n";
 		system($cmd);
 		print "\n";
+	
+		my @data_aln = mImportFile($file_aln);
+		my @params_aln = split("/", @data_aln[0]);
+		my $aln_s0 = @params_aln[2];
+		my $aln_s1 = @params_aln[3];
+		my $aln_ds = int($aln_s1) - int($aln_s0) + 1;
+		print "s0=$aln_s0/s1=$aln_s1/ds=$aln_ds\n";
+		my $cmd_sox = "sox $file_agwt $file_agwn trim 0s ${aln_ds}s";
+		system($cmd_sox);
 	}
 }
