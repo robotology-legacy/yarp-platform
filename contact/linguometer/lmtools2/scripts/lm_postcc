@@ -64,6 +64,7 @@ sub pAlign {
 	$start = $start + $target_offset;
 
 	# add a second before and after, just to be safe
+	#my $padSeconds = 0.5;
 	my $padSeconds = 0.5;
 	my $padStart = $start  - $padSeconds*$targetRate;
 	my $padLen = $len + 2*$padSeconds*$targetRate;
