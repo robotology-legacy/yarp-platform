@@ -31,6 +31,19 @@ my @folders_seq = sort {$a cmp $b} @folders_seq_ns;
 # lm_pdetect.cfg. Should be the last one.
 my @cfg_pdetect = mImportFile("config/lm_pdetect.cfg");
 
+# Few experiments (7,8,9) do have inveted segmentation peaks.
+my @cfg_invert = mImportFile("config/lm_invert.cfg");
+my $param_invert = @cfg_invert[0];
+chomp($param_invert);
+
+my $lm_cmd = "";
+if (int($param_invert)) {
+	$lm_cmd = "walign2i";
+}
+else {
+	$lm_cmd = "walign2";
+}
+
 # For each SSSS sequence, load the appropriate
 # ALS file. It contains the WD/AG peaks that
 # walign2 will use to align WD with AG data.
@@ -109,7 +122,7 @@ foreach $folder_seq (@folders_seq) {
 		print "  Peak AG $pAG\n";
 		print "  LOG     $file_log\n";
 
-		my $cmd = "walign2 --sequence $file_ag --wd $file_wd --num $idx_wd --out $file_agwt --aln $file_aln --th 0.60 --pwd $pWD --pag $pAG 1>> $file_log";
+		my $cmd = "$lm_cmd --sequence $file_ag --wd $file_wd --num $idx_wd --out $file_agwt --aln $file_aln --th 0.60 --pwd $pWD --pag $pAG 1>> $file_log";
 		#print "$cmd\n\n";
 		system($cmd);
 		print "\n";

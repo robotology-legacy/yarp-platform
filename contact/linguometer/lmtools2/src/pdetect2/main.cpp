@@ -39,6 +39,8 @@ void help (void) {
 	printf("  sequence.als  ALS file with few alignement suggestions");
 	printf("Requirments:\n");
 	printf("  ffmpeg-0.4.9_p2007012 (libavcodec, libavformat)\n\n");
+
+	cout << SAT_POS << endl;
 }
 
 void cook_dd_params (unsigned int s0, unsigned int sw0, unsigned int sw1,
@@ -65,9 +67,9 @@ bool detect_segment(mObjectPCM<int16_t> *pcm,
 	int s1 = -1;
 	
 	for(unsigned int s = 0; s < pcm->getSamples(); s++) {
-		if(pcm->getL(s) < US_TH*SAT_NEG && s0 == -1)
+		if(pcm->getL(s) < US_TH*SAT_NEG_US && s0 == -1)
 			s0 = s;
-		else if(pcm->getL(s) > US_TH*SAT_POS && s1 == -1) 
+		else if(pcm->getL(s) > US_TH*SAT_POS_US && s1 == -1) 
 			s1 = s;
 		if(s0 > -1 && s1 > -1)
 			break;
@@ -85,8 +87,8 @@ bool detect_segment(mObjectPCM<int16_t> *pcm,
 
 int main (int argc, char *argv[]) {
 	unsigned int rateUS = 48000;
-#ifdef DEBUG_ALG
-	printf("--> Running in DEBUG_ALG mode. Unpredictable behavior if no temp/ folder exists\n");
+#ifdef DEVELOP
+	printf("--> Running in DEVELOP mode. Unpredictable behavior if no temp/ folder exists\n");
 #endif
 	int segmentRough_t0 = 0;
 	int segmentRough_t1 = 0;
@@ -260,8 +262,11 @@ int main (int argc, char *argv[]) {
 	 *   ham and lots of spam, the spam filtering is done 
 	 *   on the peaks durations (clean_spikes)
 	 */
+#ifdef USE_SAT_INVERT
+	negative(bPeaksSEQ, samplesSEQ);
+#endif
 	threshold(bPeaksSEQ, samplesSEQ, (double)segment_th);
-	
+
 	/* Threshold on duration 
 	 * A peak, ideally, is 64 samples. 
 	 */
@@ -270,11 +275,10 @@ int main (int argc, char *argv[]) {
 	my_peaks = clean_spikes(bPeaksSEQ, samplesSEQ, US_DS_PEAK, US_DS_ARTI);
 	clean_spurious_spikes(bPeaksSEQ, samplesSEQ);
 
-#ifdef DEBUG_ALG 
+#ifdef DEVELOP 
 	/* Save peak detection results, with broken peaks */
 	mEncodePCM16("temp/US_threshold.wav", bufferSEQ, bPeaksSEQ, samplesSEQ, rateUS, 2);
 #endif	
-
 	/* Peak detection 
 	 * Peak frame of reference referred to the beginning of the sequence
 	 */
@@ -351,7 +355,7 @@ int main (int argc, char *argv[]) {
 					int16_t *bufferGST = NULL;
 					bufferGST = (int16_t *)malloc(recovery_ds * sizeof(int16_t));
 					memcpy(bufferGST, bufferSEQ_copy + recovery_s0, recovery_ds * sizeof(int16_t));	
-#ifdef DEBUG_ALG 
+#ifdef DEVELOP 
 					mEncodePCM16("temp/ghost_found.wav", bufferGST, NULL, recovery_ds, rateUS, 1);
 #endif
 					/* Fetch for the peak. I use few threshold values and 
@@ -385,7 +389,7 @@ int main (int argc, char *argv[]) {
 						if(bufferSEQ_copy[sg] <= thresholds[ghost_th]*SAT_NEG)
 							bPeaksSEQ[sg] = SAT_NEG;
 					}
-#ifdef DEBUG_ALG
+#ifdef DEVELOP
 					mEncodePCM16("temp/ghost_recovered.wav", bufferGST,
 							bPeaksSEQ + recovery_s0, recovery_ds, rateUS, 2);
 #endif
@@ -420,7 +424,7 @@ int main (int argc, char *argv[]) {
 					int16_t *bufferGST = NULL;
 					bufferGST = (int16_t *)malloc(recovery_ds * sizeof(int16_t));
 					memcpy(bufferGST, bufferSEQ_copy + recovery_s0, recovery_ds * sizeof(int16_t));	
-#ifdef DEBUG_ALG 
+#ifdef DEVELOP 
 					mEncodePCM16("temp/ghost_found.wav", bufferGST, NULL, recovery_ds, rateUS, 1);
 #endif
 					/* Fetch for the peak. I use few threshold values and 
@@ -454,7 +458,7 @@ int main (int argc, char *argv[]) {
 						if(bufferSEQ_copy[sg] >= thresholds[ghost_th]*SAT_POS)
 							bPeaksSEQ[sg] = SAT_POS;
 					}
-#ifdef DEBUG_ALG
+#ifdef DEVELOP
 					mEncodePCM16("temp/ghost_recovered.wav", bufferGST,
 							bPeaksSEQ + recovery_s0, recovery_ds, rateUS, 2);
 #endif

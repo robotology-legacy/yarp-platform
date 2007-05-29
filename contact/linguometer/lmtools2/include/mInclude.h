@@ -26,6 +26,9 @@ using namespace std;
 #define	SAT_POS			SAT_POS_int16
 #define	SAT_NEG			SAT_NEG_int16
 
+#define	SAT_POS_US			SAT_POS_int16
+#define	SAT_NEG_US			SAT_NEG_int16
+
 
 
 #define LMTOOLS_P			"lmtools2"

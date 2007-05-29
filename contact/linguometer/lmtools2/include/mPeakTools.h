@@ -54,6 +54,11 @@ void threshold(int16_t *buffer, unsigned int samples, double th) {
 			buffer[s] = 0;
 }
 
+void negative(int16_t *buffer, unsigned int samples) {
+	for(unsigned int s = 0; s < samples; s++) 
+		buffer[s] = -buffer[s];
+}
+
 void clean_spurious_spikes(int16_t *buffer, unsigned int samples) {
 	for(unsigned int s = 1; s < samples - 1; s++) 
 		if(buffer[s] == SAT_POS) {

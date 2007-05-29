@@ -23,6 +23,20 @@ sub mImportFile
 	return @data;
 }
 
+# Few experiments (7,8,9) do have inveted segmentation peaks.
+my @cfg_invert = mImportFile("config/lm_invert.cfg");
+my $param_invert = @cfg_invert[0];
+chomp($param_invert);
+
+# Read configuration files. 
+my $lm_cmd = "";
+if (int($param_invert)) {
+	$lm_cmd = "pdetect2i";
+}
+else {
+	$lm_cmd = "pdetect2";
+}
+
 
 $file_dv   = "root/US/stream.dv";
 $file_seqs = "config/lm_pdetect.cfg";
@@ -64,7 +78,7 @@ foreach $line (@seqs) {
 	print "  PKS:       $file_pkst\n";
 	print "  Threshold: $th\n";
 	print "  ALS:       $file_alst\n";
-	$cmd = "pdetect2 --stream $file_dv --t0 $t0 --t1 $t1 --dd $file_txtt --seg $file_segt --seq $file_seqt --pks $file_pkst --alr $file_alnt --th $th --als $file_alst 1> $file_logt";
+	$cmd = "$lm_cmd --stream $file_dv --t0 $t0 --t1 $t1 --dd $file_txtt --seg $file_segt --seq $file_seqt --pks $file_pkst --alr $file_alnt --th $th --als $file_alst 1> $file_logt";
 	#print "$cmd\n";
 	system($cmd);
 }

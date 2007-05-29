@@ -135,6 +135,10 @@ int main (int argc, char *argv[]) {
 	 * WD buffer requires the same value used by pdetect2.
 	 * The value is stored in config/lm_pdetect.cfg
 	 */
+#ifdef USE_SAT_INVERT
+	negative(bufferWD, samplesWD);
+	negative(bufferAG, samplesAG);
+#endif
 	threshold(bufferWD, samplesWD, thresholdWD);
 	threshold(bufferAG, samplesAG, AG_TH);
 
