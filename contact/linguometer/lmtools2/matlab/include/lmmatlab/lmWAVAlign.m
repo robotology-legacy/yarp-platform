@@ -1,17 +1,23 @@
 % Coded by Paul Fitzpatrick (paulfitz@liralab.it)
 % Integrated in lmtools by Michele Tavella (michele@liralab.it)
-function offset = lmWAVAlign(file_wd, file_cc_est, do_invert)
+function offset = lmWAVAlign(file_wd, file_cc_est, do_invert, channel)
 
-%file_wd = sprintf('wd_%04d.wav',wordNumber);
-%file_cc_est = sprintf('wd_%04d_cc_est.wav',wordNumber);
+
+do_plot = 0;
+
+%US<-->CC channel=2
+%US<-->LG channel=1
 
 [wav0 rate0] = wavread(file_wd);
 [wav1 rate1] = wavread(file_cc_est);
 
 printf('[lmWAVAlign] WD file:       %s\n', file_wd);
 printf('[lmWAVAlign] CC (est) file: %s\n', file_cc_est);
+rate_old = 0;
 if (rate0 ~= rate1)
-  disp('Need to add code to resample one of the audio sources, sorry')
+  %disp('Need to add code to resample one of the audio sources, sorry')
+  rate_old = rate1;
+  wav1 = resample(wav1, rate0, rate1);
 end
 
 rate = rate0;
@@ -33,7 +39,7 @@ else
 end
 % forget about stereo for comparison
 wav0 = wav0(:,2);
-wav1 = wav1(:,2);
+wav1 = wav1(:,channel);
 
 % compute something energy-like -- easier to compare
 sig0 = abs(wav0);
@@ -47,13 +53,24 @@ f = ones(round(rate*f_factor),1);  % really dumb smoothing
 sig0 = filter2(f,sig0,'same');
 sig1 = filter2(f,sig1,'same');
 
+
 [c lag] = xcorr(sig0, sig1);
 [ignore winner] = max(c);
 %offset = -lag(winner);
 offset = lag(winner);
+if(rate_old ~= 0)
+    offset = round(offset * rate_old / rate);
+end
 disp(['myans = ' num2str(offset)]);
 
-
+if(do_plot)
+figure(1); 
+plot(sig0, 'b'); axis tight; grid on; title('Target');
+figure(2); 
+plot(sig1, 'r'); axis tight; grid on; title('Source');
+figure(3); 
+plot(sig0, 'b'); hold on; plot(lagmatrix(sig1,offset), 'r'); axis tight; grid on; title('Alignment');
+end
 %if (wantView)
 %	%sig1b = shift(sig1,offset);
 %	%sig1b = lagmatrix(sig1,offset);

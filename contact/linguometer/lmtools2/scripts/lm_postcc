@@ -24,6 +24,8 @@ sub pAlign {
 	my $file_aln = $_[4];
 	my $track_cc = $_[5];
 	my $matlab_invert = $_[6];
+	my $targetRate = $_[7];
+	my $matlab_ch = $_[8];
 
 	print "Performing alignment\n";
 	print "  Offset     $target_offset\n";
@@ -31,7 +33,7 @@ sub pAlign {
 	# Sample rates of US, AGWAV, AGAMP
 	my @sampleRates = (48000, 16000, 200);
 	# Sample rate of audiodump.wav
-	my $targetRate = 48000;
+	#my $targetRate = 48000;
 	my $targetFPS = 25;
 
 	# Names of files we'll be working with
@@ -80,13 +82,7 @@ sub pAlign {
 	print "  WDCC (est) $track_cc --> $file_cc_est (${padStart} + ${padLen} samples)\n";
 	my $cmd = "sox $track_cc $file_cc_est trim ${padStart}s ${padLen}s";
 	system($cmd);
-
-	my $t0 = $padStart/48000;
-	my $t1 = $padLen/48000;
-	my $cmd2 = "sox $track_cc $file_cc_est trim ${t0}s ${t1}s";
-	#my $tt = $t0 . "/" . $t1;
 	#print "$cmd\n";
-	#print "$cmd2\n";
 
 	# Matlab complains for the "./" inherited from the "find" command.
 	# Let's make Matlab happy.
@@ -98,7 +94,7 @@ sub pAlign {
 
 	# get more exact match from correlation
     #  (aka pipe madness, could not work for earlier matlab versions!)
-	my $correction = `echo "lmWAVAlign('$matlab_file_wd', '$matlab_file_cc_est', $matlab_invert)" | matlab -nosplash -nojvm | grep "myans ="`;
+	my $correction = `echo "lmWAVAlign('$matlab_file_wd', '$matlab_file_cc_est', $matlab_invert, $matlab_ch)" | matlab -nosplash -nojvm | grep "myans ="`;
 	chomp($correction);
 	$correction =~ s/myans = //;
 	print "  Correction $correction samples\n";
@@ -132,6 +128,11 @@ sub pAlign {
 # This file is created by lm_prepare
 my $track_cc = "cache/cc_track.wav";
 
+# LG track file regex (that means, PCM Stereo, 16kHz)
+# This file is imported in the exp_****/temp folder
+# by lm_collect
+my $track_lg_regex = "temp/lg_sequence_SSSS.wav";
+
 # Look for SEQ folders
 my $folders_regex = "seq_*";
 my @folders_seq_ns = `find . -iname "$folders_regex"`;
@@ -139,6 +140,7 @@ my @folders_seq = sort {$a cmp $b} @folders_seq_ns;
 
 # Read configuration files
 my @cfg_postcc  = mImportFile("config/lm_postcc.cfg");
+my @cfg_postlg  = mImportFile("config/lm_postlg.cfg");
 my @cfg_pdetect = mImportFile("config/lm_pdetect.cfg");
 # Few experiments (7,8,9) do have inveted segmentation peaks.
 my @cfg_invert = mImportFile("config/lm_invert.cfg");
@@ -179,7 +181,15 @@ my $file_ALR_regex = "cache/wd_SSSS_sequence.alr";
 # the printed values, that are delays, one for
 # each word of each sequence 
 # (WD_tot * SEQ_tot values).
-my $file_LOG_regex = "log/lm_postcc_SSSS.log";
+my $file_LOGCC_regex = "log/lm_postcc_SSSS.log";
+my $file_LOGLG_regex = "log/lm_postlg_SSSS.log";
+
+# CC track and LG sequence rates and channel
+# index for Matlab
+my $rate_cc = 48000;
+my $rate_lg = 16000; 
+my $channel_cc = 2;
+my $channel_lg = 1;
 
 # Parse each SEQ folder
 foreach $folder_seq (@folders_seq) {
@@ -195,8 +205,8 @@ foreach $folder_seq (@folders_seq) {
 	$folder_seq =~ /^(.*)(_)(.*)$/;
 	my $idx_seq = $3;
 	my $t_idx_seq = int($idx_seq);
-		
-	
+
+
 	# Let's load the relative ALR value and re-align the 
 	# offset value (aka ALRCC).
 	my $file_ALR = $file_ALR_regex;
@@ -213,10 +223,15 @@ foreach $folder_seq (@folders_seq) {
 	print "  ALRF       $value_ALRF ($file_ALRF)\n";
 	print "  ALR        $value_ALR ($file_ALR)\n";
 
- 	# Cook a proper name for the LOG file...
-	my $file_log = $file_LOG_regex;
-	$file_log =~ s/SSSS/$idx_seq/g;
-	open(FILE_LOG, ">$file_log");
+ 	# Cook a proper name for the CC LOG file...
+	my $file_log_cc = $file_LOGCC_regex;
+	$file_log_cc =~ s/SSSS/$idx_seq/g;
+	open(FILE_LOG_CC, ">$file_log_cc");
+ 	
+	# ... and for the LG LOG file.
+	my $file_log_lg = $file_LOGLG_regex;
+	$file_log_lg =~ s/SSSS/$idx_seq/g;
+	open(FILE_LOG_LG, ">$file_log_lg");
 
 	# Cook a proper name for the CC .dd file...
 	my $file_dd_cc = $file_dd_cc_regex;
@@ -239,12 +254,17 @@ foreach $folder_seq (@folders_seq) {
 		$file_cc =~ s/_us.wav/_cc_tmp.wav/g;
 		$file_cc_est =~ s/_us.wav/_cc_est.wav/g;
 
+		my $file_lg = $file_wd;
+		my $file_lg_est = $file_wd;
+		$file_lg =~ s/_us.wav/_lg.wav/g;
+		$file_lg_est =~ s/_us.wav/_lg_est.wav/g;
+
 		# Word index
 		$file_wd =~ /^(.*)(_)(.*)(_us.wav)$/;
 		my $idx_wd = $3;
 
 		# Spam
-		print "Processing WD $idx_wd from SEQ $idx_seq\n";
+		print "US<-->CC Processing WD $idx_wd from SEQ $idx_seq\n";
 		print "  WDUS       $file_wd\n";
 		print "  WDCC       $file_cc\n";
 		print "  WDCC (est) $file_cc_est\n";
@@ -256,50 +276,59 @@ foreach $folder_seq (@folders_seq) {
 		# offset value for each sequence, in seconds).
 		my $cc_offset = @cfg_postcc[0];
 		chomp($cc_offset);
-		my @us_params = split('/', @cfg_pdetect[int($idx_seq)]);
-		my $us_offset = @us_params[1] * 48000;
+		#my @us_params = split('/', @cfg_pdetect[int($idx_seq)]);
+	    #my $us_offset = @us_params[1] * 48000;
 
 
 		# Here I call Paul's alignement routine.
 		# For the sake of simplicity, Matlab is launced
 		# for each word (sorry).
-		#my $target_offset = $cc_offset + 16667375 - 1456309;
-		print "  Paul's Offset:  $cc_offset\n";
-		print "  Paul's ALRF:    $value_ALR\n";
-		print "  Paul's ALR:     $value_ALRF\n";
-		my $target_offset = int(48000*$cc_offset) + int($value_ALR) - int($value_ALRF);
-		#my $target_offset = int(48000*$cc_offset) + $value_ALR - $value_ALRF;
-		print "  Paul's TOffset: $target_offset\n";
-		
-		my @dd_values = pAlign($target_offset, $file_wd, $file_cc, $file_cc_est, $file_aln, $track_cc, $wavalign_invert);
+		my $target_offset_cc = int($rate_cc*$cc_offset) + int($value_ALR) - int($value_ALRF);
+		my @dd_values_cc = pAlign($target_offset_cc, $file_wd, $file_cc, $file_cc_est, $file_aln, $track_cc, $wavalign_invert, $rate_cc, $channel_cc);
 
 		# Paul's script returns some cool values 
 		# used here to generate an appropriate configuration
 		# file for the dd binary.
-		print "Alignement parameters\n";
-		print "  Correction @dd_values[0]\n";
-		print "  dd f0      @dd_values[1]\n";
-		print "  dd df      @dd_values[2]\n";
+		#print "Alignement parameters\n";
+		#print "  Correction @dd_values_cc[0]\n";
+		#print "  dd f0      @dd_values_cc[1]\n";
+		#print "  dd df      @dd_values_cc[2]\n";
 
 
 		# Prepare and write the CC .dd values...
 		my $t_idx_wd = int($idx_wd);
-		print FILE_DD_CC "$t_idx_wd/@dd_values[1]/@dd_values[2]\n";
-		print FILE_LOG "$t_idx_wd/@dd_values[0]\n";
+		print FILE_DD_CC "$t_idx_wd/@dd_values_cc[1]/@dd_values_cc[2]\n";
+		print FILE_LOG_CC "$t_idx_wd/@dd_values_cc[0]\n";
+		
+		
+		# align LG
+		my $track_lg = $track_lg_regex;
+		$track_lg =~ s/SSSS/$idx_seq/g;
+
+		# Spam.
+		print "US<-->LG Processing WD $idx_wd from SEQ $idx_seq\n";
+		print "  WDUS       $file_wd\n";
+		print "  WDLG       $file_lg\n";
+		print "  WDLG (est) $file_lg_est\n";
+		print "  ALN        $file_aln\n";
+		print "  TLG        $track_lg\n";
 	
+		# Perform the same operations performed earlier
+  		# for the US/CC alignment.
+		my @lg_params = split('/', @cfg_postlg[int($idx_seq)]);
+		my $lg_offset = @lg_params[1];
+		my $target_offset_lg = int($rate_lg*$lg_offset);
+		my @dd_values_lg = pAlign($target_offset_lg, $file_wd, $file_lg, $file_lg_est, $file_aln, $track_lg, $wavalign_invert, $rate_lg, $channel_lg);
+		
+		# Prepare and write the LG log file
+		print FILE_LOG_LG "$t_idx_wd/@dd_values_lg[0]\n";
+
 		# Elegant spam on the term
 		print "\n";
+		die;
 	}
 	# .. and close the CC .dd file
-	close(FILE_LOG);
+	close(FILE_LOG_CC);
+	close(FILE_LOG_LG);
 	close(FILE_DD_CC);
-}
-
-if (0) {
-	open(FILEAMP, ">>$file_AMP");
-	for (my $l = $l0; $l <= $l1; $l++) {
-	#print FILEAMP "$l @lines_AG[$l]";
-		print FILEAMP "@lines_AG[$l]";
-	}
-	close(FILEAMP);
 }

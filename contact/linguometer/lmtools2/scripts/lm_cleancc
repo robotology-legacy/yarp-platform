@@ -1,2 +1,3 @@
 #!/bin/bash
 for i in `find seq* | grep _cc `; do rm -v $i; done
+for i in `find seq* | grep _lg `; do rm -v $i; done
