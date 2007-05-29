@@ -166,8 +166,8 @@ bool wakeUpSensors(void)
 		// GT Initialization
 		cout << "Initialising GazeTracker... ";
 		yarp::os::Property GazeProperty;
-		GazeProperty.put("comPort", _property.find("GTBaudRate"));
-		GazeProperty.put("baudRate", _property.find("GTComPort"));
+		GazeProperty.put("comPort", _property.find("GTComPort"));
+		GazeProperty.put("baudRate", _property.find("GTBaudRate"));
 		if ( _hardware.gt.open (GazeProperty) ) {
 			cout <<  "done. On COM" << GazeProperty.find("comPort").asInt() << ", " << GazeProperty.find("baudRate").asInt() << " baud." << endl;
 			atLeastOneIsOK = true;
