@@ -1,6 +1,6 @@
 % Coded by Paul Fitzpatrick (paulfitz@liralab.it)
 % Integrated in lmtools by Michele Tavella (michele@liralab.it)
-function offset = lmWAVAlign(file_wd, file_cc_est)
+function offset = lmWAVAlign(file_wd, file_cc_est, do_invert)
 
 %file_wd = sprintf('wd_%04d.wav',wordNumber);
 %file_cc_est = sprintf('wd_%04d_cc_est.wav',wordNumber);
@@ -16,11 +16,21 @@ end
 
 rate = rate0;
 % zap click peaks
-[ignore peak] = max(wav0(:,2));
-wav0(1:(peak+round(rate*0.1)),:) = 0;  % null out click at start
-[ignore peak] = min(wav0(:,2));
-wav0((peak-round(rate*0.1)):length(wav0),:) = 0;  % null out tail
-
+%[ignore peak] = max(wav0(:,2));
+%wav0(1:(peak+round(rate*0.1)),:) = 0;  % null out click at start
+%[ignore peak] = min(wav0(:,2));
+%wav0((peak-round(rate*0.1)):length(wav0),:) = 0;  % null out tail
+if (do_invert == 0)
+    [ignore peak] = max(wav0(:,2));
+    wav0(1:(peak+round(rate*0.1)),:) = 0;  % null out click at start
+    [ignore peak] = min(wav0(:,2));
+    wav0((peak-round(rate*0.1)):length(wav0),:) = 0;  % null out tail
+else
+    [ignore peak] = max(wav0(:,2));
+    wav0((peak-round(rate*0.1)):length(wav0),:) = 0;  % null out tail
+    [ignore peak] = min(wav0(:,2));
+    wav0(1:(peak+round(rate*0.1)),:) = 0;  % null out click at start
+end
 % forget about stereo for comparison
 wav0 = wav0(:,2);
 wav1 = wav1(:,2);

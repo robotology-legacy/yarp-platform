@@ -23,6 +23,7 @@ sub pAlign {
 	my $file_cc_est = $_[3];
 	my $file_aln = $_[4];
 	my $track_cc = $_[5];
+	my $matlab_invert = $_[6];
 
 	print "Performing alignment\n";
 	print "  Offset     $target_offset\n";
@@ -83,7 +84,7 @@ sub pAlign {
 	my $t0 = $padStart/48000;
 	my $t1 = $padLen/48000;
 	my $cmd2 = "sox $track_cc $file_cc_est trim ${t0}s ${t1}s";
-	my $tt = $t0 . "/" . $t1;
+	#my $tt = $t0 . "/" . $t1;
 	#print "$cmd\n";
 	#print "$cmd2\n";
 
@@ -97,7 +98,7 @@ sub pAlign {
 
 	# get more exact match from correlation
     #  (aka pipe madness, could not work for earlier matlab versions!)
-	my $correction = `echo "lmWAVAlign('$matlab_file_wd', '$matlab_file_cc_est')" | matlab -nosplash -nojvm | grep "myans ="`;
+	my $correction = `echo "lmWAVAlign('$matlab_file_wd', '$matlab_file_cc_est', $matlab_invert)" | matlab -nosplash -nojvm | grep "myans ="`;
 	chomp($correction);
 	$correction =~ s/myans = //;
 	print "  Correction $correction samples\n";
@@ -139,6 +140,15 @@ my @folders_seq = sort {$a cmp $b} @folders_seq_ns;
 # Read configuration files
 my @cfg_postcc  = mImportFile("config/lm_postcc.cfg");
 my @cfg_pdetect = mImportFile("config/lm_pdetect.cfg");
+# Few experiments (7,8,9) do have inveted segmentation peaks.
+my @cfg_invert = mImportFile("config/lm_invert.cfg");
+my $param_invert = @cfg_invert[0];
+chomp($param_invert);
+
+my $wavalign_invert = int(0);
+if ($param_invert) {
+	$wavalign_invert = int(1);
+}
 
 # Each SSSS sequence has got a .dd file that will be
 # used by binary dd to perform the segmentation of the DV
@@ -261,7 +271,7 @@ foreach $folder_seq (@folders_seq) {
 		#my $target_offset = int(48000*$cc_offset) + $value_ALR - $value_ALRF;
 		print "  Paul's TOffset: $target_offset\n";
 		
-		my @dd_values = pAlign($target_offset, $file_wd, $file_cc, $file_cc_est, $file_aln, $track_cc);
+		my @dd_values = pAlign($target_offset, $file_wd, $file_cc, $file_cc_est, $file_aln, $track_cc, $wavalign_invert);
 
 		# Paul's script returns some cool values 
 		# used here to generate an appropriate configuration
