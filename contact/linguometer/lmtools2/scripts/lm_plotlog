@@ -1,2 +1,3 @@
 #!/bin/bash
 echo "lmLogCCProxy; quit" | matlab -nosplash -nojvm
+echo "lmLogLGProxy; quit" | matlab -nosplash -nojvm

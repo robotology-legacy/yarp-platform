@@ -325,7 +325,6 @@ foreach $folder_seq (@folders_seq) {
 
 		# Elegant spam on the term
 		print "\n";
-		die;
 	}
 	# .. and close the CC .dd file
 	close(FILE_LOG_CC);
