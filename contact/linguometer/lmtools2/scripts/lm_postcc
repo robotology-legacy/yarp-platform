@@ -317,11 +317,16 @@ foreach $folder_seq (@folders_seq) {
   		# for the US/CC alignment.
 		my @lg_params = split('/', @cfg_postlg[int($idx_seq)]);
 		my $lg_offset = @lg_params[1];
-		my $target_offset_lg = int($rate_lg*$lg_offset);
-		my @dd_values_lg = pAlign($target_offset_lg, $file_wd, $file_lg, $file_lg_est, $file_aln, $track_lg, $wavalign_invert, $rate_lg, $channel_lg);
-		
-		# Prepare and write the LG log file
-		print FILE_LOG_LG "$t_idx_wd/@dd_values_lg[0]\n";
+		if ($lg_offset > 0) {
+			my $target_offset_lg = int($rate_lg*$lg_offset);
+			my @dd_values_lg = pAlign($target_offset_lg, $file_wd, $file_lg, $file_lg_est, $file_aln, $track_lg, $wavalign_invert, $rate_lg, $channel_lg);
+			
+			# Prepare and write the LG log file
+			print FILE_LOG_LG "$t_idx_wd/@dd_values_lg[0]\n";
+		}
+		else {
+			print FILE_LOG_LG "$t_idx_wd/0.00\n";
+		}
 
 		# Elegant spam on the term
 		print "\n";
