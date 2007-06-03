@@ -39,18 +39,6 @@ if [ -e $PATH_ROOT ]; then
 			echo "$idx/" >> $CFG_CD
 		done
 	fi
-
-
-	# Create configuration file for lm_segment
-	CFG_PD="config/lm_pdetect.cfg"
-	if [ -e $CFG_PD ]; then
-		echo "File $CFG_PD exists"
-	else
-		echo "File $CFG_PD does not exist: creating empty pattern"
-		for idx in `seq 0 8`; do
-			echo "$idx//" >> $CFG_CD
-		done
-	fi
 else
 	echo "File $PATH_ROOT (symlink) does not exist. Please create it!"
 fi
