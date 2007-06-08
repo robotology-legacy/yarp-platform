@@ -77,14 +77,6 @@ foreach $line (@lines) {
 	print " AG POS   $file_AGPOSt <-- $file_AGPOSs\n";
 	copy($file_AGPOSs, $file_AGPOSt) or die "File cannot be copied ($file_AGPOSs, $file_AGPOSt)";	
 	
-	# AG AMP files
-	my $file_AGs = $path_AGAMP . "/" . $regex_AGAMPs;
-	$file_AGs =~ s/NNNN/$idsf/g;
-	$file_AGt = $path_cache . "/" . $regex_AGAMPt;
-	$file_AGt =~ s/SSSS/$idtf/g;
-	print " AG AMP   $file_AGt <-- $file_AGs\n";
-	copy($file_AGs, $file_AGt) or die "File cannot be copied ($file_AGs, $file_AGt)";	
-	
 	# AG WAV files
 	my $file_WAs = $path_WA . "/" . $regex_WAs;
 	$file_WAs =~ s/NNNN/$idsf/g;
