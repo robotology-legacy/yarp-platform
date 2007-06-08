@@ -20,7 +20,7 @@ sub mImportFile
 	return @data;
 }
 $path_AG  		= "temp/";
-$regex_AG		= "ag_sequence_SSSS.amp";
+$regex_AG		= "ag_sequence_SSSS.pos";
 
 $regex_SEQ 		= "seq_*";
 @folders_SEQ 	= sort {$a cmp $b} `find . -iname "$regex_SEQ"`;
@@ -28,7 +28,7 @@ $regex_SEQ 		= "seq_*";
 $ext_ALN		= "aln";
 $regex_ALN		= "wd_SSSS_ag.aln";
 
-$ext_AMP		= "amp";
+$ext_AMP		= "pos";
 
 foreach $folder_SEQ (@folders_SEQ) {
 	chomp($folder_SEQ);
@@ -37,7 +37,7 @@ foreach $folder_SEQ (@folders_SEQ) {
 	print "Current SEQ:  $idx_SEQ ($folder_SEQ)\n";
 	my $file_AG = $path_AG . '/' . $regex_AG;
 	$file_AG =~ s/SSSS/$idx_SEQ/g;
-	print " Current AG:  $file_AG\n";
+	print " Current AGPOS:  $file_AG\n";
 	
 	@lines_AG = mImportFile($file_AG);
 	#foreach $line_AG (@lines_AG) {
