@@ -37,7 +37,7 @@ foreach $folder_SEQ (@folders_SEQ) {
 	print "Current SEQ:  $idx_SEQ ($folder_SEQ)\n";
 	my $file_AG = $path_AG . '/' . $regex_AG;
 	$file_AG =~ s/SSSS/$idx_SEQ/g;
-	print " Current AGAMP:  $file_AG\n";
+	print " Current AG:  $file_AG\n";
 	
 	@lines_AG = mImportFile($file_AG);
 	#foreach $line_AG (@lines_AG) {
