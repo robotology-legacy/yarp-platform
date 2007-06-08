@@ -1,0 +1,13 @@
+-mdef	/usr/local/share/sphinx3/model/hmm/hub4_cd_continuous_8gau_1s_c_d_dd/hub4opensrc.6000.mdef
+-ctl tmp/list.ctl
+-mean	/usr/local/share/sphinx3/model/hmm/hub4_cd_continuous_8gau_1s_c_d_dd/means
+-var	/usr/local/share/sphinx3/model/hmm/hub4_cd_continuous_8gau_1s_c_d_dd/variances
+-mixw	/usr/local/share/sphinx3/model/hmm/hub4_cd_continuous_8gau_1s_c_d_dd/mixture_weights 
+-tmat	/usr/local/share/sphinx3/model/hmm/hub4_cd_continuous_8gau_1s_c_d_dd/transition_matrices
+-feat 1s_c_d_dd
+-varnorm	no
+-cmn	current
+-insent tmp/transcript.txt
+-phsegdir tmp
+-dict tmp/current.dict
+-fdict /usr/local/share/sphinx3/model/lm/an4/filler.dict
