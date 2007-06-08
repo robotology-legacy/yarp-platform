@@ -21,18 +21,21 @@ sub mImportFile
 $path_cache = "temp";
 
 # Experiment paths
-$path_AG = "root/AG/Sweeps/lm_amps";
+$path_AGAMP = "root/AG/Sweeps/amps";
+$path_AGPOS = "root/AG/Sweeps/rawpos";
 $path_WA = "root/AG/Sweeps/wav";
 $path_LG = "root/LG";
 $path_WS = "root/WS";
 
 # Regex: source
-$regex_AGs = "NNNN.mat";
+$regex_AGAMPs = "NNNN.amp";
+$regex_AGPOSs = "NNNN.pos";
 $regex_WAs = "NNNN.wav";
 $regex_LGs = "track_NN.wav";
 
 # Regex: target
-$regex_AGt = "ag_sequence_SSSS.mat";
+$regex_AGAMPt = "ag_sequence_SSSS_bin.amp";
+$regex_AGPOSt = "ag_sequence_SSSS_bin.pos";
 $regex_WAt = "ag_sequence_SSSS.wav";
 $regex_LGt = "lg_sequence_SSSS.wav";
 $regex_WSt = "ws_sequence_SSSS.txt";
@@ -59,15 +62,31 @@ foreach $line (@lines) {
 	print "Collecting sequence $idtf ($idsf)\n";
 
 	# AG AMP files
-	$file_AGs = $path_AG . "/" . $regex_AGs;
+	my $file_AGAMPs = $path_AGAMP . "/" . $regex_AGAMPs;
+	$file_AGAMPs =~ s/NNNN/$idsf/g;
+	my $file_AGAMPt = $path_cache . "/" . $regex_AGAMPt;
+	$file_AGAMPt =~ s/SSSS/$idtf/g;
+	print " AG AMP   $file_AGAMPt <-- $file_AGAMPs\n";
+	copy($file_AGAMPs, $file_AGAMPt) or die "File cannot be copied ($file_AGAMPs, $file_AGAMPt)";	
+
+	# AG POS files
+	my $file_AGPOSs = $path_AGPOS . "/" . $regex_AGPOSs;
+	$file_AGPOSs =~ s/NNNN/$idsf/g;
+	my $file_AGPOSt = $path_cache . "/" . $regex_AGPOSt;
+	$file_AGPOSt =~ s/SSSS/$idtf/g;
+	print " AG POS   $file_AGPOSt <-- $file_AGPOSs\n";
+	copy($file_AGPOSs, $file_AGPOSt) or die "File cannot be copied ($file_AGPOSs, $file_AGPOSt)";	
+	
+	# AG AMP files
+	my $file_AGs = $path_AGAMP . "/" . $regex_AGAMPs;
 	$file_AGs =~ s/NNNN/$idsf/g;
-	$file_AGt = $path_cache . "/" . $regex_AGt;
+	$file_AGt = $path_cache . "/" . $regex_AGAMPt;
 	$file_AGt =~ s/SSSS/$idtf/g;
 	print " AG AMP   $file_AGt <-- $file_AGs\n";
 	copy($file_AGs, $file_AGt) or die "File cannot be copied ($file_AGs, $file_AGt)";	
 	
 	# AG WAV files
-	$file_WAs = $path_WA . "/" . $regex_WAs;
+	my $file_WAs = $path_WA . "/" . $regex_WAs;
 	$file_WAs =~ s/NNNN/$idsf/g;
 	$file_WAt = $path_cache . "/" . $regex_WAt;
 	$file_WAt =~ s/SSSS/$idtf/g;
@@ -75,7 +94,7 @@ foreach $line (@lines) {
 	copy($file_WAs, $file_WAt) or die "File cannot be copied ($file_WAs, $file_WAt)";	
 	
 	# LG files
-	$file_LGs = $path_LG . "/" . $regex_LGs;
+	my $file_LGs = $path_LG . "/" . $regex_LGs;
 	$file_LGs =~ s/NN/$idsf2/g;
 	$file_LGt = $path_cache . "/" . $regex_LGt;
 	$file_LGt =~ s/SSSS/$idtf/g;
@@ -83,7 +102,7 @@ foreach $line (@lines) {
 	copy($file_LGs, $file_LGt) or die "File cannot be copied ($file_LGs, $file_LGt)";	
 	
 	# WS files
-	$file_WSs = @files_WS[$ids - 1];
+	my $file_WSs = @files_WS[$ids - 1];
 	chomp($file_WSs);
 	$file_WSt = $path_cache . "/" . $regex_WSt;
 	$file_WSt =~ s/SSSS/$idtf/g;
