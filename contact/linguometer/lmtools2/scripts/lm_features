@@ -16,8 +16,109 @@ sub mImportFile {
 	return @data;
 }
 
+sub ff {
+	my $file = $_[0];
+	my $frames = $_[1];
+
+	open(FILE_FF, ">$file");
+	for ($i = 0; $i < $frames; $i++) {
+		print FILE_FF "$i/0/0/0/0/0/0\n";
+	}
+	close(FILE_FF);
+}
+
 # Look for SEQ folders
 my $folders_regex = "seq_*";
 my @folders_seq_ns = `find . -iname "$folders_regex"`;
 my @folders_seq = sort {$a cmp $b} @folders_seq_ns;
 
+# I'm missing the feature extraction code, so I'll
+# simply produce a faked output via ff().
+# Now, to enable the faked feature detection, 
+# set the next variable to 1.
+my $opt_go_fake = 1;
+
+# Parse each SEQ folder
+foreach $folder_seq (@folders_seq) {
+	# Nuke the carrier return char
+	chomp($folder_seq);
+	
+	# Look for CC-DV files
+	my $cc_regex = "wd_*_cc.dv";
+	my @cc_files_ns = `find $folder_seq/ -iname "$cc_regex" | grep -v "ag"`;
+	my @cc_files = sort {$a cmp $b} @cc_files_ns;
+	
+	# Look for US-DV files
+	my $us_regex = "wd_*_us.dv";
+	my @us_files_ns = `find $folder_seq/ -iname "$us_regex" | grep -v "ag"`;
+	my @us_files = sort {$a cmp $b} @us_files_ns;
+
+	# Extract SEQ folder number
+	$folder_seq =~ /^(.*)(_)(.*)$/;
+	my $idx_seq = $3;
+	my $t_idx_seq = int($idx_seq);
+	
+	#print "$folder_seq ($idx_seq)\n";
+
+	##############################################
+	# Get faked parameters                       #
+	##############################################
+	my $cfg_cc = "cache/wd_" . $idx_seq . "_cc_sequence.dd";
+	my @values_cc = mImportFile($cfg_cc);
+	
+	my $cfg_us = "cache/wd_" . $idx_seq . "_us_sequence.dd";
+	my @values_us = mImportFile($cfg_us);
+	
+	##############################################
+	# Run feature extraction code on CC-DV files #
+	##############################################
+	foreach $cc_file (@cc_files) {
+		# Nuke the carrier return char
+		chomp($cc_file);
+
+		my $cc_ff_file = $cc_file;
+		$cc_ff_file =~ s/.dv/.ff/g;
+
+		if ($opt_go_fake) {
+			$cc_file =~ /^(.*)(_)(.*)(_cc.dv)$/;
+			my $cc_idx = $3;
+			
+			my @cc_params = split('/', @values_cc[$cc_idx]);
+			my $cc_frames = @cc_params[2];
+			chomp($cc_frames);
+
+			print "Generating CC faked features: $cc_ff_file = ff($cc_file, $cc_frames)\n";
+		}
+		else {
+			my $cmd = "echo MISSING_BIN";
+			system ("$cmd $cc_file $cc_ff_file");
+		}
+	}
+	
+	##############################################
+	# Run feature extraction code on US-DV files #
+	##############################################
+	foreach $us_file (@us_files) {
+		# Nuke the carrier return char
+		chomp($us_file);
+
+		my $us_ff_file = $us_file;
+		$us_ff_file =~ s/.dv/.ff/g;
+
+		if ($opt_go_fake) {
+			$us_file =~ /^(.*)(_)(.*)(_us.dv)$/;
+			my $us_idx = $3;
+			
+			my @us_params = split('/', @values_us[$us_idx]);
+			my $us_frames = @us_params[2];
+			chomp($us_frames);
+
+			print "Generating US faked features: $us_ff_file = ff($us_file, $us_frames)\n";
+			ff($us_ff_file, $us_frames);
+		}
+		else {
+			my $cmd = "echo MISSING_BIN";
+			system ("$cmd $us_file $us_ff_file");
+		}
+	}
+}

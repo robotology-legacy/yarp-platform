@@ -201,7 +201,7 @@ foreach $folder_seq (@folders_seq) {
 	my @word_files_ns = `find $folder_seq/ -iname "$word_regex" | grep -v "ag"`;
 	my @word_files = sort {$a cmp $b} @word_files_ns;
 		
-	# Look for WD files
+	# Extract SEQ folder number
 	$folder_seq =~ /^(.*)(_)(.*)$/;
 	my $idx_seq = $3;
 	my $t_idx_seq = int($idx_seq);
