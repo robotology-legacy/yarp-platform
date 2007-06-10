@@ -1,7 +1,7 @@
 clear all;
 
 seq = 0;
-num = 60;
+num = 70;
 
 std_rate = 48000;
 opt_plot = 1;
