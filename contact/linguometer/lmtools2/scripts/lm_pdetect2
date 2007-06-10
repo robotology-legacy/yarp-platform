@@ -55,13 +55,13 @@ foreach $line (@seqs) {
 	print "Sequence $txt, ";
 	print "t0 = $t0, ";
 	print "t1 = $t1\n";
-	$file_txt = "wd_" . $txtf . "_sequence" . ".dd";
+	$file_txt = "wd_" . $txtf . "_us_sequence" . ".dd";
 	$file_log = "lm_pdetect2_" . $txtf . ".log";
-	$file_seg = "wd_" . $txtf . "_segment"  . ".wav";
-	$file_seq = "wd_" . $txtf . "_sequence" . ".wav";
-	$file_aln = "wd_" . $txtf . "_sequence" . ".alr";
-	$file_pks = "wd_" . $txtf . "_sequence_peaks" . ".wav";
-	$file_als = "wd_" . $txtf . "_sequence" . ".als";
+	$file_seg = "wd_" . $txtf . "_us_segment"  . ".wav";
+	$file_seq = "wd_" . $txtf . "_us_sequence" . ".wav";
+	$file_aln = "wd_" . $txtf . "_us_sequence" . ".alr";
+	$file_pks = "wd_" . $txtf . "_us_sequence_peaks" . ".wav";
+	$file_als = "wd_" . $txtf . "_us_sequence" . ".als";
 	
 	$file_txtt = "cache/$file_txt";
 	$file_logt = "log/$file_log";

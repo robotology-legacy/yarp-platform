@@ -47,7 +47,7 @@ else {
 # For each SSSS sequence, load the appropriate
 # ALS file. It contains the WD/AG peaks that
 # walign2 will use to align WD with AG data.
-my $file_als_regex = "cache/wd_SSSS_sequence.als";
+my $file_als_regex = "cache/wd_SSSS_us_sequence.als";
 
 # For each SSSS sequence, load the appropriate
 # AG SEQ file.
