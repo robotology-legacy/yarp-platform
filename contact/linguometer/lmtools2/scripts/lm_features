@@ -22,7 +22,7 @@ sub ff {
 
 	open(FILE_FF, ">$file");
 	for ($i = 0; $i < $frames; $i++) {
-		print FILE_FF "$i/0/0/0/0/0/0\n";
+		print FILE_FF "$i 0 0 0 0 0 0\n";
 	}
 	close(FILE_FF);
 }
@@ -88,6 +88,7 @@ foreach $folder_seq (@folders_seq) {
 			chomp($cc_frames);
 
 			print "Generating CC faked features: $cc_ff_file = ff($cc_file, $cc_frames)\n";
+			ff($cc_ff_file, $cc_frames);
 		}
 		else {
 			my $cmd = "echo MISSING_BIN";
