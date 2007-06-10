@@ -163,7 +163,7 @@ my $file_dd_cc_regex = "cache/wd_SSSS_cc_sequence.dd";
 # of the sequences. The ALRF file stands for ALR frame.
 # Look at doc/lm_postcc.txt, since a human (or a well trained
 # ape) is required for this step.
-my $file_ALRF = "cache/wd_0000_sequence.alr";
+my $file_ALRF = "cache/wd_0000_us_sequence.alr";
 my @values_ALRF = mImportFile($file_ALRF);
 my $value_ALRF = @values_ALRF[0];
 chomp($value_ALRF);
@@ -174,7 +174,7 @@ $value_ALRF = int($value_ALRF);
 # ALR value should be now loaded. We need to 
 # load relative ALR values, one for each sequence.
 # As usual, I rely on a regex-ready string. 
-my $file_ALR_regex = "cache/wd_SSSS_sequence.alr";
+my $file_ALR_regex = "cache/wd_SSSS_us_sequence.alr";
 
 # Log File regex. If the alignement is performed 
 # correcly, you should observe a low variance in
@@ -219,7 +219,7 @@ foreach $folder_seq (@folders_seq) {
 	$value_ALR = int($value_ALR);
 
 	# What about some useful spam (ham?)
-	print "Alignement reference\n";
+	print "Alignment reference\n";
 	print "  ALRF       $value_ALRF ($file_ALRF)\n";
 	print "  ALR        $value_ALR ($file_ALR)\n";
 
@@ -245,7 +245,7 @@ foreach $folder_seq (@folders_seq) {
 	foreach $file_wd (@word_files) {
 		# Nuke the carrier return char
 		chomp($file_wd);
-	
+		
 		# Those are the names of the files I'll write/read
 		my $file_aln = $file_wd;
 		my $file_cc = $file_wd;

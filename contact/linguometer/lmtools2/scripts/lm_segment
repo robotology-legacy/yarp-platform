@@ -33,7 +33,7 @@ foreach $file_words (@files_words) {
 	chomp($file_words);
 	print "$file_words\n";
 		
-	$file_words =~ /^(.*)(_)(.*)(_)(.*)$/;
+	$file_words =~ /^(.*)(_)(.*)(_)(.*)(_)(.*)$/;
 	$seq_idx = $3;
 	print "$seq_idx\n";
 	
