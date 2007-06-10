@@ -23,7 +23,7 @@ sub mImportFile
 
 my $file_dv = "root/US/stream.dv";
 my $words_path = "cache";
-my $words_regex = "wd_*_sequence.dd";
+my $words_regex = "wd_*_us_sequence.dd";
 my @files_words_ns= `find $words_path -iname "$words_regex"`;
 my @files_words = sort {$a cmp $b} @files_words_ns;
 

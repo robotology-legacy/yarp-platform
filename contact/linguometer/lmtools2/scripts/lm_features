@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+
+use Getopt::Long;
+use File::Copy;
+use Cwd;
+use Term::ANSIColor;
+use Sys::Hostname;
+
+sub mImportFile {
+	my $file = $_[0];
+	
+	open(FID, "< $file") or die "Error ($file): $!\n";
+	my @data = <FID>;
+	close (FID);
+
+	return @data;
+}
+
+# Look for SEQ folders
+my $folders_regex = "seq_*";
+my @folders_seq_ns = `find . -iname "$folders_regex"`;
+my @folders_seq = sort {$a cmp $b} @folders_seq_ns;
+
