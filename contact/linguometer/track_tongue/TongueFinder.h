@@ -14,6 +14,7 @@
 #include <yarp/sig/all.h>
 #include <yarp/sig/GlutOrientation.h>
 #include <deque>
+#include "Finder.h"
 
 class Point { 
 public:
@@ -23,7 +24,7 @@ public:
 };
 
 
-class TongueFinder {
+class TongueFinder : public Finder {
 private:
   double xglob, yglob;
   double dxglob, dyglob;
