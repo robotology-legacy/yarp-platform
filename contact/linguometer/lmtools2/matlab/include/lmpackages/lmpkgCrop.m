@@ -1,4 +1,4 @@
-function sig2 = align_crop(sig1, offset)
+function sig2 = lmpkgCrop(sig1, offset)
 if (offset > 0)	
 	%sig2 = sig1(offset+1:length(sig1));
     sig2 = sig1;

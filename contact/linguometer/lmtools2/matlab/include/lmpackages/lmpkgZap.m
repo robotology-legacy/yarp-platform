@@ -1,4 +1,4 @@
-function [wav zap0 zap1] = align_zap(wav, rate, do_invert)
+function [wav zap0 zap1] = lmpkgZap(wav, rate, do_invert)
 if (do_invert == 0)
     [ignore peak] = max(wav);
 	zap0 = peak+round(rate*0.1);

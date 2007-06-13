@@ -1,4 +1,4 @@
-function data = align_main(seq, num);
+function data = lmpkgAlign(seq, num);
 
 clear all;
 seq = 0;
@@ -35,12 +35,12 @@ audio_cc = sprintf('seq_%.4d/wd_%.4d_cc.wav', seq, num);
 
 % Select the right channel (US-Speech)
 wav_wd = owav_wd(:, 2);
-[wav_wd zap0_wd zap1_wd] = align_zap(wav_wd, std_rate, opt_invert);
+[wav_wd zap0_wd zap1_wd] = lmpkgZap(wav_wd, std_rate, opt_invert);
 
 % Resample the AG-Speech data (16-->48kHz)
 wav_ag = resample(owav_ag, std_rate, orate_ag);
 rate_ag = std_rate;
-[wav_ag zap0_ag zap1_ag] = align_zap(wav_ag, std_rate, opt_invert);
+[wav_ag zap0_ag zap1_ag] = lmpkgZap(wav_ag, std_rate, opt_invert);
 
 % Select the left channel (LG-Speech)
 wav_lg = resample(owav_lg, std_rate, orate_lg);
@@ -81,9 +81,9 @@ sig_cc  = filter2(filter_fast, abs(wav_cc), 'same');
 sig_cc  = filter2(filter_fast, abs(wav_cc), 'same');
 
 printf('Computing offset values:\n');
-offset_ag = align_lag(sig_wd, sig_ag);
-offset_lg = align_lag(sig_wd, sig_lg);
-offset_cc = align_lag(sig_wd, sig_cc);
+offset_ag = lmpkgLag(sig_wd, sig_ag);
+offset_lg = lmpkgLag(sig_wd, sig_lg);
+offset_cc = lmpkgLag(sig_wd, sig_cc);
 printf('    WD     %d (reference)\n', 0);
 printf('    AG     %d\n', offset_ag);
 printf('    LG     %d\n', offset_lg);
@@ -125,13 +125,13 @@ end
 
 % remove NaN values
 wav3_wd = wav_wd;
-wav3_ag = align_crop(wav2_ag, offset_ag);
-dat3_agamp = align_crop(dat2_agamp, offset_ag);
-dat3_agpos = align_crop(dat2_agpos, offset_ag);
-wav3_lg = align_crop(wav2_lg, offset_lg);
-dat3_lg = align_crop(dat2_lg, offset_lg);
-wav3_cc = align_crop(wav2_cc, offset_cc);
-dat3_ccff = align_crop(dat2_ccff, offset_cc);
+wav3_ag = lmpkgCrop(wav2_ag, offset_ag);
+dat3_agamp = lmpkgCrop(dat2_agamp, offset_ag);
+dat3_agpos = lmpkgCrop(dat2_agpos, offset_ag);
+wav3_lg = lmpkgCrop(wav2_lg, offset_lg);
+dat3_lg = lmpkgCrop(dat2_lg, offset_lg);
+wav3_cc = lmpkgCrop(wav2_cc, offset_cc);
+dat3_ccff = lmpkgCrop(dat2_ccff, offset_cc);
 dat3_usff = dat_usff;
 
 lengths = zeros(4, 1);
@@ -162,9 +162,9 @@ sig3_lg = filter2(filter_fast, abs(wav3_lg), 'same');
 sig3_cc = filter2(filter_fast, abs(wav3_cc), 'same');
 
 printf('Computing offset values:\n');
-offset3_ag = align_lag(sig3_wd, sig3_ag);
-offset3_lg = align_lag(sig3_wd, sig3_lg);
-offset3_cc = align_lag(sig3_wd, sig3_cc);
+offset3_ag = lmpkgLag(sig3_wd, sig3_ag);
+offset3_lg = lmpkgLag(sig3_wd, sig3_lg);
+offset3_cc = lmpkgLag(sig3_wd, sig3_cc);
 printf('    WD   %d (reference)\n', 0);
 printf('    AG   %d\n', offset3_ag);
 printf('    LG   %d\n', offset3_lg);
