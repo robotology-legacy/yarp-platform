@@ -1,4 +1,4 @@
-%function data = align_main(seq, num);
+function data = align_main(seq, num);
 
 clear all;
 seq = 0;
