@@ -1,17 +1,19 @@
-# Usage:
-#  make clean
-#  make prepare 
-#  make process
 CFG_NICE=config/lm_nice
 VAL_NICE=`if [ -e "$(CFG_NICE)" ]; then cat $(CFG_NICE); else echo 0; fi`
 CMD_NICE=/usr/bin/nice -n $(VAL_NICE)
 
-all: prepare process
-process: collect detect segment align aligncc plot
+all:  build process
+clean: cleantemp cleanseq
+build: cleantemp prepare collect 
+process: cleanseq detect segment align aligncc features plot
 
-clean:
-	@echo "Cleaning"
+cleanseq:
+	@echo "Cleaning seq_*/ folders"
 	@$(CMD_NICE) lm_clean --noask
+	
+cleantemp:
+	@echo "Cleaning temp/ folder"
+	@$(CMD_NICE) lm_cleantemp --noask
 
 prepare:	
 	@echo "Preparing data for segment identification"
@@ -42,6 +44,9 @@ aligncc:
 	@$(CMD_NICE) lm_cleancc
 	@$(CMD_NICE) lm_postcc
 	@$(CMD_NICE) lm_segmentcc
+
+features:
+	@$(CMD_NICE) lm_features
 
 plot:
 	@$(CMD_NICE) lm_plotlog
