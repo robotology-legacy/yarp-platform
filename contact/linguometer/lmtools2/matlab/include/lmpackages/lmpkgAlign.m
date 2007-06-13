@@ -5,11 +5,11 @@ seq = 0;
 num = 20;
 
 std_rate = 48000;
-opt_plot = 1;
+opt_plot = 0;
 opt_plotcrap = 0;
 opt_invert = 0;
 opt_spam = 0;
-opt_exportdata = 0;
+opt_exportdata = 1;
 
 % Filters used for smoothing the signals
 filter_fast = ones(round(std_rate*0.01),1);
@@ -261,12 +261,12 @@ end
 printf('Lenght of signals\n');
 printf('(+) US-Speech   %d\n', length(wav3_wd));
 printf('(+) US-Features %d\n', length(dat3_usff));
-printf('    AG-Speech   %d\n', length(wav3_ag));
+printf('(+) AG-Speech   %d\n', length(wav3_ag));
 printf('(+) AG-AMP      %d\n', length(dat3_agamp));
 printf('(+) AG-POS      %d\n', length(dat3_agpos));
-printf('    LG-Speech   %d\n', length(wav3_lg));
+printf('(+) LG-Speech   %d\n', length(wav3_lg));
 printf('(+) LG-EEG      %d\n', length(dat3_lg));
-printf('    CC-Speech   %d\n', length(wav3_cc));
+printf('(+) CC-Speech   %d\n', length(wav3_cc));
 printf('(+) CC-Features %d\n', length(dat3_ccff));
 
 

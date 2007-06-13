@@ -50,3 +50,6 @@ features:
 
 plot:
 	@$(CMD_NICE) lm_plotlog
+
+pack:
+	@$(CMD_NICE) lm_package
