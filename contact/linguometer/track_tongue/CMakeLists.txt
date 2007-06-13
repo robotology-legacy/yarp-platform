@@ -5,7 +5,8 @@ PROJECT(track_tongue)
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
 
-ADD_LIBRARY(tracker_tools GlutOrientation.cpp IntegralImage.cpp Finder.cpp)
+ADD_LIBRARY(tracker_tools GlutOrientation.cpp IntegralImage.cpp 
+			  Finder.cpp YARPViterbi.cpp)
 
 LINK_LIBRARIES(tracker_tools)
 
