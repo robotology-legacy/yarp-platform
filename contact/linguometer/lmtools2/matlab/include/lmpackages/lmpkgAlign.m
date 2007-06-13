@@ -1,14 +1,14 @@
 function data = lmpkgAlign(seq, num);
 
-clear all;
-seq = 0;
-num = 20;
+%clear all;
+%seq = 0;
+%num = 20;
 
 std_rate = 48000;
 opt_plot = 0;
 opt_plotcrap = 0;
 opt_invert = 0;
-opt_spam = 0;
+opt_spam = 1;
 opt_exportdata = 1;
 
 % Filters used for smoothing the signals
@@ -297,5 +297,6 @@ data.CC.spc = wav3_cc;
 data.misc.time = [0:1/std_rate:(length(data.US.spc) - 1)/std_rate];
 if (opt_exportdata)
 	file_data = sprintf('seq_%.4d/wd_%.4d.mat', seq, num);
+	printf('> %s\n', file_data);
 	save(file_data, '-struct', 'data');
 end

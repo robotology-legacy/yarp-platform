@@ -47,5 +47,6 @@ foreach $folder_seq (@folders_seq) {
 	$words -= 1;
 	
 	#my $result = `echo "lmpkgAlignProxy($idx_seq, 0, $words)" | matlab -nosplash -nojvm`;
-	system("echo \"lmpkgAlignProxy($idx_seq, 0, $words)\" | matlab -nosplash -nojvm");
+	#system("echo \"lmpkgAlignProxy($idx_seq, 0, $words)\" | matlab -nosplash -nojvm");
+	system("matlab -nosplash -nojvm -r \"lmpkgAlignProxy($idx_seq, 0, $words)\" ");
 }
