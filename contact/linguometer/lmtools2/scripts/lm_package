@@ -32,83 +32,19 @@ foreach $folder_seq (@folders_seq) {
 	# Nuke the carrier return char
 	chomp($folder_seq);
 	
-	# Look for CC-DV files
-	my $cc_regex = "wd_*_cc.dv";
-	my @cc_files_ns = `find $folder_seq/ -iname "$cc_regex" | grep -v "ag"`;
-	my @cc_files = sort {$a cmp $b} @cc_files_ns;
-	
-	# Look for US-DV files
-	my $us_regex = "wd_*_us.dv";
-	my @us_files_ns = `find $folder_seq/ -iname "$us_regex" | grep -v "ag"`;
-	my @us_files = sort {$a cmp $b} @us_files_ns;
-
 	# Extract SEQ folder number
 	$folder_seq =~ /^(.*)(_)(.*)$/;
 	my $idx_seq = $3;
 	my $t_idx_seq = int($idx_seq);
+
+	# Look for US-DV files
+	my $us_regex = "wd_*_us.dv";
+	my @us_files_ns = `find $folder_seq/ -iname "$us_regex" | grep -v "ag"`;
+	my @us_files = sort {$a cmp $b} @us_files_ns;
 	
-	#print "$folder_seq ($idx_seq)\n";
-
-	##############################################
-	# Get faked parameters                       #
-	##############################################
-	my $cfg_cc = "cache/wd_" . $idx_seq . "_cc_sequence.dd";
-	my @values_cc = mImportFile($cfg_cc);
+	my $words =	@us_files;
+	print "Sequence $idx_seq: total $words\n";
+	$words -= 1;
 	
-	my $cfg_us = "cache/wd_" . $idx_seq . "_us_sequence.dd";
-	my @values_us = mImportFile($cfg_us);
-	
-	##############################################
-	# Run feature extraction code on CC-DV files #
-	##############################################
-	foreach $cc_file (@cc_files) {
-		# Nuke the carrier return char
-		chomp($cc_file);
-
-		my $cc_ff_file = $cc_file;
-		$cc_ff_file =~ s/.dv/.ff/g;
-
-		if ($opt_go_fake) {
-			$cc_file =~ /^(.*)(_)(.*)(_cc.dv)$/;
-			my $cc_idx = $3;
-			
-			my @cc_params = split('/', @values_cc[$cc_idx]);
-			my $cc_frames = @cc_params[2];
-			chomp($cc_frames);
-
-			print "Generating CC faked features: $cc_ff_file = ff($cc_file, $cc_frames)\n";
-			ff($cc_ff_file, $cc_frames);
-		}
-		else {
-			my $cmd = "echo MISSING_BIN";
-			system ("$cmd $cc_file $cc_ff_file");
-		}
-	}
-	
-	##############################################
-	# Run feature extraction code on US-DV files #
-	##############################################
-	foreach $us_file (@us_files) {
-		# Nuke the carrier return char
-		chomp($us_file);
-
-		my $us_ff_file = $us_file;
-		$us_ff_file =~ s/.dv/.ff/g;
-
-		if ($opt_go_fake) {
-			$us_file =~ /^(.*)(_)(.*)(_us.dv)$/;
-			my $us_idx = $3;
-			
-			my @us_params = split('/', @values_us[$us_idx]);
-			my $us_frames = @us_params[2];
-			chomp($us_frames);
-
-			print "Generating US faked features: $us_ff_file = ff($us_file, $us_frames)\n";
-			ff($us_ff_file, $us_frames);
-		}
-		else {
-			my $cmd = "echo MISSING_BIN";
-			system ("$cmd $us_file $us_ff_file");
-		}
-	}
+	my $result = `echo "lmpkgAlignProxy(0, $words, $idx_seq)" | matlab -nosplash -nojvm`;
 }

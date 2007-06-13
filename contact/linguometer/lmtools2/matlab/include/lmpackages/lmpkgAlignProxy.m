@@ -1,7 +1,5 @@
-function lmpkgAlignProxy(wd0, wd1, seq0, seq1)
+function lmpkgAlignProxy(wd0, wd1, seq)
 
-for seq = seq0:seq1
-	for wd = wd0:wd1
-		lmpkgAlign(wd, seq);
-	end
+for wd = wd0:wd1
+	lmpkgAlign(wd, seq);
 end
