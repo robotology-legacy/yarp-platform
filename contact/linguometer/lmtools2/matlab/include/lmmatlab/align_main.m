@@ -1,15 +1,15 @@
-function align_main(seq, num);
+%function data = align_main(seq, num);
 
-%clear all;
-%seq = 0;
-%num = 0;
+clear all;
+seq = 0;
+num = 20;
 
 std_rate = 48000;
 opt_plot = 1;
 opt_plotcrap = 0;
 opt_invert = 0;
 opt_spam = 0;
-opt_exportdata = 1;
+opt_exportdata = 0;
 
 % Filters used for smoothing the signals
 filter_fast = ones(round(std_rate*0.01),1);
@@ -282,16 +282,20 @@ if (opt_spam)
 	wavwrite(wav3_cc, std_rate, audio_cc_out);
 end
 
-if (opt_exportdata)
-	data = {};
-	data.US.spc = wav3_wd;
-	data.US.fea = dat3_usff;
-	data.AG.amp = dat3_agamp;
-	data.AG.pos = dat3_agpos;
-	data.LG.eeg = dat3_lg;
-	data.CC.fea = dat3_ccff;
-	data.misc.time = [0:1/std_rate:(length(data.US.spc) - 1)/std_rate];
 
+data = {};
+data.US.spc = wav3_wd;
+data.US.fea = dat3_usff;
+data.AG.spc = wav3_ag;
+data.AG.amp = dat3_agamp;
+data.AG.pos = dat3_agpos;
+data.LG.egg = dat3_lg;
+data.LG.spc = wav3_lg;
+data.CC.fea = dat3_ccff;
+data.CC.spc = wav3_cc;
+
+data.misc.time = [0:1/std_rate:(length(data.US.spc) - 1)/std_rate];
+if (opt_exportdata)
 	file_data = sprintf('seq_%.4d/wd_%.4d.mat', seq, num);
 	save(file_data, '-struct', 'data');
 end
