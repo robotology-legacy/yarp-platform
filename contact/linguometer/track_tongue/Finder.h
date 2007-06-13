@@ -12,6 +12,7 @@
 
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
+#include <string>
 
 class Finder {
 private:
@@ -29,6 +30,8 @@ public:
     int main(int argc, char *argv[]);
 
     bool isVerbose() { return verbose; }
+
+    virtual std::string getName() = 0;
 };
 
 #endif

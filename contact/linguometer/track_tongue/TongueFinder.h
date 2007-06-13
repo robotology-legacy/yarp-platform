@@ -18,41 +18,44 @@
 
 class Point { 
 public:
-  double x, y;
-  
-  Point(double x, double y) : x(x), y(y) {}
+    double x, y;
+    
+    Point(double x, double y) : x(x), y(y) {}
 };
 
 
 class TongueFinder : public Finder {
 private:
-  double xglob, yglob;
-  double dxglob, dyglob;
-  bool globSet;
-
-  int ct;
-  double peak;
-  double t;
-  yarp::sig::ImageOf<yarp::sig::PixelRgb> part;
-  yarp::sig::ImageOf<yarp::sig::PixelFloat> dx, dy, mag, work;
-  yarp::sig::GlutOrientation orient;
-  std::deque<Point> prevTongue;
+    double xglob, yglob;
+    double dxglob, dyglob;
+    bool globSet;
+    
+    int ct;
+    double peak;
+    double t;
+    yarp::sig::ImageOf<yarp::sig::PixelRgb> part;
+    yarp::sig::ImageOf<yarp::sig::PixelFloat> dx, dy, mag, work;
+    yarp::sig::GlutOrientation orient;
+    std::deque<Point> prevTongue;
 
 public:
   TongueFinder() : orient("data/orient.txt") {
-    t = 0;
-    peak = 0;
-    ct = 0;
-    globSet = false;
-    xglob = yglob = 0;
-    dxglob = dyglob = 0;
+      t = 0;
+      peak = 0;
+      ct = 0;
+      globSet = false;
+      xglob = yglob = 0;
+      dxglob = dyglob = 0;
   }
+    
+    void process(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image, 
+               yarp::sig::ImageOf<yarp::sig::PixelRgb>& out);
+    
+    void saveImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image, 
+                   const char *key);
 
-  void process(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image, 
-	       yarp::sig::ImageOf<yarp::sig::PixelRgb>& out);
+    std::string getName() { return "tongue"; }
 
-  void saveImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image, 
-		 const char *key);
 };
 
 

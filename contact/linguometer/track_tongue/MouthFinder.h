@@ -15,6 +15,8 @@ class MouthFinder : public Finder {
 public:
     virtual void process(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image, 
                          yarp::sig::ImageOf<yarp::sig::PixelRgb>& out);
+
+    std::string getName() { return "mouth"; }
 };
 
 #endif
