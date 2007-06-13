@@ -29,7 +29,6 @@ private:
   double xglob, yglob;
   double dxglob, dyglob;
   bool globSet;
-  bool verbose;
 
   int ct;
   double peak;
@@ -47,11 +46,6 @@ public:
     globSet = false;
     xglob = yglob = 0;
     dxglob = dyglob = 0;
-    verbose = false;
-  }
-
-  void setVerbose(bool verbose) {
-    this->verbose = verbose;
   }
 
   void process(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image, 

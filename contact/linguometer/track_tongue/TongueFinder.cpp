@@ -36,7 +36,7 @@ void TongueFinder::process(ImageOf<PixelRgb>& image, ImageOf<PixelRgb>& out) {
         factor = 2;
     }
 
-    if (verbose) {
+    if (isVerbose()) {
         saveImage(image,"00src");
     }
 
@@ -68,7 +68,7 @@ void TongueFinder::process(ImageOf<PixelRgb>& image, ImageOf<PixelRgb>& out) {
         }
     }
 
-    if (verbose) {
+    if (isVerbose()) {
         saveImage(out,"01dir");
     }
     ImageOf<PixelMono> tongueMask;
@@ -106,7 +106,7 @@ void TongueFinder::process(ImageOf<PixelRgb>& image, ImageOf<PixelRgb>& out) {
     }
 
 
-    if (verbose) {
+    if (isVerbose()) {
         ImageOf<PixelRgb> copy;
         copy.copy(work);
         saveImage(copy,"02enh");
@@ -294,7 +294,7 @@ void TongueFinder::process(ImageOf<PixelRgb>& image, ImageOf<PixelRgb>& out) {
     addRectangleOutline(image,PixelRgb(0,255,0),image.width()/2,
                         image.height()/2, out.width()/2, out.height()/2);
 
-    if (verbose) {
+    if (isVerbose()) {
         addCircleOutline(image,PixelRgb(255,0,0),xmin+tx,ymin+ty,9*factor);
         addCircleOutline(image,PixelRgb(255,0,0),xmin+tx,ymin+ty,8*factor);
         addCircleOutline(image,PixelRgb(0,0,255),xmin+tx,ymin+ty,10*factor);
@@ -303,7 +303,7 @@ void TongueFinder::process(ImageOf<PixelRgb>& image, ImageOf<PixelRgb>& out) {
 
     out = image;
 
-    if (verbose) {
+    if (isVerbose()) {
         saveImage(out,"03out");
     }
 

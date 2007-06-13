@@ -10,14 +10,25 @@
 #ifndef FINDER_INC
 #define FINDER_INC
 
+#include <yarp/os/all.h>
+#include <yarp/sig/all.h>
+
 class Finder {
+private:
+  bool verbose;
 public:
-    virtual void setVerbose(bool verbose) = 0;
+    Finder() : verbose(false) {}
+
+    virtual void setVerbose(bool verbose) {
+        this->verbose = verbose;
+    }
     
     virtual void process(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image, 
                          yarp::sig::ImageOf<yarp::sig::PixelRgb>& out) = 0;
 
     int main(int argc, char *argv[]);
+
+    bool isVerbose() { return verbose; }
 };
 
 #endif
