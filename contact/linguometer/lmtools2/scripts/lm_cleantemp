@@ -1,0 +1,29 @@
+#!/bin/bash
+
+
+if [ "$1" = "--noask" ]; then
+	echo "Script launched with --noask. Cleaning without confirmation."
+	DO_CLEAN=1;
+else
+	echo -e 'Are you sure (Yes/no)? \c'
+	read USER_CHOICE;
+	
+	if [ "$USER_CHOICE" == "Yes" ]; then
+		echo "User choose to clean.";
+		DO_CLEAN=1;
+	else
+		echo "User choose not to clean.";
+		DO_CLEAN=0;
+	fi
+fi
+	
+if [ "$DO_CLEAN" == "1" ]; then
+	echo -e 'Waiting 10 seconds: \c';
+	for x in `seq 0 9`; do
+		echo -e "$((9 - $x)) \a\c";
+		sleep 1;
+	done
+	echo "Cleaning!";
+
+	rm -fv temp/*
+fi

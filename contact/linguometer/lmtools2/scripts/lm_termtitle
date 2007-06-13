@@ -1,0 +1,6 @@
+#!/bin/bash
+case $TERM in
+	xterm*|rxvt*|Eterm) 
+		echo PROMPT_COMMAND='echo -ne "\033]0;${TERM} - ${USER}@${HOSTNAME%%.*} - `pwd`\007"'
+esac
+
