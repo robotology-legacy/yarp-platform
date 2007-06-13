@@ -51,6 +51,9 @@ public:
     void process(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image, 
                yarp::sig::ImageOf<yarp::sig::PixelRgb>& out);
     
+    void processVersion1(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image, 
+                         yarp::sig::ImageOf<yarp::sig::PixelRgb>& out);
+    
     void saveImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image, 
                    const char *key);
 

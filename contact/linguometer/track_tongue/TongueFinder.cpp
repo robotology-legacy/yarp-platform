@@ -20,6 +20,8 @@
 
 #include "TongueFinder.h"
 
+#include "YARPViterbi.h"
+
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
@@ -29,7 +31,8 @@ using namespace yarp::dev;
 
 
 
-void TongueFinder::process(ImageOf<PixelRgb>& image, ImageOf<PixelRgb>& out) {
+void TongueFinder::processVersion1(ImageOf<PixelRgb>& image, 
+                                   ImageOf<PixelRgb>& out) {
 
     int factor = 1;
     if (image.width()>400) {
@@ -310,6 +313,97 @@ void TongueFinder::process(ImageOf<PixelRgb>& image, ImageOf<PixelRgb>& out) {
 
     ct++;
 }
+
+
+double comp(ImageOf<PixelRgb>& img, int x0, int y0,
+            int x1, int y1) {
+    return 1;
+}
+
+void TongueFinder::process(ImageOf<PixelRgb>& image, 
+                           ImageOf<PixelRgb>& out) {
+
+    int factor = 1;
+    if (image.width()>400) {
+        factor = 2;
+    }
+
+    if (isVerbose()) {
+        saveImage(image,"00src");
+    }
+
+    int xmin = image.width()/4;
+    int xmax = image.width()-xmin;
+    int ymin = image.height()/4;
+    int ymax = image.height()-ymin;
+
+
+    // Extract important part of Toshiba image
+    part.resize(xmax-xmin+1,ymax-ymin+1);
+    IMGFOR(part,x,y) {
+        part(x,y) = image(x+xmin,y+ymin);
+    }
+
+    out.copy(part);
+
+
+    YARPViterbi path;
+    path.SetSize(part.height()+2,part.width()+2);
+    int PRE_STATE = part.height();
+    int POST_STATE = part.height()+1;
+    path.BeginTransitions();
+    path.AddTransition(PRE_STATE,PRE_STATE,1);
+    path.EndTransitions();
+    float trans = 0;
+    float base = 50;
+    for (int x=0; x<part.width(); x++) {
+        path.BeginTransitions();
+        path.AddTransition(PRE_STATE,PRE_STATE,0);
+        path.AddTransition(POST_STATE,POST_STATE,0);
+        for (int y=0; y<part.height(); y++) {
+            path.AddTransition(PRE_STATE,y,0);
+            path.AddTransition(y,POST_STATE,0);
+
+            double v = part(x,y).r;
+            double local = base-v;
+            local += part.safePixel(x,y-10).r;
+            local += part.safePixel(x,y-20).r;
+            double ydev = (y-part.height()/2)/(part.height()/2);
+            double xdev = (x-part.width()/2)/(part.width()/2);
+            bool ok = true;
+            if (xdev>=0 && ydev<-0.5) {
+                ok = false;
+            }
+            if (ok) {
+                path.AddTransition(y,y,local +
+                                   comp(part,x,y,x,y));
+                for (int dy=-3; dy<=3; dy++) {
+                    if (y!=0) {
+                        if (y+dy>0 && y+dy<part.height()) {
+                            path.AddTransition(y,y+dy,local +
+                                               comp(part,x,y,x,y+dy) +
+                                               trans);
+                        }
+                    }
+                }
+            }
+        }
+        path.EndTransitions();
+    }
+    path.BeginTransitions();
+    path.AddTransition(POST_STATE,POST_STATE,1);
+    path.EndTransitions();
+
+    path.CalculatePath();
+    for (int x=1; x<=part.width(); x++) {
+        addCircle(out,PixelRgb(255,0,0),x,path(x)+10,3);
+        addCircle(out,PixelRgb(255,0,0),x,path(x)-10,3);
+    }
+
+    ct++;
+}
+
+
 
 void TongueFinder::saveImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image, 
                              const char *key) {
