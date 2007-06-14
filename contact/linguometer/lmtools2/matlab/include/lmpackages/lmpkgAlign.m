@@ -1,4 +1,8 @@
-function data = lmpkgAlign(seq, num, opt_plot);
+%function data = lmpkgAlign(seq, num, opt_plot);
+
+seq = 0;
+num = 28;
+opt_plot = 1;
 
 printf('[lmpkgAlign] Running on SEQ %d, word %d\n', seq, num);
 
@@ -37,7 +41,7 @@ wav_wd = owav_wd(:, 2);
 wav_ag = resample(owav_ag, std_rate, orate_ag);
 rate_ag = std_rate;
 [wav_ag zap0_ag zap1_ag] = lmpkgZap(wav_ag, std_rate, opt_invert);
-
+break;
 % Select the left channel (LG-Speech)
 wav_lg = resample(owav_lg, std_rate, orate_lg);
 dat_lg = wav_lg(:, 2);
