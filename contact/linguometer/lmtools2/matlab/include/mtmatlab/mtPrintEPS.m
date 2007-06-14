@@ -15,5 +15,6 @@
 % Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 function mtPrintEPS (fig, file)
 set(fig, 'PaperPosition', [0 0 6 3]);
-print ('-deps', file);
+set(fig, 'PaperPositionMode', 'auto');
+print ('-depsc2', file);
 
