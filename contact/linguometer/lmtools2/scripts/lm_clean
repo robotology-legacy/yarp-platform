@@ -42,6 +42,7 @@ if [ "$DO_CLEAN" == "1" ]; then
 
 	# Log and Tmp files could stay where they are, but performing
 	# some cleaning is a good idea
+	rm -fv log/plots/
 	rm -fv log/*
 
 	# Cleaning the SEQ folders is NECESSARY and cannot

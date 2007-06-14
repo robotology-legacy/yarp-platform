@@ -254,7 +254,7 @@ if (opt_plot)
 	xlabel('Time [s]');
 
 	drawnow;
-	file_img = sprintf('log/img_lmpack_%.4d_%.4d', seq, num);
+	file_img = sprintf('log/plots/lmpack_%.4d_%.4d', seq, num);
 	mtExport(3, file_img, '', 'png', 80);
 end
 
