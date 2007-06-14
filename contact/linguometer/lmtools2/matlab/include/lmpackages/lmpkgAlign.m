@@ -1,15 +1,11 @@
-function data = lmpkgAlign(seq, num);
+function data = lmpkgAlign(seq, num, opt_plot);
 
-%clear all;
-%seq = 0;
-%num = 20;
+printf('[lmpkgAlign] Running on SEQ %d, word %d\n', seq, num);
 
 std_rate = 48000;
-opt_plot = 0;
 opt_plotcrap = 0;
 opt_invert = 0;
-opt_spam = 1;
-opt_exportdata = 1;
+opt_spam = 0;
 
 % Filters used for smoothing the signals
 filter_fast = ones(round(std_rate*0.01),1);
@@ -80,22 +76,22 @@ sig_lg  = filter2(filter_fast, abs(wav_lg), 'same');
 sig_cc  = filter2(filter_fast, abs(wav_cc), 'same');
 sig_cc  = filter2(filter_fast, abs(wav_cc), 'same');
 
-printf('Computing offset values:\n');
+printf('[lmpkgAlign] Initial offset values:\n');
 offset_ag = lmpkgLag(sig_wd, sig_ag);
 offset_lg = lmpkgLag(sig_wd, sig_lg);
 offset_cc = lmpkgLag(sig_wd, sig_cc);
-printf('    WD     %d (reference)\n', 0);
-printf('    AG     %d\n', offset_ag);
-printf('    LG     %d\n', offset_lg);
-printf('    CC     %d\n', offset_cc);
+printf('  WD     %d (reference)\n', 0);
+printf('  AG     %d\n', offset_ag);
+printf('  LG     %d\n', offset_lg);
+printf('  CC     %d\n', offset_cc);
 
-printf('Lenght of signals\n');
-printf('    WD     %d\n', length(wav_wd));
-printf('    AG     %d\n', length(wav_ag));
-printf('    AGAMP  %d\n', length(dat_agamp));
-printf('    AGPOS  %d\n', length(dat_agpos));
-printf('    LG     %d\n', length(wav_lg));
-printf('    CC     %d\n', length(wav_cc));
+printf('[lmpkgAlign] Initial lenght of signals\n');
+printf('  WD     %d\n', length(wav_wd));
+printf('  AG     %d\n', length(wav_ag));
+printf('  AGAMP  %d\n', length(dat_agamp));
+printf('  AGPOS  %d\n', length(dat_agpos));
+printf('  LG     %d\n', length(wav_lg));
+printf('  CC     %d\n', length(wav_cc));
 
 wav2_ag = lagmatrix(wav_ag, offset_ag);
 dat2_agamp = lagmatrix(dat_agamp, offset_ag);
@@ -161,14 +157,14 @@ sig3_ag = filter2(filter_fast, abs(wav3_ag), 'same');
 sig3_lg = filter2(filter_fast, abs(wav3_lg), 'same');
 sig3_cc = filter2(filter_fast, abs(wav3_cc), 'same');
 
-printf('Computing offset values:\n');
+printf('[lmpkgAlign] Final offset values:\n');
 offset3_ag = lmpkgLag(sig3_wd, sig3_ag);
 offset3_lg = lmpkgLag(sig3_wd, sig3_lg);
 offset3_cc = lmpkgLag(sig3_wd, sig3_cc);
-printf('    WD   %d (reference)\n', 0);
-printf('    AG   %d\n', offset3_ag);
-printf('    LG   %d\n', offset3_lg);
-printf('    CC   %d\n', offset3_cc);
+printf('  WD   %d (reference)\n', 0);
+printf('  AG   %d\n', offset3_ag);
+printf('  LG   %d\n', offset3_lg);
+printf('  CC   %d\n', offset3_cc);
 
 
 if (opt_plot && opt_plotcrap)
@@ -196,7 +192,7 @@ if (opt_plot)
 	grid on;
 	axis tight;
 	ylabel('US-Speech');
-	title('Alignment reference tracks: speech');
+	title(sprintf('Alignment reference tracks:\nspeech'));
 	
 	subplot(4, 3, 4);
 	plot(time, wav3_ag, 'b');
@@ -218,23 +214,23 @@ if (opt_plot)
 	xlabel('Time [s]');
 		
 	subplot(4, 3, 2);
-	plot(time, filter2(filter_slow, abs(wav3_wd), 'same'), 'r');
+	plot(time, filter2(filter_fast, abs(wav3_wd), 'same'), 'r');
 	grid on;
 	axis tight;
-	title('Alignment reference tracks: smooth energy-like');
+	title(sprintf('Alignment reference tracks:\nenergy-like'));
 	
 	subplot(4, 3, 5);
-	plot(time, filter2(filter_slow, abs(wav3_ag), 'same'), 'b');
+	plot(time, filter2(filter_fast, abs(wav3_ag), 'same'), 'b');
 	grid on;
 	axis tight;
 	
 	subplot(4, 3, 8);
-	plot(time, filter2(filter_slow, abs(wav3_lg), 'same'), 'k');
+	plot(time, filter2(filter_fast, abs(wav3_lg), 'same'), 'k');
 	grid on;
 	axis tight;
 	
 	subplot(4, 3, 11);
-	plot(time, filter2(filter_slow, abs(wav3_cc), 'same'), 'g');
+	plot(time, filter2(filter_fast, abs(wav3_cc), 'same'), 'g');
 	grid on;
 	axis tight;
 	xlabel('Time [s]');
@@ -256,18 +252,22 @@ if (opt_plot)
 	axis tight;
 	ylabel('LG-Data');
 	xlabel('Time [s]');
+
+	drawnow;
+	file_img = sprintf('log/img_lmpack_%.4d_%.4d', seq, num);
+	mtExport(3, file_img, '', 'png', 80);
 end
 
-printf('Lenght of signals\n');
-printf('(+) US-Speech   %d\n', length(wav3_wd));
-printf('(+) US-Features %d\n', length(dat3_usff));
-printf('(+) AG-Speech   %d\n', length(wav3_ag));
-printf('(+) AG-AMP      %d\n', length(dat3_agamp));
-printf('(+) AG-POS      %d\n', length(dat3_agpos));
-printf('(+) LG-Speech   %d\n', length(wav3_lg));
-printf('(+) LG-EEG      %d\n', length(dat3_lg));
-printf('(+) CC-Speech   %d\n', length(wav3_cc));
-printf('(+) CC-Features %d\n', length(dat3_ccff));
+printf('[lmpkgAlign] Final lenght of signals\n');
+printf('  (+) US-Speech   %d\n', length(wav3_wd));
+printf('  (+) US-Features %d\n', length(dat3_usff));
+printf('  (+) AG-Speech   %d\n', length(wav3_ag));
+printf('  (+) AG-AMP      %d\n', length(dat3_agamp));
+printf('  (+) AG-POS      %d\n', length(dat3_agpos));
+printf('  (+) LG-Speech   %d\n', length(wav3_lg));
+printf('  (+) LG-EEG      %d\n', length(dat3_lg));
+printf('  (+) CC-Speech   %d\n', length(wav3_cc));
+printf('  (+) CC-Features %d\n', length(dat3_ccff));
 
 
 if (opt_spam)
@@ -293,10 +293,5 @@ data.LG.egg = dat3_lg;
 data.LG.spc = wav3_lg;
 data.CC.fea = dat3_ccff;
 data.CC.spc = wav3_cc;
-
 data.misc.time = [0:1/std_rate:(length(data.US.spc) - 1)/std_rate];
-if (opt_exportdata)
-	file_data = sprintf('seq_%.4d/wd_%.4d.mat', seq, num);
-	printf('> %s\n', file_data);
-	save(file_data, '-struct', 'data');
-end
+data.misc.rate = 48000;
