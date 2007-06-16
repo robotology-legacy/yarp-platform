@@ -59,11 +59,11 @@ rate_ag = std_rate;
 [wav_ag zap0_ag zap1_ag] = lmpkgZap(wav_ag, std_rate, opt_invert);
 
 if (zap1_ag < zap0_ag)
-	return 0;
+	return;
 end
 
 if (zap1_wd < zap0_wd) 
-	return 0;
+	return;
 end
 
 % Select the left channel (LG-Speech)
