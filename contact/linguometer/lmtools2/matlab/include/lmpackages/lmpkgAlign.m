@@ -58,6 +58,10 @@ wav_ag = resample(owav_ag, std_rate, orate_ag);
 rate_ag = std_rate;
 [wav_ag zap0_ag zap1_ag] = lmpkgZap(wav_ag, std_rate, opt_invert);
 
+if (zap1_ag < zap0_ag || zap1_wd < zap0_wd) 
+	return 0;
+end
+
 % Select the left channel (LG-Speech)
 wav_lg = resample(owav_lg, std_rate, orate_lg);
 dat_lg = wav_lg(:, 2);
