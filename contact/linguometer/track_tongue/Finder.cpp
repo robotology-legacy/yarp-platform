@@ -31,6 +31,7 @@ int Finder::main(int argc, char *argv[]) {
         // allow overrides if needed
         p.fromCommand(argc,argv,true,false);
     }
+    p.put("verbose",1);
 
     BufferedPort<ImageOf<PixelRgb> > outPort;
     outPort.open(name.c_str());
