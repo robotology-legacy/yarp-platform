@@ -29,6 +29,9 @@ using namespace yarp::sig::draw;
 using namespace yarp::dev;
 
 
+double dist(double x1,double y1,double x2,double y2) {
+    return sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
+}
 
 
 void TongueFinder::processVersion1(ImageOf<PixelRgb>& image, 
@@ -315,13 +318,15 @@ void TongueFinder::processVersion1(ImageOf<PixelRgb>& image,
 }
 
 
-double comp(ImageOf<PixelRgb>& img, int x0, int y0,
+double comp(ImageOf<PixelFloat>& img, int x0, int y0,
             int x1, int y1) {
     return 1;
 }
 
 void TongueFinder::process(ImageOf<PixelRgb>& image, 
                            ImageOf<PixelRgb>& out) {
+
+    static ImageOf<PixelFloat> prev;
 
     int factor = 1;
     if (image.width()>400) {
@@ -340,49 +345,85 @@ void TongueFinder::process(ImageOf<PixelRgb>& image,
 
     // Extract important part of Toshiba image
     part.resize(xmax-xmin+1,ymax-ymin+1);
-    IMGFOR(part,x,y) {
+    IMGFOR(work,x,y) {
         part(x,y) = image(x+xmin,y+ymin);
     }
+    work.copy(part);
+    if (prev.width()==0) {
+        prev.resize(work);
+        prev.zero();
+    }
 
-    out.copy(part);
+    // At back, tongue falls rapidly, and scan only captures small samples.
+    // enhance those samples.
+    IMGFOR(part,x,y) {
+        if (x<work.width()/2) {
+            PixelFloat& at = work.safePixel(x,y);
+            PixelFloat& up = work.safePixel(x-5,y-5);
+            if (at>up*1.2+50) {
+                PixelFloat& at2 = work.safePixel(x+1,y);
+                PixelFloat& up2 = work.safePixel(x-5+1,y-5);
+                if (at2>up2*1.2+50) {
+                    at = 255;
+                }
+            }
+        }
+    }
+
+    out.copy(work);
 
 
     YARPViterbi path;
-    path.SetSize(part.height()+2,part.width()+2);
-    int PRE_STATE = part.height();
-    int POST_STATE = part.height()+1;
+    path.SetSize(work.height()+2,part.width()+2);
+    int PRE_STATE = work.height();
+    int POST_STATE = work.height()+1;
     path.BeginTransitions();
     path.AddTransition(PRE_STATE,PRE_STATE,1);
     path.EndTransitions();
-    float trans = 0;
-    float base = 50;
-    for (int x=0; x<part.width(); x++) {
+    float base = 30;
+    for (int x=0; x<work.width(); x++) {
         path.BeginTransitions();
         path.AddTransition(PRE_STATE,PRE_STATE,0);
         path.AddTransition(POST_STATE,POST_STATE,0);
-        for (int y=0; y<part.height(); y++) {
+        for (int y=0; y<work.height(); y++) {
+            float trans = 20;
             path.AddTransition(PRE_STATE,y,0);
             path.AddTransition(y,POST_STATE,0);
 
-            double v = part(x,y).r;
+            double v = work(x,y);
             double local = base-v;
-            local += part.safePixel(x,y-10).r;
-            local += part.safePixel(x,y-20).r;
-            double ydev = (y-part.height()/2)/(part.height()/2);
-            double xdev = (x-part.width()/2)/(part.width()/2);
-            bool ok = true;
-            if (xdev>=0 && ydev<-0.5) {
-                ok = false;
+            local += work.safePixel(x,y-10);
+            local += work.safePixel(x,y-20);
+            if (v>30) {
+                local -= prev.safePixel(x,y);
             }
+            if (prev.safePixel(x,y)>128) {
+                out(x,y).r = 80;
+            }
+            double ydev = ((double)y-work.height()/2)/(work.height()/2);
+            double xdev = ((double)x-work.width()/2)/(work.width()/2);
+            bool ok = true;
+
+            // tongue just can't be here - but the chin often is
+            if (ydev>0.75 || ydev<-0.75) {
+                ok = false;
+                out(x,y).b = 255;
+            }
+            if (fabs(xdev)<0.25&&ydev>0.5) {
+                // in the central region, punish low values a bit
+                out(x,y).g = 128;
+                trans *= 10;
+            }
+
             if (ok) {
                 path.AddTransition(y,y,local +
-                                   comp(part,x,y,x,y));
-                for (int dy=-3; dy<=3; dy++) {
+                                   comp(work,x,y,x,y));
+                for (int dy=-5; dy<=5; dy++) {
                     if (y!=0) {
-                        if (y+dy>0 && y+dy<part.height()) {
+                        if (y+dy>0 && y+dy<work.height()) {
                             path.AddTransition(y,y+dy,local +
-                                               comp(part,x,y,x,y+dy) +
-                                               trans);
+                                               comp(work,x,y,x,y+dy) +
+                                               trans*fabs(dy));
                         }
                     }
                 }
@@ -395,10 +436,80 @@ void TongueFinder::process(ImageOf<PixelRgb>& image,
     path.EndTransitions();
 
     path.CalculatePath();
-    for (int x=1; x<=part.width(); x++) {
-        addCircle(out,PixelRgb(255,0,0),x,path(x)+10,3);
-        addCircle(out,PixelRgb(255,0,0),x,path(x)-10,3);
+    deque<Point> tongue;
+    int py = -1;
+    int px = -1;
+    prev.zero();
+    for (int x=1; x<=work.width(); x++) {
+        int cx = x;
+        int cy = path(x);
+        if (cy<work.height()) {
+            //addCircle(out,PixelRgb(255,0,0),cx,cy+10,3);
+            //addCircle(out,PixelRgb(255,0,0),cx,cy-10,3);
+            addCircle(prev,PixelFloat(255),cx,cy,30);
+            if (px>=0) {
+                double d = dist(px,py,cx,cy)+0.0000001;
+                for (int i=0; i<=d; i++) {
+                    double factor = i/d;
+                    double ix = cx*factor+px*(1-factor);
+                    double iy = cy*factor+py*(1-factor);
+                    tongue.push_front(Point((int)ix,(int)iy));
+                }
+            }
+            px = cx;
+            py = cy;
+        }
     }
+
+
+    // Do some really brain-dead and inefficient smoothing
+    ImageOf<PixelFloat> locs, locs2;
+    int tops = tongue.size();
+    locs.resize(2,tops);
+    locs2 = locs;
+    int at = 0;
+    for (deque<Point>::iterator it=tongue.begin(); it!=tongue.end(); it++) {
+        Point p = *it;
+        locs(0,at) = p.x;
+        locs(1,at) = p.y;
+        at++;
+    }
+    for (int k=0; k<10; k++) {
+        locs2 = locs;
+        for (int i=1; i<tops-1; i++) {
+            double x = (0.5*locs(0,i-1)+locs(0,i)+0.5*locs(0,i+1))/2;
+            double y = (0.5*locs(1,i-1)+locs(1,i)+0.5*locs(1,i+1))/2;
+            double xx = locs(0,i);
+            locs2(0,i) = x;
+            locs2(1,i) = y;
+        }
+        locs = locs2;
+    }
+    at = 0;
+    for (deque<Point>::iterator it=tongue.begin(); it!=tongue.end(); it++) {
+        Point& p = *it;
+        p.x = locs(0,at);
+        p.y = locs(1,at);
+        at++;
+    }
+
+    for (int r=0; r<=0; r+=2) {
+        int del = 10*r;
+        for (deque<Point>::iterator it=tongue.begin(); it!=tongue.end(); it++) {
+            Point p = *it;
+            if (int(p.x/(7*factor))%2==0) {
+                addCircle(out,PixelRgb(0,0,255),(int)p.x,(int)(p.y+del),3*factor);
+            }
+        }
+      
+        for (deque<Point>::iterator it=tongue.begin(); it!=tongue.end(); it++) {
+            Point p = *it;
+            if (int(p.x/(7*factor))%2==0) {
+                addCircle(out,PixelRgb(255,0,0),(int)p.x,(int)(p.y+del),1*factor);
+            }
+        }
+    }
+
 
     ct++;
 }
