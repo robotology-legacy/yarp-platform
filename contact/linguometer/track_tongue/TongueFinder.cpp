@@ -17,6 +17,7 @@
 
 
 #include <deque>
+#include <fstream>
 
 #include "TongueFinder.h"
 
@@ -453,7 +454,7 @@ void TongueFinder::process(ImageOf<PixelRgb>& image,
                     double factor = i/d;
                     double ix = cx*factor+px*(1-factor);
                     double iy = cy*factor+py*(1-factor);
-                    tongue.push_front(Point((int)ix,(int)iy));
+                    tongue.push_back(Point((int)ix,(int)iy));
                 }
             }
             px = cx;
@@ -510,6 +511,23 @@ void TongueFinder::process(ImageOf<PixelRgb>& image,
         }
     }
 
+
+    char buf[256];
+    sprintf(buf,"path_%06d.txt",ct);
+    ofstream fout(buf);
+    int ppx = 0;
+    int ppy = 0;
+    for (deque<Point>::iterator it=tongue.begin(); it!=tongue.end(); it++) {
+        Point p = *it;
+        int xx = p.x;
+        int yy = p.y;
+        if (xx!=ppx) { // || yy!=ppy) {
+            fout << xx << " " << yy << endl;
+            ppx = xx;
+            ppy = yy;
+        }
+    }
+    fout.close();
 
     ct++;
 }
