@@ -14,11 +14,12 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-function data = lmpkgAlign(seq, num, opt_plot);
+%function data = lmpkgAlign(seq, num, opt_plot);
 
-%seq = 0;
-%num = 28;
-%opt_plot = 1;
+clear all;
+seq = 1;
+num = 1;
+opt_plot = 1;
 
 printf('[lmpkgAlign] Running on SEQ %d, word %d\n', seq, num);
 
@@ -48,6 +49,9 @@ audio_cc = sprintf('seq_%.4d/wd_%.4d_cc.wav', seq, num);
 [owav_ag  orate_ag]  = wavread(audio_ag);
 [owav_lg  orate_lg]  = wavread(audio_lg);
 [owav_cc  orate_cc]  = wavread(audio_cc);
+
+wav_ag_peaks = owav_ag;
+wav_wd_peaks = owav_wd;
 
 % Select the right channel (US-Speech)
 wav_wd = owav_wd(:, 2);
@@ -212,6 +216,73 @@ if (opt_plot && opt_plotcrap)
 end
 
 if (opt_plot)
+	mtSimpleFig(4);
+
+	subplot(4, 3, 1);
+	time_wd = [0:1/std_rate:(length(wav_wd_peaks) - 1)/std_rate];
+	plot(time_wd, wav_wd_peaks, 'r');
+	grid on;
+	axis tight;
+	ylabel('US-Speech');
+	title(sprintf('Alignment reference tracks:\nspeech'));
+	
+	subplot(4, 3, 4);
+	time_ag = [0:1/orate_ag:(length(wav_ag_peaks) - 1)/orate_ag];
+	plot(time_ag, wav_ag_peaks, 'b');
+	grid on;
+	axis tight;
+	ylabel('AG-Speech');
+	
+	subplot(4, 3, 7);
+	time_lg = [0:1/orate_wd:(length(wav_lg) - 1)/orate_wd];
+	plot(time_lg, wav_lg, 'k');
+	grid on;
+	axis tight;
+	ylabel('LG-Speech');
+	
+	subplot(4, 3, 10);
+	time_cc = [0:1/orate_cc:(length(wav_cc) - 1)/orate_cc];
+	plot(time_cc, wav_cc, 'g');
+	grid on;
+	axis tight;
+	ylabel('CC-Speech');
+	xlabel('Time [s]');
+		
+	subplot(4, 3, 2);
+	plot(time_wd, filter2(filter_fast, abs(wav_wd_peaks), 'same'), 'r');
+	grid on;
+	axis tight;
+	title(sprintf('Alignment reference tracks:\nenergy-like'));
+	
+	subplot(4, 3, 5);
+	plot(time_ag, filter2(filter_fast, abs(wav_ag_peaks), 'same'), 'b');
+	grid on;
+	axis tight;
+	
+	subplot(4, 3, 8);
+	plot(time_lg, filter2(filter_fast, abs(wav_lg), 'same'), 'k');
+	grid on;
+	axis tight;
+	
+	subplot(4, 3, 11);
+	plot(time_cc, filter2(filter_fast, abs(wav_cc), 'same'), 'g');
+	grid on;
+	axis tight;
+	xlabel('Time [s]');
+
+	subplot(4, 3, 9);
+	plot(time_lg, dat_lg, 'k');
+	grid on;
+	axis tight;
+	ylabel('LG-EEG');
+	xlabel('Time [s]');
+
+	drawnow;
+	file_img = sprintf('log/plots/lmpack_%.4d_%.4d', seq, num);
+	%mtExport(3, file_img, '', 'png', 80);
+end
+
+if (opt_plot)
 	time = [0:1/std_rate:(length(wav3_wd) - 1)/std_rate];
 	mtSimpleFig(3);
 
@@ -232,7 +303,7 @@ if (opt_plot)
 	plot(time, wav3_lg, 'k');
 	grid on;
 	axis tight;
-	ylabel('LG-Speech');
+	ylabel('LG-EEG');
 	
 	subplot(4, 3, 10);
 	plot(time, wav3_cc, 'g');
@@ -283,7 +354,7 @@ if (opt_plot)
 
 	drawnow;
 	file_img = sprintf('log/plots/lmpack_%.4d_%.4d', seq, num);
-	mtExport(3, file_img, '', 'png', 80);
+	%mtExport(3, file_img, '', 'png', 80);
 end
 
 printf('[lmpkgAlign] Final lenght of signals\n');
