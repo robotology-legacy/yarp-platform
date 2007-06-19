@@ -11,6 +11,7 @@
 
 #include <math.h>
 #include <vector>
+#include <fstream>
 
 using namespace yarp::sig;
 using namespace yarp::sig::draw;
@@ -257,18 +258,30 @@ void MouthFinder::process(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image,
     }
     
     diff.resize(curr);
+    double total = 0;
+    int tct = 0;
     IMGFOR(diff,x,y) {
-        if (fabs(x-xLip)<lipScale) {
+        if (fabs(x-xLip)<lipScale && fabs(y-yLip)<lipScale*2) {
             double v = fabs(curr(x,y)-prev(x,y));
             v *= 5;
             if (v>255) v = 255;
             diff(x,y) = v;
+            tct++;
             if (v>128) {
                 int w = (int)v;
                 out(x,y) = PixelRgb(0,w,0);
+                total += v;
             }
         }
     }
+    static int first = 1;
+    ofstream fout("lips.txt",(!first)?ios_base::app:ios_base::trunc);
+    first = 0;
+    if (tct>0) {
+        total /= tct;
+    }
+    fout << total << endl;
+
     //out.copy(diff);
 
 

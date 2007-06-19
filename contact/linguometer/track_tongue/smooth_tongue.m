@@ -1,6 +1,8 @@
 function smooth_tongue(fname)
 
-if fname == "path_000000.txt"
+global all_curve;
+
+if length(findstr(fname,"path_000000.txt")) > 0
   data=[1 1; 2 1; 3 1; 4 1];
 else
   data=load(fname);
@@ -24,4 +26,7 @@ hold off;
 axis(ax,'square');
 print([fname ".png"]);
 drawnow
+
+all_curve{length(all_curve)+1} = {xx, yy};
+
 
