@@ -381,13 +381,13 @@ void TongueFinder::process(ImageOf<PixelRgb>& image,
     path.BeginTransitions();
     path.AddTransition(PRE_STATE,PRE_STATE,1);
     path.EndTransitions();
-    float base = 30;
     for (int x=0; x<work.width(); x++) {
         path.BeginTransitions();
         path.AddTransition(PRE_STATE,PRE_STATE,0);
         path.AddTransition(POST_STATE,POST_STATE,0);
         for (int y=0; y<work.height(); y++) {
             float trans = 20;
+            float base = 30;
             path.AddTransition(PRE_STATE,y,0);
             path.AddTransition(y,POST_STATE,0);
 
@@ -413,7 +413,7 @@ void TongueFinder::process(ImageOf<PixelRgb>& image,
             if (fabs(xdev)<0.25&&ydev>0.5) {
                 // in the central region, punish low values a bit
                 out(x,y).g = 128;
-                trans *= 10;
+                local += base*10;
             }
 
             if (ok) {
