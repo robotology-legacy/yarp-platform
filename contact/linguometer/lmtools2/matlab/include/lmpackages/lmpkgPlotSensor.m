@@ -18,7 +18,7 @@
 function lmpkgPlotSensor(data, sensors, fig, trid);
 
 idxs = [1:6:72];
-gfx = {'rx' 'kx' 'bx' 'gx' 'mx' 'ro' 'ko' 'r^' 'k^' 'sr' 'sb' 'sk'};
+gfx = {'rx' 'kx' 'bx' 'gx' 'mx' 'ro' 'ko' 'm^' 'g^' 'sr' 'sb' 'sk'};
 
 mtSimpleFig(fig);
 if (length(sensors) == 1)
@@ -63,7 +63,7 @@ else
 		axis([-1 1 -1 1 -1 1]*80);
 		grid on;
 	else
-		for sensor = 1:12
+		for sensor = sensors
 			idx = idxs(sensor);
 			subplot(4, 3, sensor);
 			xc = data.AG.pos(:, idx + 0);

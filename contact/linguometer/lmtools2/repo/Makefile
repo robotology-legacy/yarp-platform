@@ -2,7 +2,7 @@ CFG_NICE=config/lm_nice
 VAL_NICE=`if [ -e "$(CFG_NICE)" ]; then cat $(CFG_NICE); else echo 0; fi`
 CMD_NICE=/usr/bin/nice -n $(VAL_NICE)
 
-all:  build process
+all:  build process pack
 clean: cleantemp cleanseq
 build: cleantemp prepare collect 
 process: cleanseq detect segment align aligncc features plot

@@ -16,9 +16,15 @@
 
 function lmpkgAlignProxy(seq, wd)
 
+data = {};
 data = lmpkgAlign(seq, wd, 1);
-
 file_data = sprintf('seq_%.4d/wd_%.4d.mat', seq, wd);
-printf('[lmpkgAlignProxy] Saving data: %s\n', file_data);
-save(file_data, '-struct', 'data');
+
+if (isempty(data) == 0)
+	printf('[lmpkgAlignProxy] Saving data: %s\n', file_data);
+	save(file_data, '-struct', 'data');
+else
+	printf('[lmpkgAlignProxy] Could not save data: %s\n', file_data);
+end
+
 quit
