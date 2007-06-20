@@ -14,8 +14,8 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-function data = lmpkgAlign(seq, num, opt_plot);
-
+function data = lmpkgAlign(seq, num, opt_plot, opt_invert, opt_bug);
+data = {};
 %seq = 0;
 %num = 28;
 %opt_plot = 1;
@@ -24,7 +24,7 @@ printf('[lmpkgAlign] Running on SEQ %d, word %d\n', seq, num);
 
 std_rate = 48000;
 opt_plotcrap = 0;
-opt_invert = 0;
+%opt_invert = 0;
 opt_spam = 0;
 
 % Filters used for smoothing the signals
@@ -51,19 +51,22 @@ audio_cc = sprintf('seq_%.4d/wd_%.4d_cc.wav', seq, num);
 
 % Select the right channel (US-Speech)
 wav_wd = owav_wd(:, 2);
-[wav_wd zap0_wd zap1_wd] = lmpkgZap(wav_wd, std_rate, opt_invert);
+[wav_wd zap0_wd zap1_wd] = lmpkgZap(wav_wd, std_rate, opt_invert, opt_bug);
 
 % Resample the AG-Speech data (16-->48kHz)
 wav_ag = resample(owav_ag, std_rate, orate_ag);
 rate_ag = std_rate;
-[wav_ag zap0_ag zap1_ag] = lmpkgZap(wav_ag, std_rate, opt_invert);
+[wav_ag zap0_ag zap1_ag] = lmpkgZap(wav_ag, std_rate, opt_invert, opt_bug);
+
 
 if (zap1_ag < zap0_ag)
-	return;
+	printf('[lmpkgAlign] AG zap problem\n');
+    return;
 end
 
 if (zap1_wd < zap0_wd) 
-	return;
+	printf('[lmpkgAlign] US zap problem\n');
+    return;
 end
 
 % Select the left channel (LG-Speech)

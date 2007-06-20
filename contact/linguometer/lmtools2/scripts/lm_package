@@ -36,11 +36,11 @@ my $folders_regex = "seq_*";
 my @folders_seq_ns = `find . -iname "$folders_regex"`;
 my @folders_seq = sort {$a cmp $b} @folders_seq_ns;
 
-# I'm missing the feature extraction code, so I'll
-# simply produce a faked output via ff().
-# Now, to enable the faked feature detection, 
-# set the next variable to 1.
-my $opt_go_fake = 1;
+# Few experiments (7,8,9) do have inveted segmentation peaks.
+my @cfg_invert = mImportFile("config/lm_invert.cfg");
+my $param_invert = @cfg_invert[0];
+chomp($param_invert);
+$param_invert = int($param_invert);
 
 # Parse each SEQ folder
 foreach $folder_seq (@folders_seq) {
@@ -63,6 +63,13 @@ foreach $folder_seq (@folders_seq) {
 	#system("matlab -nosplash -nojvm -r \"lmpkgAlignProxy($idx_seq, 0, $words)\" ");
 	for ($word = 0; $word < $words; $word = $word + 1)
 	{
-		system("matlab -nosplash -nojvm -r \"lmpkgAlignProxy($idx_seq, $word);\" ");
+		my $file_data = sprintf('seq_%.4d/wd_%.4d.mat', $idx_seq, $word);
+		if (-e $file_data) {
+			print "File $file_data exists... Skipping packaging operations\n";
+		}
+		else {
+			print "File $file_data needs to be created\n";
+			system("matlab -nosplash -nojvm -r \"lmpkgAlignProxy($idx_seq, $word, \'$file_data\', $param_invert);\" ");
+		}
 	}
 }
