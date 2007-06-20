@@ -40,6 +40,7 @@ end
 
 
 % Load audio files (reference)
+printf('[lmpkgAlign] Loading data\n');
 audio_wd = sprintf('seq_%.4d/wd_%.4d_us.wav', seq, num);
 audio_ag = sprintf('seq_%.4d/wd_%.4d_ag.wav', seq, num);
 audio_lg = sprintf('seq_%.4d/wd_%.4d_lg.wav', seq, num);
@@ -50,12 +51,16 @@ audio_cc = sprintf('seq_%.4d/wd_%.4d_cc.wav', seq, num);
 [owav_cc  orate_cc]  = wavread(audio_cc);
 
 % Select the right channel (US-Speech)
+printf('[lmpkgAlign] Zapping US data\n');
 wav_wd = owav_wd(:, 2);
+wav_wd_old = wav_wd;
 [wav_wd zap0_wd zap1_wd] = lmpkgZap(wav_wd, std_rate, opt_invert, opt_bug);
 
 % Resample the AG-Speech data (16-->48kHz)
+printf('[lmpkgAlign] Zapping AG data\n');
 wav_ag = resample(owav_ag, std_rate, orate_ag);
 rate_ag = std_rate;
+wav_ag_old = wav_ag;
 [wav_ag zap0_ag zap1_ag] = lmpkgZap(wav_ag, std_rate, opt_invert, opt_bug);
 
 
@@ -70,6 +75,7 @@ if (zap1_wd < zap0_wd)
 end
 
 % Select the left channel (LG-Speech)
+printf('[lmpkgAlign] Processing remaining data\n');
 wav_lg = resample(owav_lg, std_rate, orate_lg);
 dat_lg = wav_lg(:, 2);
 wav_lg = wav_lg(:, 1);
@@ -82,6 +88,7 @@ std_zap0 = max([zap0_wd zap0_ag]);
 std_zap1 = min([zap1_wd zap1_ag]);
 
 
+printf('[lmpkgAlign] Loading non-audio data\n');
 % Load AGAMP
 file_agamp = sprintf('seq_%.4d/wd_%.4d_ag.amp', seq, num); 
 odat_agamp = importdata(file_agamp);
@@ -101,6 +108,7 @@ odat_ccff = importdata(file_ccff);
 odat_ccff = odat_ccff(:,2:min(size(odat_ccff)));
 dat_ccff = resample(odat_ccff, std_rate, 25, 0);
 
+printf('[lmpkgAlign] Creating alignment energy-like signals\n');
 sig_wd  = filter2(filter_fast, abs(wav_wd), 'same');
 sig_ag  = filter2(filter_fast, abs(wav_ag), 'same');
 sig_lg  = filter2(filter_fast, abs(wav_lg), 'same');
@@ -124,14 +132,26 @@ printf('  AGPOS  %d\n', length(dat_agpos));
 printf('  LG     %d\n', length(wav_lg));
 printf('  CC     %d\n', length(wav_cc));
 
+printf('[lmpkgAlign] Correcting AG lag\n');
 wav2_ag = lagmatrix(wav_ag, offset_ag);
+printf('[lmpkgAlign] Correcting AG-AMP lag\n');
 dat2_agamp = lagmatrix(dat_agamp, offset_ag);
+printf('[lmpkgAlign] Correcting AG-POS lag\n');
 dat2_agpos = lagmatrix(dat_agpos, offset_ag);
+printf('[lmpkgAlign] Correcting LG-Speech lag\n');
 wav2_lg = lagmatrix(wav_lg, offset_lg);
+printf('[lmpkgAlign] Correcting LG-EEG lag\n');
 dat2_lg = lagmatrix(dat_lg, offset_lg);
+printf('[lmpkgAlign] Correcting CC-Speech lag\n');
 wav2_cc = lagmatrix(wav_cc, offset_cc);
-dat2_ccff = lagmatrix(dat_ccff, offset_cc);
-
+printf('[lmpkgAlign] Correcting CC-Features lag: ');
+% In the case of big delays, lagmatrix takes ages to finish
+%dat2_ccff = lagmatrix(dat_ccff, offset_cc);
+for col = 1:min(size(dat_ccff))
+	printf('%d/%d ', col, min(size(dat_ccff)));
+	dat2_ccff(:, col) = lagmatrix(dat_ccff(:, col), offset_cc);
+end
+printf('\n');
 
 if (opt_plot && opt_plotcrap)
 	mtSimpleFig(1);

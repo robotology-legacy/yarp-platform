@@ -40,13 +40,13 @@ else
 	if (do_invert == 0)
 		wav_t = wav(1:round(length(wav)/4));
 		[ignore peak] = max(wav_t);
-		zap0 = peak+round(rate*0.1)
+		zap0 = peak+round(rate*0.1);
 		wav(1:zap0,:) = 0;
 
 		wav_t = wav(round(length(wav)*3/4):length(wav));
 		[ignore peak] = min(wav_t);
 		peak = peak + round(length(wav)*3/4); 
-		zap1 = peak-round(rate*0.1)
+		zap1 = peak-round(rate*0.1);
 		wav(zap1:length(wav),:) = 0; 
 	else
 		wav_t = wav(1:round(length(wav)/4));

@@ -21,10 +21,10 @@ function lmpkgAlignProxy(seq, wd, file_data, opt_invert)
 data = {};
 %file_data = sprintf('seq_%.4d/wd_%.4d.mat', seq, wd);
 
-data = lmpkgAlign(seq, wd, 1, opt_invert, 0);
+data = lmpkgAlign(seq, wd, 1, opt_invert, 1);
 
 if (isempty(data) == 1)
-	data = lmpkgAlign(seq, wd, 1, opt_invert, 1);
+	data = lmpkgAlign(seq, wd, 1, opt_invert, 0);
 end
 
 if (isempty(data) == 0)
