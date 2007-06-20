@@ -52,4 +52,5 @@ plot:
 	@$(CMD_NICE) lm_plotlog
 
 pack:
+	@$(CMD_NICE) lm_cleanmat
 	@$(CMD_NICE) lm_package

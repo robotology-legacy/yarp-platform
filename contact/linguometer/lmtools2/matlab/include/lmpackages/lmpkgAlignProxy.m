@@ -14,15 +14,11 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-function lmpkgAlignProxy(seq, wd0, wd1)
+function lmpkgAlignProxy(seq, wd)
 
-for wd = wd0:wd1
-	data = lmpkgAlign(seq, wd, 1);
-	
-	file_data = sprintf('seq_%.4d/wd_%.4d.mat', seq, wd);
-	printf('[lmpkgAlignProxy] Saving data: %s\n', file_data);
-	save(file_data, '-struct', 'data');
-	clear data;
-    clear file_data;
-    clear global;
-end
+data = lmpkgAlign(seq, wd, 1);
+
+file_data = sprintf('seq_%.4d/wd_%.4d.mat', seq, wd);
+printf('[lmpkgAlignProxy] Saving data: %s\n', file_data);
+save(file_data, '-struct', 'data');
+quit
