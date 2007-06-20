@@ -17,8 +17,8 @@
 %function data = lmpkgAlign(seq, num, opt_plot);
 
 clear all;
-seq = 1;
-num = 1;
+seq = 0;
+num = 15;
 opt_plot = 1;
 
 printf('[lmpkgAlign] Running on SEQ %d, word %d\n', seq, num);

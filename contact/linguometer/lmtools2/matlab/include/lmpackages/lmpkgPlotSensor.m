@@ -70,14 +70,20 @@ else
 			yc = data.AG.pos(:, idx + 1);
 			zc = data.AG.pos(:, idx + 2);
 			hold on;
-			plot(xc, 'r');
-			plot(yc, 'k');
-			plot(zc, 'b');
+			plot(data.misc.time, xc, 'r');
+			plot(data.misc.time, yc, 'k');
+			plot(data.misc.time, zc, 'b');
 			hold off;
 			%xlabel ('samples');
 			ylabel (sprintf('Sensor %d', sensor));
 			axis tight;
 			grid on;
+			if (sensor == 1)
+				legend ('x', 'y', 'z');
+			end
+			if (sensor > 9)
+				xlabel('Time [s]');
+			end
 		end
 	end
 end

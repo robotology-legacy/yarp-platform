@@ -13,6 +13,9 @@
 % You should have received a copy of the GNU General Public License
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+%
+% function mtPrintEPS (fig, file)
+
 function mtPrintEPS (fig, file)
 set(fig, 'PaperPosition', [0 0 6 3]);
 set(fig, 'PaperPositionMode', 'auto');
