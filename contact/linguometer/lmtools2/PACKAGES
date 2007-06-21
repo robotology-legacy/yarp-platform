@@ -1,0 +1,153 @@
+Title:    Documentation for lmtools2 .mat packages
+Author:   Michele Tavella <michele@liralab.it>
+Updated:  Jun 21, 2007
+
+
+Section A.1 - Introduction
+--------------------------
+The lmtools2 toolkit processes automatically the data recorded 
+simultaneously with the Linguometer.
+If you are reading this document, it probably means that you
+dowloaded/obtained the .mat archives.
+
+This document covers the format the data gets stored into 
+the .mat files.
+This document does not cover the process used to align and
+segment the dataset.
+
+Section A.2 - Compatibility
+---------------------------
+The author provides .mat files compatible with Matlab 7, 
+since it is the only version available.
+A short post about this topic has been posted here:
+ http://mt.notnot.org/projects/linguometer
+
+Section B.1 - Importing the files in Matlab 7
+---------------------------------------------
+You obtained the dataset somehow, and probably in a similar 
+structure:
+
+ exp_0001/
+   dist_0000/
+     wd_0000.mat
+     wd_0001.mat
+     wd_0002.mat
+	 ...
+   dist_0001/
+   dist_0002/
+   dist_0003/
+   dist_0004/
+   dist_0005/
+   dist_0006/
+   dist_0007/
+   dist_0008/
+
+Each "exp_EEEE" folder contains the processed data from experiment "EEEE".
+Each "dist_SSSS" folder contains the processed data from sequence "SSSS",
+experiment "EEEE".
+
+I imagine that you want to load this file:
+ exp_0001/dist_0000/wd_0000.mat
+
+I usually do:
+>> data = load('$ROOT/exp_0001/dist_0000/wd_0000.mat');
+
+Let's give a look at "data":
+>> data
+data = 
+      US: [1x1 struct]
+      AG: [1x1 struct]
+      LG: [1x1 struct]
+      CC: [1x1 struct]
+    misc: [1x1 struct]
+
+Section B.2 - US structure
+---------------------------------------------
+Data from ultrasound system.
+>> data.US
+ans = 
+    spc: [105014x1 double]
+    fea: [105014x6 double]
+
+data.US.spc		Main speech signal
+data.US.fea		Tongue tracking features 
+  				Right now is a big matrix of zeros.
+				When the features extraction code will
+				be ready, it will contain lots of numbers ;-)
+
+Section B.3 - AG structure
+---------------------------------------------
+Data from articulograph.
+>> data.AG
+ans = 
+    spc: [105014x1 double]
+    amp: [105014x72 double]
+    pos: [105014x72 double]
+
+data.AG.spc		Secondary speech signal acquired via the main
+				mic but down-sampled by the articulograph sw
+data.AG.amp		Amplitude data
+				The articulograph has got 12 recording sensors.
+				6 reference coils induce 6 currents in each one
+				of the 12 sensors.
+				This structure contains the amplitudes of the 
+				currents recorded.
+				Let's imagine that:
+				 cS_K
+				means:
+				 the amplitude of the current induced by reference coil
+				 K in sensor S.
+				Given that, here you have the column labels:
+  				 c1_1 c1_2 c1_3 c1_4 c1_5 c1_6 c2_1 c2_2 c2_3.... c12_6
+				In fact, 12 sensors x 6 currents = 72 columns
+data.AG.pos		Kinesthetic data (no head motion compensation)
+				For each sensor, the articulograph calculates:
+				 x, y, z 		Cartesian coordinates
+				 theta, phi 	Spherical coordinates azimuth and elevation
+				 rms			Performance parameter
+				The columns are:
+				 x1 y1 z1 theta1 phi1 rms1 x2 y2 z2 theta2 phi2 rms2... rms12
+
+Section B.4 - LG structure
+---------------------------------------------
+Stereo signal acquired via the laringograph
+>> data.LG
+ans = 
+    egg: [105014x1 double]
+    spc: [105014x1 double]
+
+data.LG.spc		Secondary speech signal (LG mic)
+data.LG.egg		Lx + Gx signal
+
+Section B.5 - CC structure
+---------------------------------------------
+Data from camcorder.
+>> data.CC
+ans = 
+    spc: [105014x1 double]
+    fea: [105014x6 double]
+
+data.CC.spc		Secondary speech signal (camcorder mic)
+data.CC.fea		Tongue tracking features 
+  				Right now is a big matrix of zeros.
+				When the features extraction code will
+				be ready, it will contain lots of numbers ;-)
+
+Section B.6 - misc structure
+---------------------------------------------
+>> data.misc
+ans = 
+    time: [1x105014 double]
+    rate: 48000
+     xpr: 0
+     seq: 0
+     num: 0
+     txt: 'mattone'
+	
+data.misc.time	Time axis starting from 0 seconds
+data.misc.rate	Sampling rate of the signals
+data.misc.xpr	Experiment number
+data.misc.seq	Sequence number
+data.misc.num	Word number
+data.misc.txt	Submitted stimuli
+
