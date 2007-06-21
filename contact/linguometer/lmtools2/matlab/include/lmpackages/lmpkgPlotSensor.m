@@ -60,7 +60,7 @@ else
 		xlabel ('x');
 		ylabel ('y');
 		zlabel ('z');
-		axis([-1 1 -1 1 -1 1]*80);
+		axis([-1 1 -1 1 -1 1]*50);
 		grid on;
 	else
 		for sensor = sensors

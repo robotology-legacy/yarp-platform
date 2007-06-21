@@ -18,7 +18,7 @@
 
 clear all;
 seq = 0;
-num = 15;
+num = 20;
 opt_plot = 1;
 
 printf('[lmpkgAlign] Running on SEQ %d, word %d\n', seq, num);
@@ -55,12 +55,12 @@ wav_wd_peaks = owav_wd;
 
 % Select the right channel (US-Speech)
 wav_wd = owav_wd(:, 2);
-[wav_wd zap0_wd zap1_wd] = lmpkgZap(wav_wd, std_rate, opt_invert);
+[wav_wd zap0_wd zap1_wd] = lmpkgZap(wav_wd, std_rate, opt_invert, 1);
 
 % Resample the AG-Speech data (16-->48kHz)
 wav_ag = resample(owav_ag, std_rate, orate_ag);
 rate_ag = std_rate;
-[wav_ag zap0_ag zap1_ag] = lmpkgZap(wav_ag, std_rate, opt_invert);
+[wav_ag zap0_ag zap1_ag] = lmpkgZap(wav_ag, std_rate, opt_invert, 1);
 
 if (zap1_ag < zap0_ag)
 	return;
@@ -274,7 +274,7 @@ if (opt_plot)
 	plot(time_lg, dat_lg, 'k');
 	grid on;
 	axis tight;
-	ylabel('LG-EEG');
+	ylabel('LG-EGG');
 	xlabel('Time [s]');
 
 	drawnow;
@@ -303,7 +303,7 @@ if (opt_plot)
 	plot(time, wav3_lg, 'k');
 	grid on;
 	axis tight;
-	ylabel('LG-EEG');
+	ylabel('LG-Speech');
 	
 	subplot(4, 3, 10);
 	plot(time, wav3_cc, 'g');
@@ -349,7 +349,7 @@ if (opt_plot)
 	plot(time, dat3_lg, 'k');
 	grid on;
 	axis tight;
-	ylabel('LG-Data');
+	ylabel('LG-EGG');
 	xlabel('Time [s]');
 
 	drawnow;
