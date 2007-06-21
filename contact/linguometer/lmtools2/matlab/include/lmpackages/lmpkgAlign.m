@@ -15,11 +15,15 @@
 % Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 function data = lmpkgAlign(seq, num, opt_plot, opt_invert, opt_bug);
-data = {};
-%seq = 0;
-%num = 28;
-%opt_plot = 1;
+if (0)
+	seq = 6;
+	num = 19;
+	opt_plot = 1;
+	opt_invert = 0;
+	opt_bug = 1;
+end
 
+data = {};
 printf('[lmpkgAlign] Running on SEQ %d, word %d\n', seq, num);
 
 std_rate = 48000;
@@ -53,16 +57,14 @@ audio_cc = sprintf('seq_%.4d/wd_%.4d_cc.wav', seq, num);
 % Select the right channel (US-Speech)
 printf('[lmpkgAlign] Zapping US data\n');
 wav_wd = owav_wd(:, 2);
-wav_wd_old = wav_wd;
 [wav_wd zap0_wd zap1_wd] = lmpkgZap(wav_wd, std_rate, opt_invert, opt_bug);
+
 
 % Resample the AG-Speech data (16-->48kHz)
 printf('[lmpkgAlign] Zapping AG data\n');
 wav_ag = resample(owav_ag, std_rate, orate_ag);
 rate_ag = std_rate;
-wav_ag_old = wav_ag;
 [wav_ag zap0_ag zap1_ag] = lmpkgZap(wav_ag, std_rate, opt_invert, opt_bug);
-
 
 if (zap1_ag < zap0_ag)
 	printf('[lmpkgAlign] AG zap problem\n');
@@ -134,16 +136,32 @@ printf('  CC     %d\n', length(wav_cc));
 
 printf('[lmpkgAlign] Correcting AG lag\n');
 wav2_ag = lagmatrix(wav_ag, offset_ag);
+
 printf('[lmpkgAlign] Correcting AG-AMP lag\n');
 dat2_agamp = lagmatrix(dat_agamp, offset_ag);
+%for col = 1:min(size(dat_agamp))
+%	printf('%d/%d ', col, min(size(dat_agamp)));
+%	dat2_agamp(:, col) = lagmatrix(dat_agamp(:, col), offset_cc);
+%end
+%printf('\n');
+
 printf('[lmpkgAlign] Correcting AG-POS lag\n');
 dat2_agpos = lagmatrix(dat_agpos, offset_ag);
+%for col = 1:min(size(dat_agpos))
+%	printf('%d/%d ', col, min(size(dat_agpos)));
+%	dat2_agpos(:, col) = lagmatrix(dat_agpos(:, col), offset_cc);
+%end
+%printf('\n');
+
 printf('[lmpkgAlign] Correcting LG-Speech lag\n');
 wav2_lg = lagmatrix(wav_lg, offset_lg);
+
 printf('[lmpkgAlign] Correcting LG-EEG lag\n');
 dat2_lg = lagmatrix(dat_lg, offset_lg);
+
 printf('[lmpkgAlign] Correcting CC-Speech lag\n');
 wav2_cc = lagmatrix(wav_cc, offset_cc);
+
 printf('[lmpkgAlign] Correcting CC-Features lag: ');
 % In the case of big delays, lagmatrix takes ages to finish
 %dat2_ccff = lagmatrix(dat_ccff, offset_cc);

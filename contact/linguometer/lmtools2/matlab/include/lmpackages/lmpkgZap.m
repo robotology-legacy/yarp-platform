@@ -17,47 +17,132 @@
 %function [wav zap0 zap1] = lmpkgZap(wav, rate, do_invert, do_sat)
 
 function [wav zap0 zap1] = lmpkgZap(wav, rate, do_invert, do_sat)
+cf = 0.1;
+ol = length(wav);
+th = 0.60;
+
+zap_bug_ll = 1/5;
+zap_bug_ul = 1 - zap_bug_ll;
 
 if (do_sat == 0)
 	if (do_invert == 0)
 		[ignore peak] = max(wav);
-		zap0 = peak+round(rate*0.1);
+		zap0 = peak+round(rate*cf);
 		wav(1:zap0,:) = 0;
 
 		[ignore peak] = min(wav);
-		zap1 = peak-round(rate*0.1);
+		zap1 = peak-round(rate*cf);
 		wav(zap1:length(wav),:) = 0; 
 	else
 		[ignore peak] = max(wav);
-		zap0 = peak-round(rate*0.1);
+		zap0 = peak-round(rate*cf);
 		wav(zap0:length(wav),:) = 0;
 
 		[ignore peak] = min(wav);
-		zap1 = peak+round(rate*0.1);
+		zap1 = peak+round(rate*cf);
 		wav(1:zap1,:) = 0;
 	end
 else
-	if (do_invert == 0)
-		wav_t = wav(1:round(length(wav)/4));
-		[ignore peak] = max(wav_t);
-		zap0 = peak+round(rate*0.1);
-		wav(1:zap0,:) = 0;
+	if(0)
+		if (do_invert == 0)
+			wav_t = wav(1:round(length(wav)*zap_bug_ll));
+			[ignore peak] = max(wav_t);
+			zap0 = peak+round(rate*cf);
+			wav(1:zap0,:) = 0;
 
-		wav_t = wav(round(length(wav)*3/4):length(wav));
-		[ignore peak] = min(wav_t);
-		peak = peak + round(length(wav)*3/4); 
-		zap1 = peak-round(rate*0.1);
-		wav(zap1:length(wav),:) = 0; 
+			wav_t = wav(round(length(wav)*zap_bug_ul):length(wav));
+			[ignore peak] = min(wav_t);
+			peak = peak + round(length(wav)*zap_bug_ul); 
+			zap1 = peak-round(rate*cf);
+			wav(zap1:length(wav),:) = 0; 
+		else
+			wav_t = wav(1:round(length(wav)/zap_bug_ll));
+			[ignore peak] = max(wav_t);
+			zap0 = peak-round(rate*cf);
+			wav(zap0:length(wav),:) = 0;
+			
+			wav_t = wav(round(length(wav)*zap_bug_ul):length(wav));
+			[ignore peak] = min(wav_t);
+			peak = peak + round(length(wav)*zap_bug_ul); 
+			zap1 = peak+round(rate*cf);
+			wav(1:zap1,:) = 0;
+		end
 	else
-		wav_t = wav(1:round(length(wav)/4));
-		[ignore peak] = max(wav_t);
-		zap0 = peak-round(rate*0.1);
-		wav(zap0:length(wav),:) = 0;
-		
-		wav_t = wav(round(length(wav)*3/4):length(wav));
-		[ignore peak] = min(wav_t);
-		peak = peak + round(length(wav)*3/4); 
-		zap1 = peak+round(rate*0.1);
-		wav(1:zap1,:) = 0;
+		if (do_invert == 0)
+			[zap_raw_0 zap_raw_1] = lmpkgFetchPeaks(wav, th, do_invert);
+			zap0 = zap_raw_0 + round(rate*cf);
+			zap1 = zap_raw_1 - round(rate*cf);
+			wav(1:zap0,:) = 0;
+			wav(zap1:length(wav),:) = 0; 
+		else
+			[zap_raw_0 zap_raw_1] = lmpkgFetchPeaks(wav, th, do_invert);
+			zap0 = zap_raw_0 + round(rate*cf);
+			zap1 = zap_raw_1 - round(rate*cf);
+			wav(1:zap0,:) = 0;
+			wav(zap1:length(wav),:) = 0; 
+		end
 	end
+end
+printf('[lmpkgZap] Zapping between %d and %d/%d\n', zap0, zap1, ol);
+
+
+
+
+function [zap_raw_0 zap_raw_1] = lmpkgFetchPeaks (wav, th, opt_invert)
+zap_raw_0 = 0;
+zap_raw_1 = 0;
+
+pstot = 0;
+ps0 = 0;
+ps1 = 0;
+
+if(opt_invert)
+	wav = -wav;
+end
+
+for s = 1:round(length(wav)/2)
+	if(wav(s) > th)
+		pstot = pstot + 1;
+		ps1 = s;
+
+		if (pstot == 0)
+			ps0 = s;
+		end
+	elseif (pstot > 60)
+		zap_raw_0 = ps1;
+		printf('[lmpkgFetchPeaks] WD-Start peak found: %d-%d\n', 1, ps1);
+		break;
+	end
+end
+
+pstot = 0;
+ps0 = 0;
+ps1 = 0;
+for s = round(length(wav)-length(wav)/2):length(wav)
+	s = length(wav) - s + round(length(wav)-length(wav)/2);
+	if(wav(s) < -th)
+		pstot = pstot + 1;
+		ps0 = s;
+
+		if (pstot == 0)
+			ps1 = s;
+		end
+	elseif (pstot > 60)
+		zap_raw_1 = ps0;
+		printf('[lmpkgFetchPeaks] WD-Stop peak found: %d-%d\n', ps0, length(wav));
+		break;
+	end
+end
+if (0)
+	% ----------------------------------------- %
+	mtSimpleFig(2222);
+	plot(wav);
+	axis tight;
+	hold on;
+	plot(zap_raw_0, +th, 'ro', 'LineWidth', 2)
+	plot(zap_raw_1, -th, 'ro', 'LineWidth', 2)
+	hold off;
+	grid on;
+	title('DumbTM Peak Detector');
+	% ----------------------------------------- %
 end
