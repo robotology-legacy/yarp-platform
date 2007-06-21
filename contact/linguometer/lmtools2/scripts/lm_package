@@ -42,6 +42,15 @@ my $param_invert = @cfg_invert[0];
 chomp($param_invert);
 $param_invert = int($param_invert);
 
+# I do need to import the WD file
+my $ws_regex = "temp/ws_sequence_SSSS.txt";
+
+# I need to fetch the experiment number
+my $exp_pwd = getcwd;
+my $exp_idx = $exp_pwd;
+$exp_idx =~ /^(.*)(\/exp\_)(.*)$/;
+$exp_idx = int($exp_idx);
+
 # Parse each SEQ folder
 foreach $folder_seq (@folders_seq) {
 	# Nuke the carrier return char
@@ -52,6 +61,25 @@ foreach $folder_seq (@folders_seq) {
 	my $idx_seq = $3;
 	my $t_idx_seq = int($idx_seq);
 
+	# Import the WS file
+	my $ws_file = $ws_regex;
+	$ws_file =~ s/SSSS/$idx_seq/g;
+	print "$ws_file\n";
+	my @ws_values_t = mImportFile($ws_file);
+	my @ws_words = {};
+	my @ws_status = {};
+	my $entry = 0;
+	for(my $line_t = 0; $line_t < @ws_values_t; $line_t++) {
+		my $buffer = @ws_values_t[$line_t];
+		chomp($buffer);
+		if(substr($buffer, 0, 1) ne '#') {
+			my @array = split(/;/, $buffer);
+			@ws_words[$entry] = @array[2];
+			@ws_status[$entry] = @array[6];
+			$entry++;
+		}
+	}
+
 	# Look for US-DV files
 	my $us_regex = "wd_*_us.dv";
 	my @us_files_ns = `find $folder_seq/ -iname "$us_regex" | grep -v "ag"`;
@@ -59,17 +87,33 @@ foreach $folder_seq (@folders_seq) {
 	
 	my $words =	@us_files;
 	print "Sequence $idx_seq: total $words\n";
-	
-	#system("matlab -nosplash -nojvm -r \"lmpkgAlignProxy($idx_seq, 0, $words)\" ");
-	for ($word = 0; $word < $words; $word = $word + 1)
+
+	for (my $word = 0; $word < $words; $word = $word + 1)
 	{
-		my $file_data = sprintf('seq_%.4d/wd_%.4d.mat', $idx_seq, $word);
-		if (-e $file_data) {
-			print "File $file_data exists... Skipping packaging operations\n";
+		#print "Processing Word  @ws_words[$word] ---> Status @ws_status[$word]\n";
+		print "Processing:\n";
+		print "  SEQ     $idx_seq\n";
+		print "  WD      $word\n";
+		print "  TXT     @ws_words[$word]\n";
+		print "  Status  @ws_status[$word]\n";
+
+		if (@ws_status[$word]) {
+			my $file_data = sprintf('dist_%.4d/wd_%.4d.mat', $idx_seq, $word);
+			if (-e $file_data) {
+				print "File $file_data exists... Skipping packaging operations\n";
+			}
+			else {
+				print "File $file_data needs to be created\n";
+
+				my $txt = @ws_words[$word];
+				$txt =~ s/'/`/g;
+				system("matlab -nosplash -nojvm -r \"lmpkgAlignProxy($idx_seq,  $word, \'$file_data\', $param_invert, $exp_idx,\'$txt\');\" ");
+				#system("matlab -nosplash -nojvm -r \"lmpkgAddInfo(\'$file_data\', $exp_idx, $idx_seq, $word, \'@ws_words[$word]\');\" ");
+			}
 		}
-		else {
-			print "File $file_data needs to be created\n";
-			system("matlab -nosplash -nojvm -r \"lmpkgAlignProxy($idx_seq, $word, \'$file_data\', $param_invert);\" ");
+		else  {
+			printf "Word not accepted by the experimenters... Skipping it...\n";
 		}
+		printf "\n\n";
 	}
 }

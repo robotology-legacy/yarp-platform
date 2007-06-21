@@ -13,9 +13,30 @@
 % You should have received a copy of the GNU General Public License
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+% 
+% This code integrates sfigure.m by Daniel Eaton, 2005
 
-function mtSimpleFig (f)
-figure(f);
+function f = mtSimpleFig (f)
+sfigure(f);
 clf;
-%set(f, 'ToolBar', 'none');
+set(f, 'ToolBar', 'none');
 set(f, 'Color', [1 1 1])
+
+function h = sfigure(h)
+% SFIGURE  Create figure window (minus annoying focus-theft).
+%
+% Usage is identical to figure.
+%
+% Daniel Eaton, 2005
+%
+% See also figure
+
+if nargin>=1 
+	if ishandle(h)
+		set(0, 'CurrentFigure', h);
+	else
+		h = figure(h);
+	end
+else
+	h = figure;
+end

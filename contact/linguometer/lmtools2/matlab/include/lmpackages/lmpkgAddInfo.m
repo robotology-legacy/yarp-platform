@@ -13,29 +13,14 @@
 % You should have received a copy of the GNU General Public License
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-%
-% function lmpkgAlignProxy(seq, wd, file_data, opt_invert, xpr, txt)
-function lmpkgAlignProxy(seq, wd, file_data, opt_invert, xpr, txt)
 
-data = {};
-%file_data = sprintf('seq_%.4d/wd_%.4d.mat', seq, wd);
+function lmpkgAddInfo(file, xpr, seq, num, txt);
 
-data = lmpkgAlign(seq, wd, 1, opt_invert, 1);
+data = load(file);
+data.misc.xpr = xpr;
+data.misc.seq = seq;
+data.misc.num = num;
+data.misc.txt = txt;
+save(file, '-struct', 'data');
 
-if (isempty(data) == 1)
-	data = lmpkgAlign(seq, wd, 1, opt_invert, 0);
-end
-
-if (isempty(data) == 0)
-	data.misc.xpr = xpr;
-	data.misc.seq = seq;
-	data.misc.num = wd;
-	data.misc.txt = txt;
-
-	printf('[lmpkgAlignProxy] Saving data: %s\n', file_data);
-	save(file_data, '-struct', 'data');
-else
-	printf('[lmpkgAlignProxy] Could not save data: %s\n', file_data);
-end
-
-quit
+quit;
