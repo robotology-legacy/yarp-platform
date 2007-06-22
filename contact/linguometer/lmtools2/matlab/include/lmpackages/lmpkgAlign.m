@@ -398,13 +398,19 @@ if (opt_spam)
 	wavwrite(wav3_cc, std_rate, audio_cc_out);
 end
 
-
 data = {};
 data.US.spc = wav3_wd;
 data.US.fea = dat3_usff;
+data.US.or.spc = 48000;
+data.US.or.fea = 25;
+
 data.AG.spc = wav3_ag;
 data.AG.amp = dat3_agamp;
 data.AG.pos = dat3_agpos;
+data.AG.or.spc = 16000;
+data.AG.or.amp = 200;
+data.AG.or.pos = 200;
+
 if (opt_nolg == 0)
 	data.LG.egg = dat3_lg;
 	data.LG.spc = wav3_lg;
@@ -412,7 +418,14 @@ else
 	data.LG.egg = zeros(size(wav3_wd));
 	data.LG.spc = zeros(size(wav3_wd));
 end
+data.LG.or.spc = 16000;
+data.LG.or.egg = 16000;
+
 data.CC.fea = dat3_ccff;
 data.CC.spc = wav3_cc;
+data.CC.or.spc = 48000;
+data.CC.or.fea = 25;
+
 data.misc.time = [0:1/std_rate:(length(data.US.spc) - 1)/std_rate];
 data.misc.rate = 48000;
+data.misc.length = length(wav3_wd);
