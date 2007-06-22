@@ -17,9 +17,9 @@
 %function [wav zap0 zap1] = lmpkgZap(wav, rate, do_invert, do_sat)
 
 function [wav zap0 zap1] = lmpkgZap(wav, rate, do_invert, do_sat)
-cf = 0.1;
 ol = length(wav);
 th = 0.60;
+cf = 0.1;
 
 zap_bug_ll = 1/5;
 zap_bug_ul = 1 - zap_bug_ll;
@@ -43,44 +43,84 @@ if (do_sat == 0)
 		wav(1:zap1,:) = 0;
 	end
 else
-	if(0)
-		if (do_invert == 0)
-			wav_t = wav(1:round(length(wav)*zap_bug_ll));
-			[ignore peak] = max(wav_t);
-			zap0 = peak+round(rate*cf);
-			wav(1:zap0,:) = 0;
+	if (do_invert == 0)
+		[zap_th0 zap_th1] = lmpkgPeaksTh(wav, th, 0);
+		[zap_mm0 zap_mm1] = lmpkgPeaksMinMax (wav, rate, zap_bug_ll, zap_bug_ul, cf, 0);
+	
 
-			wav_t = wav(round(length(wav)*zap_bug_ul):length(wav));
-			[ignore peak] = min(wav_t);
-			peak = peak + round(length(wav)*zap_bug_ul); 
-			zap1 = peak-round(rate*cf);
-			wav(zap1:length(wav),:) = 0; 
+		if (zap_th0 < 0)
+			zap0 = zap_mm0; 
 		else
-			wav_t = wav(1:round(length(wav)/zap_bug_ll));
-			[ignore peak] = max(wav_t);
-			zap0 = peak-round(rate*cf);
-			wav(zap0:length(wav),:) = 0;
-			
-			wav_t = wav(round(length(wav)*zap_bug_ul):length(wav));
-			[ignore peak] = min(wav_t);
-			peak = peak + round(length(wav)*zap_bug_ul); 
-			zap1 = peak+round(rate*cf);
-			wav(1:zap1,:) = 0;
+			zap0 = zap_th0; 
 		end
+		if (zap_th1 < 0)
+			zap1 = zap_mm1; 
+		else
+			zap1 = zap_th1; 
+		end
+
+		if(0)
+			if (zap_mm0 > 0)
+				zap0 = zap_mm0;
+			elseif(zap_th0 > 0)
+				zap0 = zap_th0;
+			else
+				printf('[lmpkgZap] Error: zapping not possible due zap0: %d/%d\n', zap_mm0, zap_th0);
+			end	
+			if (zap_mm0 > 0)
+				zap1 = zap_mm1;
+			elseif(zap_th0 > 0)
+				zap1 = zap_th1;
+			else
+				printf('[lmpkgZap] Error: zapping not possible due zap1: %d/%d\n', zap_mm0, zap_th0);
+			end	
+		end
+
+		lmpkgPeaksPlot (2222, wav, zap0, zap1);
+		zap0 = zap0 + round(rate*cf);
+		zap1 = zap1 - round(rate*cf);
+		lmpkgPeaksPlot (2222, wav, zap0, zap1);
+		drawnow;
+		wav(1:zap0,:) = 0;
+		wav(zap1:length(wav),:) = 0; 
 	else
-		if (do_invert == 0)
-			[zap_raw_0 zap_raw_1] = lmpkgFetchPeaks(wav, th, do_invert);
-			zap0 = zap_raw_0 + round(rate*cf);
-			zap1 = zap_raw_1 - round(rate*cf);
-			wav(1:zap0,:) = 0;
-			wav(zap1:length(wav),:) = 0; 
+		[zap_raw_0 zap_raw_1] = lmpkgPeaksTh(wav, th, 1);
+		[zap_raw_0 zap_raw_1] = lmpkgPeaksMinMax (wav, rate, zap_bug_ll, zap_bug_ul, cf, 1);
+		
+		if (zap_th0 < 0)
+			zap0 = zap_mm0; 
 		else
-			[zap_raw_0 zap_raw_1] = lmpkgFetchPeaks(wav, th, do_invert);
-			zap0 = zap_raw_0 + round(rate*cf);
-			zap1 = zap_raw_1 - round(rate*cf);
-			wav(1:zap0,:) = 0;
-			wav(zap1:length(wav),:) = 0; 
+			zap0 = zap_th0; 
 		end
+		if (zap_th1 < 1)
+			zap1 = zap_mm1; 
+		else
+			zap1 = zap_th1; 
+		end
+
+		
+		if(0)
+		if (zap_mm0 > 0)
+			zap0 = zap_mm0;
+		elseif(zap_th0 > 0)
+			zap0 = zap_th0;
+		else
+			printf('[lmpkgZap] Error: zapping not possible due zap0: %d/%d\n', zap_mm0, zap_th0);
+		end	
+
+		if (zap_mm0 > 0)
+			zap1 = zap_mm0;
+		elseif(zap_th0 > 0)
+			zap1 = zap_th0;
+		else
+			printf('[lmpkgZap] Error: zapping not possible due zap1: %d/%d\n', zap_mm0, zap_th0);
+		end	
+		end
+
+		zap0 = zap0 + round(rate*cf);
+		zap1 = zap1 - round(rate*cf);
+		wav(1:zap0,:) = 0;
+		wav(zap1:length(wav),:) = 0; 
 	end
 end
 printf('[lmpkgZap] Zapping between %d and %d/%d\n', zap0, zap1, ol);
@@ -88,18 +128,18 @@ printf('[lmpkgZap] Zapping between %d and %d/%d\n', zap0, zap1, ol);
 
 
 
-function [zap_raw_0 zap_raw_1] = lmpkgFetchPeaks (wav, th, opt_invert)
+function [zap_raw_0 zap_raw_1] = lmpkgPeaksTh (wav, th, opt_invert)
 zap_raw_0 = 0;
 zap_raw_1 = 0;
 
-pstot = 0;
-ps0 = 0;
-ps1 = 0;
 
 if(opt_invert)
 	wav = -wav;
 end
 
+pstot = 0;
+ps0 = 0;
+ps1 = 0;
 for s = 1:round(length(wav)/2)
 	if(wav(s) > th)
 		pstot = pstot + 1;
@@ -133,16 +173,41 @@ for s = round(length(wav)-length(wav)/2):length(wav)
 		break;
 	end
 end
-if (0)
-	% ----------------------------------------- %
-	mtSimpleFig(2222);
-	plot(wav);
-	axis tight;
-	hold on;
-	plot(zap_raw_0, +th, 'ro', 'LineWidth', 2)
-	plot(zap_raw_1, -th, 'ro', 'LineWidth', 2)
-	hold off;
-	grid on;
-	title('DumbTM Peak Detector');
-	% ----------------------------------------- %
+
+
+function [zap0 zap1] = lmpkgPeaksMinMax (wav, rate, zap_bug_ll, zap_bug_ul, cf, opt_invert)
+if (opt_invert == 0)
+	wav_t = wav(1:round(length(wav)*zap_bug_ll));
+	[ignore peak] = max(wav_t);
+	zap0 = peak+round(rate*cf);
+	wav(1:zap0,:) = 0;
+
+	wav_t = wav(round(length(wav)*zap_bug_ul):length(wav));
+	[ignore peak] = min(wav_t);
+	peak = peak + round(length(wav)*zap_bug_ul); 
+	zap1 = peak-round(rate*cf);
+	wav(zap1:length(wav),:) = 0; 
+else
+	wav_t = wav(1:round(length(wav)/zap_bug_ll));
+	[ignore peak] = max(wav_t);
+	zap0 = peak-round(rate*cf);
+	wav(zap0:length(wav),:) = 0;
+
+	wav_t = wav(round(length(wav)*zap_bug_ul):length(wav));
+	[ignore peak] = min(wav_t);
+	peak = peak + round(length(wav)*zap_bug_ul); 
+	zap1 = peak+round(rate*cf);
+	wav(1:zap1,:) = 0;
 end
+
+
+function lmpkgPeaksPlot (fig, wav, zap0, zap1)
+mtSimpleFig(fig);
+plot(wav);
+axis tight;
+hold on;
+plot(zap0, +0.50, 'ro', 'LineWidth', 2)
+plot(zap1, -0.50, 'ro', 'LineWidth', 2)
+hold off;
+grid on;
+title('DumbTM Peak Detector');

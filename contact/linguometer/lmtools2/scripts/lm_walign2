@@ -138,7 +138,7 @@ foreach $folder_seq (@folders_seq) {
 		print "  Peak AG $pAG\n";
 		print "  LOG     $file_log\n";
 
-		my $cmd = "$lm_cmd --sequence $file_ag --wd $file_wd --num $idx_wd --out $file_agwt --aln $file_aln --th 0.60 --pwd $pWD --pag $pAG 1>> $file_log";
+		my $cmd = "$lm_cmd --sequence $file_ag --wd $file_wd --num $idx_wd --out $file_agwt --aln $file_aln --th $thWD --pwd $pWD --pag $pAG 1>> $file_log";
 		#print "$cmd\n\n";
 		system($cmd);
 		print "\n";

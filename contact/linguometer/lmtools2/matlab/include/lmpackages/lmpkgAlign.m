@@ -22,7 +22,7 @@ if (0)
 	opt_invert = 0;
 	opt_bug = 1;
 end
-
+opt_nolg = 0;
 data = {};
 printf('[lmpkgAlign] Running on SEQ %d, word %d\n', seq, num);
 
@@ -51,8 +51,12 @@ audio_lg = sprintf('seq_%.4d/wd_%.4d_lg.wav', seq, num);
 audio_cc = sprintf('seq_%.4d/wd_%.4d_cc.wav', seq, num);
 [owav_wd  orate_wd]  = wavread(audio_wd);
 [owav_ag  orate_ag]  = wavread(audio_ag);
-[owav_lg  orate_lg]  = wavread(audio_lg);
 [owav_cc  orate_cc]  = wavread(audio_cc);
+try
+	[owav_lg  orate_lg]  = wavread(audio_lg);
+catch
+	opt_nolg = 1;
+end
 
 % Select the right channel (US-Speech)
 printf('[lmpkgAlign] Zapping US data\n');
@@ -78,9 +82,12 @@ end
 
 % Select the left channel (LG-Speech)
 printf('[lmpkgAlign] Processing remaining data\n');
-wav_lg = resample(owav_lg, std_rate, orate_lg);
-dat_lg = wav_lg(:, 2);
-wav_lg = wav_lg(:, 1);
+if (opt_nolg == 0)
+	wav_lg = resample(owav_lg, std_rate, orate_lg);
+	dat_lg = wav_lg(:, 2);
+	wav_lg = wav_lg(:, 1);
+end
+
 
 % Select the left CC-Speech channel
 wav_cc  = owav_cc(:, 1);
@@ -113,17 +120,23 @@ dat_ccff = resample(odat_ccff, std_rate, 25, 0);
 printf('[lmpkgAlign] Creating alignment energy-like signals\n');
 sig_wd  = filter2(filter_fast, abs(wav_wd), 'same');
 sig_ag  = filter2(filter_fast, abs(wav_ag), 'same');
-sig_lg  = filter2(filter_fast, abs(wav_lg), 'same');
+if (opt_nolg == 0)
+	sig_lg  = filter2(filter_fast, abs(wav_lg), 'same');
+end
 sig_cc  = filter2(filter_fast, abs(wav_cc), 'same');
 sig_cc  = filter2(filter_fast, abs(wav_cc), 'same');
 
 printf('[lmpkgAlign] Initial offset values:\n');
 offset_ag = lmpkgLag(sig_wd, sig_ag);
-offset_lg = lmpkgLag(sig_wd, sig_lg);
+if (opt_nolg == 0)
+	offset_lg = lmpkgLag(sig_wd, sig_lg);
+end
 offset_cc = lmpkgLag(sig_wd, sig_cc);
 printf('  WD     %d (reference)\n', 0);
 printf('  AG     %d\n', offset_ag);
-printf('  LG     %d\n', offset_lg);
+if (opt_nolg == 0)
+	printf('  LG     %d\n', offset_lg);
+end
 printf('  CC     %d\n', offset_cc);
 
 printf('[lmpkgAlign] Initial lenght of signals\n');
@@ -131,7 +144,9 @@ printf('  WD     %d\n', length(wav_wd));
 printf('  AG     %d\n', length(wav_ag));
 printf('  AGAMP  %d\n', length(dat_agamp));
 printf('  AGPOS  %d\n', length(dat_agpos));
-printf('  LG     %d\n', length(wav_lg));
+if (opt_nolg == 0)
+	printf('  LG     %d\n', length(wav_lg));
+end
 printf('  CC     %d\n', length(wav_cc));
 
 printf('[lmpkgAlign] Correcting AG lag\n');
@@ -153,11 +168,13 @@ dat2_agpos = lagmatrix(dat_agpos, offset_ag);
 %end
 %printf('\n');
 
-printf('[lmpkgAlign] Correcting LG-Speech lag\n');
-wav2_lg = lagmatrix(wav_lg, offset_lg);
+if (opt_nolg == 0)
+	printf('[lmpkgAlign] Correcting LG-Speech lag\n');
+	wav2_lg = lagmatrix(wav_lg, offset_lg);
 
-printf('[lmpkgAlign] Correcting LG-EEG lag\n');
-dat2_lg = lagmatrix(dat_lg, offset_lg);
+	printf('[lmpkgAlign] Correcting LG-EEG lag\n');
+	dat2_lg = lagmatrix(dat_lg, offset_lg);
+end
 
 printf('[lmpkgAlign] Correcting CC-Speech lag\n');
 wav2_cc = lagmatrix(wav_cc, offset_cc);
@@ -176,7 +193,9 @@ if (opt_plot && opt_plotcrap)
 	plot(sig_wd, 'r');
 	hold on;
 	plot(sig_ag, 'b');
-	plot(sig_lg, 'k');
+	if (opt_nolg == 0)
+		plot(sig_lg, 'k');
+	end
 	plot(sig_cc, 'g');
 	hold off;
 	grid on;
@@ -193,8 +212,10 @@ wav3_wd = wav_wd;
 wav3_ag = lmpkgCrop(wav2_ag, offset_ag);
 dat3_agamp = lmpkgCrop(dat2_agamp, offset_ag);
 dat3_agpos = lmpkgCrop(dat2_agpos, offset_ag);
-wav3_lg = lmpkgCrop(wav2_lg, offset_lg);
-dat3_lg = lmpkgCrop(dat2_lg, offset_lg);
+if (opt_nolg == 0)
+	wav3_lg = lmpkgCrop(wav2_lg, offset_lg);
+	dat3_lg = lmpkgCrop(dat2_lg, offset_lg);
+end
 wav3_cc = lmpkgCrop(wav2_cc, offset_cc);
 dat3_ccff = lmpkgCrop(dat2_ccff, offset_cc);
 dat3_usff = dat_usff;
@@ -202,7 +223,11 @@ dat3_usff = dat_usff;
 lengths = zeros(4, 1);
 lengths(1) = length(wav3_wd);
 lengths(2) = length(wav3_ag);
-lengths(3) = length(wav3_lg);
+if (opt_nolg == 0)
+	lengths(3) = length(wav3_lg);
+else
+	lengths(3) = 1e6;
+end
 lengths(4) = length(wav3_cc);
 
 if (std_zap1 <= min(lengths))
@@ -215,24 +240,32 @@ wav3_wd = wav3_wd(std_zap0:std_lenght);
 wav3_ag = wav3_ag(std_zap0:std_lenght);
 dat3_agamp = dat3_agamp(std_zap0:std_lenght, :);
 dat3_agpos = dat3_agpos(std_zap0:std_lenght, :);
-wav3_lg = wav3_lg(std_zap0:std_lenght);
-dat3_lg = dat3_lg(std_zap0:std_lenght);
+if (opt_nolg == 0)
+	wav3_lg = wav3_lg(std_zap0:std_lenght);
+	dat3_lg = dat3_lg(std_zap0:std_lenght);
+end
 wav3_cc = wav3_cc(std_zap0:std_lenght);
 dat3_usff = dat3_usff(std_zap0:std_lenght, :);
 dat3_ccff = dat3_ccff(std_zap0:std_lenght, :);
 
 sig3_wd = filter2(filter_fast, abs(wav3_wd), 'same');
 sig3_ag = filter2(filter_fast, abs(wav3_ag), 'same');
-sig3_lg = filter2(filter_fast, abs(wav3_lg), 'same');
+if (opt_nolg == 0)
+	sig3_lg = filter2(filter_fast, abs(wav3_lg), 'same');
+end
 sig3_cc = filter2(filter_fast, abs(wav3_cc), 'same');
 
 printf('[lmpkgAlign] Final offset values:\n');
 offset3_ag = lmpkgLag(sig3_wd, sig3_ag);
-offset3_lg = lmpkgLag(sig3_wd, sig3_lg);
+if (opt_nolg == 0)
+	offset3_lg = lmpkgLag(sig3_wd, sig3_lg);
+end
 offset3_cc = lmpkgLag(sig3_wd, sig3_cc);
 printf('  WD   %d (reference)\n', 0);
 printf('  AG   %d\n', offset3_ag);
-printf('  LG   %d\n', offset3_lg);
+if (opt_nolg == 0)
+	printf('  LG   %d\n', offset3_lg);
+end
 printf('  CC   %d\n', offset3_cc);
 
 
@@ -241,7 +274,9 @@ if (opt_plot && opt_plotcrap)
 	plot(sig3_wd, 'r');
 	hold on;
 	plot(sig3_ag, 'b');
-	plot(sig3_lg, 'k');
+	if (opt_nolg == 0)
+		plot(sig3_lg, 'k');
+	end
 	plot(sig3_cc, 'g');
 	hold off;
 	grid on;
@@ -269,12 +304,14 @@ if (opt_plot)
 	axis tight;
 	ylabel('AG-Speech');
 	
-	subplot(4, 3, 7);
-	plot(time, wav3_lg, 'k');
-	grid on;
-	axis tight;
-	ylabel('LG-Speech');
-	
+	if (opt_nolg == 0)
+		subplot(4, 3, 7);
+		plot(time, wav3_lg, 'k');
+		grid on;
+		axis tight;
+		ylabel('LG-Speech');
+	end
+
 	subplot(4, 3, 10);
 	plot(time, wav3_cc, 'g');
 	grid on;
@@ -293,10 +330,12 @@ if (opt_plot)
 	grid on;
 	axis tight;
 	
-	subplot(4, 3, 8);
-	plot(time, filter2(filter_fast, abs(wav3_lg), 'same'), 'k');
-	grid on;
-	axis tight;
+	if (opt_nolg == 0)
+		subplot(4, 3, 8);
+		plot(time, filter2(filter_fast, abs(wav3_lg), 'same'), 'k');
+		grid on;
+		axis tight;
+	end
 	
 	subplot(4, 3, 11);
 	plot(time, filter2(filter_fast, abs(wav3_cc), 'same'), 'g');
@@ -315,12 +354,14 @@ if (opt_plot)
 		title('Data tracks');
 	end
 
-	subplot(4, 3, 9);
-	plot(time, dat3_lg, 'k');
-	grid on;
-	axis tight;
-	ylabel('LG-Data');
-	xlabel('Time [s]');
+	if (opt_nolg == 0)
+		subplot(4, 3, 9);
+		plot(time, dat3_lg, 'k');
+		grid on;
+		axis tight;
+		ylabel('LG-Data');
+		xlabel('Time [s]');
+	end
 
 	drawnow;
 	file_img = sprintf('log/plots/lmpack_%.4d_%.4d', seq, num);
@@ -333,8 +374,10 @@ printf('  (+) US-Features %d\n', length(dat3_usff));
 printf('  (+) AG-Speech   %d\n', length(wav3_ag));
 printf('  (+) AG-AMP      %d\n', length(dat3_agamp));
 printf('  (+) AG-POS      %d\n', length(dat3_agpos));
-printf('  (+) LG-Speech   %d\n', length(wav3_lg));
-printf('  (+) LG-EEG      %d\n', length(dat3_lg));
+if (opt_nolg == 0)
+	printf('  (+) LG-Speech   %d\n', length(wav3_lg));
+	printf('  (+) LG-EEG      %d\n', length(dat3_lg));
+end
 printf('  (+) CC-Speech   %d\n', length(wav3_cc));
 printf('  (+) CC-Features %d\n', length(dat3_ccff));
 
@@ -342,12 +385,16 @@ printf('  (+) CC-Features %d\n', length(dat3_ccff));
 if (opt_spam)
 	audio_wd_out  = sprintf('seq_%.4d/wd_%.4d_us_fine.wav', seq, num);
 	audio_ag_out  = sprintf('seq_%.4d/wd_%.4d_ag_fine.wav', seq, num);
-	audio_lg_out  = sprintf('seq_%.4d/wd_%.4d_lg_fine.wav', seq, num);
+	if (opt_nolg == 0)
+		audio_lg_out  = sprintf('seq_%.4d/wd_%.4d_lg_fine.wav', seq, num);
+	end
 	audio_cc_out  = sprintf('seq_%.4d/wd_%.4d_cc_fine.wav', seq, num);
 
 	wavwrite(wav3_wd, std_rate, audio_wd_out);
 	wavwrite(wav3_ag, std_rate, audio_ag_out);
-	wavwrite([wav3_lg dat3_lg], std_rate, audio_lg_out);
+	if (opt_nolg == 0)
+		wavwrite([wav3_lg dat3_lg], std_rate, audio_lg_out);
+	end
 	wavwrite(wav3_cc, std_rate, audio_cc_out);
 end
 
@@ -358,8 +405,13 @@ data.US.fea = dat3_usff;
 data.AG.spc = wav3_ag;
 data.AG.amp = dat3_agamp;
 data.AG.pos = dat3_agpos;
-data.LG.egg = dat3_lg;
-data.LG.spc = wav3_lg;
+if (opt_nolg == 0)
+	data.LG.egg = dat3_lg;
+	data.LG.spc = wav3_lg;
+else
+	data.LG.egg = zeros(size(wav3_wd));
+	data.LG.spc = zeros(size(wav3_wd));
+end
 data.CC.fea = dat3_ccff;
 data.CC.spc = wav3_cc;
 data.misc.time = [0:1/std_rate:(length(data.US.spc) - 1)/std_rate];
