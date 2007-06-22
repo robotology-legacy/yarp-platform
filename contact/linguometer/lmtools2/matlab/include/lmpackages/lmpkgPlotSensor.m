@@ -19,6 +19,7 @@ function lmpkgPlotSensor(data, sensors, fig, trid);
 
 idxs = [1:6:72];
 gfx = {'rx' 'kx' 'bx' 'gx' 'mx' 'ro' 'ko' 'm^' 'g^' 'sr' 'sb' 'sk'};
+plt = {'r' 'k' 'b' 'g' 'm' 'r' 'k' 'm' 'g' 'r' 'b' 'k'};
 
 mtSimpleFig(fig);
 if (length(sensors) == 1)
@@ -62,7 +63,7 @@ else
 		zlabel ('z');
 		axis([-1 1 -1 1 -1 1]*50);
 		grid on;
-	else
+	elseif (trid == 0)
 		for sensor = sensors
 			idx = idxs(sensor);
 			subplot(4, 3, sensor);
@@ -83,6 +84,69 @@ else
 			end
 			if (sensor > 9)
 				xlabel('Time [s]');
+			end
+		end
+	elseif (trid == 2)
+		if (min(size(data.AG.pos)) < 72)
+			L = min(size(data.AG.pos));
+		else
+			L = length(data.AG.pos);
+		end
+
+		for sbp = 1:4
+			subplot(2, 2, sbp);
+			for sensor = sensors
+				idx = idxs(sensor);
+				xc = data.AG.pos(:, idx + 0);
+				yc = data.AG.pos(:, idx + 1);
+				zc = data.AG.pos(:, idx + 2);
+				hold on;
+				switch (sbp)
+					case 1
+						plot(yc, zc, char(plt(sensor)));
+						plot(yc(L), zc(L), char(gfx(sensor)), 'LineWidth', 2);
+					case 2
+						plot(xc, yc, char(plt(sensor)));
+						plot(xc(L), yc(L), char(gfx(sensor)), 'LineWidth', 2);
+					case 3
+						plot(xc, zc, char(plt(sensor)));
+						plot(xc(L), zc(L), char(gfx(sensor)), 'LineWidth', 2);
+					case 4
+						plot3(xc, yc, zc, char(plt(sensor)));
+						plot3(xc(L), yc(L), zc(L), char(gfx(sensor)), 'LineWidth', 2);
+				end
+				hold off;
+
+				if (sensor == sensors(length(sensors)))
+					switch (sbp)
+						case 1
+							title('Axial view');
+							xlabel('y');
+							ylabel('z');
+							axis equal
+							grid on;
+						case 2
+							title('Sagittal view');
+							xlabel('x');
+							ylabel('y');
+							axis equal
+							grid on;
+						case 3
+							title('Coronal view');
+							xlabel('x');
+							ylabel('z');
+							axis equal
+							grid on;
+						case 4
+							title('Tridimensional view');
+							xlabel('x');
+							ylabel('y');
+							zlabel('z');
+							view(-30,50)
+							axis equal
+							grid on;
+					end
+				end
 			end
 		end
 	end
