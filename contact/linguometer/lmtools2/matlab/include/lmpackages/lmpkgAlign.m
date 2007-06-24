@@ -16,10 +16,10 @@
 
 function data = lmpkgAlign(seq, num, opt_plot, opt_invert, opt_bug);
 if (0)
-	seq = 6;
-	num = 19;
+	seq = 0;
+	num = 0;
 	opt_plot = 1;
-	opt_invert = 0;
+	opt_invert = 1;
 	opt_bug = 1;
 end
 opt_nolg = 0;
@@ -61,14 +61,20 @@ end
 % Select the right channel (US-Speech)
 printf('[lmpkgAlign] Zapping US data\n');
 wav_wd = owav_wd(:, 2);
-[wav_wd zap0_wd zap1_wd] = lmpkgZap(wav_wd, std_rate, opt_invert, opt_bug);
+if (opt_invert)
+	wav_wd = -wav_wd;
+end
+[wav_wd zap0_wd zap1_wd] = lmpkgZap(wav_wd, std_rate, opt_bug);
 
 
 % Resample the AG-Speech data (16-->48kHz)
 printf('[lmpkgAlign] Zapping AG data\n');
 wav_ag = resample(owav_ag, std_rate, orate_ag);
+if (opt_invert)
+	wav_ag = -wav_ag;
+end
 rate_ag = std_rate;
-[wav_ag zap0_ag zap1_ag] = lmpkgZap(wav_ag, std_rate, opt_invert, opt_bug);
+[wav_ag zap0_ag zap1_ag] = lmpkgZap(wav_ag, std_rate, opt_bug);
 
 if (zap1_ag < zap0_ag)
 	printf('[lmpkgAlign] AG zap problem\n');

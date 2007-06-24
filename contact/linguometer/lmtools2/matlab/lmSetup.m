@@ -1,11 +1,13 @@
 path_pwd = pwd;
 if (isunix())
 	warning('off');
+	path(path,[path_pwd './']);
 	path(path,[path_pwd '/include/tapadm/']);
 	path(path,[path_pwd '/include/lmmatlab/']);
 	path(path,[path_pwd '/include/lmstuff/']);
 	path(path,[path_pwd '/include/mtmatlab/']);
 	path(path,[path_pwd '/include/lmpackages']);
+	path(path,[path_pwd '/include/dtw']);
 	warning('on');
 else
 	warning('off');
@@ -14,6 +16,7 @@ else
 	path(path,[path_pwd '\include\lmstuff/']);
 	path(path,[path_pwd '\include\mtmatlab\']);
 	path(path,[path_pwd '\include\lmpackages']);
+	path(path,[path_pwd '\include\dtw']);
 	warning('on');
 end
-
+savepath

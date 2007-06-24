@@ -1,0 +1,181 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.76 [en] (X11; U; Linux 2.2.16-22smp i686) [Netscape]">
+   <meta name="Author" content="Dan Ellis <dpwe@ee.columbia.edu>">
+   <meta name="Description" content="Code and discussion of the Dynamic Time Warping algorithm for audio signal matching, implemented in Matlab">
+   <meta name="KeyWords" content="matlab, audio, speech, recognition, dynamic time warp, DTW">
+   <title>Dynamic Time Warp in Matlab</title>
+</head>
+<body text="#000000" bgcolor="#FFFFFF" link="#0000FF" vlink="#551A8B" alink="#0000FF">
+<a href="http://www.ee.columbia.edu/~dpwe/">Dan
+Ellis</a> : <a href="http://www.ee.columbia.edu/~dpwe/resources/">Resources</a>
+: <a href="http://www.ee.columbia.edu/~dpwe/resources/matlab/">Matlab</a>
+:
+<h1>
+Dynamic Time Warp (DTW) in Matlab
+<hr WIDTH="100%"></h1>
+
+<h4>Introduction</h4>
+<P>
+One of the difficulties in speech recognition is that although
+different recordings of the same words may include more or less the
+same sounds in the same order, the precise timing - the durations of
+each subword within the word - will not match.  As a result, efforts
+to recognize words by matching them to templates will give inaccurate
+results if there is no temporal alignment.
+</P>
+
+<P>
+Although it has been largely superseded by hidden Markov models, early
+speech recognizers used a dynamic-programming technique called Dynamic
+Time Warping (DTW) to accommodate differences in timing between sample
+words and templates.  The basic principle is to allow a range of
+'steps' in the space of (time frames in sample, time frames in
+template) and to find the path through that space that maximizes the
+local match between the aligned time frames, subject to the
+constraints implicit in the allowable steps.  The total `similarity
+cost' found by this algorithm is a good indication of how well the
+sample and template match, which can be used to choose the
+best-matching template.
+</P>
+
+<P>
+The code and example on this page show a simple implementation of
+dynamic time warp alignment between soundfiles.  In addition to using
+this for scoring the similarity between sounds, we can also use it to
+`warp' a soundfile to match the timing of a reference, for instance to
+synchronize two utterances of the same words.
+</P>
+
+<h4>Code</h4>
+<P>
+The routines provided here are:
+</P>
+<UL>
+  <LI><A HREF="simmx.m"><B>simmx.m</B></A> - a utility to calculate
+  the full local-match matrix i.e. calculating the distance between 
+  every pair of frames from the sample and template signals.</LI>
+  <LI><A HREF="dp.m"><B>dp.m</B></A> - implementation of the simple 
+  dynamic programming algorithm that allows three steps - (1,1), (0,1) 
+  and (1,0) - with equal weights.</LI>
+  <LI><A HREF="dp2.m"><B>dp2.m</B></A> - experimental alternative 
+  version that allows 5 steps - (1,1), (0,1), (1,0), (1,2), and (2,1) - 
+  with different weights to prefer sloping paths but without a hard 
+  limit on regions in which matches are found.  Seems to work better, 
+  but not much tested.  Syntax etc. the same as dp.m.</LI>
+  <LI><A HREF="dpfast.m"><B>dpfast.m</B></A> - fast version that uses 
+  a MEX routine (dpcore) to execute the non-vectorizable inner loop - as much 
+  as 200 times faster!  Also allows user-specified step/cost matrix.</LI>
+  <LI><A HREF="dpcore.c"><B>dpcore.c</B></A> - C source for the MEX
+  routine that speeds up dpfast.m.  Also available as precompiled 
+  MEX extensions for Mac OS X: <A HREF="dpcore.mexmac">dpcore.mexmac</A> 
+  and Linux: <A HREF="dpcore.mexglx">dpcore.mexglx</A>.</LI>
+</UL>
+
+<h4>Example</h4>
+<P>
+An example use is shown below:
+</P>
+<TT><PRE>
+>> <FONT COLOR="#FF0000">% Load two speech waveforms of the same utterance (from TIMIT)</FONT>
+>> [d1,sr] = wavread('<A HREF="http://www.ee.columbia.edu/~dpwe/sounds/sents/sm1_cln.wav">sm1_cln.wav</A>');
+>> [d2,sr] = wavread('<A HREF="http://www.ee.columbia.edu/~dpwe/sounds/sents/sm2_cln.wav">sm2_cln.wav</A>');
+>> 
+>> <FONT COLOR="#FF0000">% Listen to them together:</FONT>
+>> ml = min(length(d1),length(d2));
+>> soundsc(d1(1:ml)+d2(1:ml),sr)
+>> <FONT COLOR="#FF0000">% or, in stereo</FONT>
+>> soundsc([d1(1:ml),d2(1:ml)],sr)
+>>
+>> <FONT COLOR="#FF0000">% Calculate STFT features for both sounds (25% window overlap)</FONT>
+>> D1 = specgram(d1,512,sr,512,384);
+>> D2 = specgram(d2,512,sr,512,384);
+>>
+>> <FONT COLOR="#FF0000">% Construct the 'local match' scores matrix as the cosine distance </FONT>
+>> <FONT COLOR="#FF0000">% between the STFT magnitudes</FONT>
+>> SM = simmx(abs(D1),abs(D2));
+>> <FONT COLOR="#FF0000">% Look at it:</FONT>
+>> subplot(121)
+>> imagesc(SM)
+>> colormap(1-gray)
+>> <FONT COLOR="#FF0000">% You can see a dark stripe (high similarity values) approximately</FONT>
+>> <FONT COLOR="#FF0000">% down the leading diagonal.</FONT>
+>>
+>> <FONT COLOR="#FF0000">% Use dynamic programming to find the lowest-cost path between the </FONT>
+>> <FONT COLOR="#FF0000">% opposite corners of the cost matrix</FONT>
+>> <FONT COLOR="#FF0000">% Note that we use 1-SM because dp will find the *lowest* total cost</FONT>
+>> [p,q,C] = dp(1-SM);
+>> <FONT COLOR="#FF0000">% Overlay the path on the local similarity matrix</FONT>
+>> hold on; plot(q,p,'r'); hold off
+>> <FONT COLOR="#FF0000">% Path visibly follows the dark stripe</FONT>
+>> 
+>> <FONT COLOR="#FF0000">% Plot the minimum-cost-to-this point matrix too</FONT>
+>> subplot(122)
+>> imagesc(C)
+>> hold on; plot(q,p,'r'); hold off
+<IMG SRC="dtw.jpg" ALT="[image of DTW path]">
+>> 
+>> <FONT COLOR="#FF0000">% Bottom right corner of C gives cost of minimum-cost alignment of the two</FONT>
+>> C(size(C,1),size(C,2))
+<FONT COLOR="#008000">ans =</FONT>
+<FONT COLOR="#008000"> 128.2873</FONT>
+>> <FONT COLOR="#FF0000">% This is the value we would compare between different </FONT>
+>> <FONT COLOR="#FF0000">% templates if we were doing classification.</FONT>
+>> 
+>> <FONT COLOR="#FF0000">% Calculate the frames in D2 that are indicated to match each frame</FONT>
+>> <FONT COLOR="#FF0000">% in D1, so we can resynthesize a warped, aligned version</FONT>
+>> D2i1 = zeros(1, size(D1,2));
+>> for i = 1:length(D2i1); D2i1(i) = q(min(find(p >= i))); end
+>> <FONT COLOR="#FF0000">% <A HREF="../pvoc/">Phase-vocoder</A> interpolate D2's STFT under the time warp</FONT>
+>> D2x = <A HREF="../pvoc/pvsample.m">pvsample</A>(D2, D2i1-1, 128);
+>> <FONT COLOR="#FF0000">% Invert it back to time domain</FONT>
+>> d2x = <A HREF="../pvoc/istft.m">istft</A>(D2x, 512, 512, 128);
+>>
+>> <FONT COLOR="#FF0000">% Listen to the results</FONT>
+>> <FONT COLOR="#FF0000">% Warped version alone</FONT>
+>> soundsc(d2x,sr)
+>> <FONT COLOR="#FF0000">% Warped version added to original target (have to fine-tune length)</FONT>
+>> d2x = <A HREF="resize.m">resize</A>(d2x', length(d1),1);
+>> soundsc(d1+d2x,sr)
+>> <FONT COLOR="#FF0000">% .. and in stereo</FONT>
+>> soundsc([d1,d2x],sr)
+>> <FONT COLOR="#FF0000">% Compare to unwarped pair:</FONT>
+>> soundsc([d1(1:ml),d2(1:ml)],sr)
+</PRE></TT>
+<hr ALIGN=LEFT>
+<h4>Referencing</h4>
+<P>
+If you find this code useful and wish to reference it in your publications, you can make a reference directly to this web page, e.g. something like:
+</P>
+<DL>
+   <DT>D. Ellis (2003).
+   <A HREF="http://www.ee.columbia.edu/~dpwe/resources/matlab/dtw/">
+Dynamic Time Warp (DTW) in Matlab</A></DT>
+   <DD>Web resource, available:
+   <A HREF="http://www.ee.columbia.edu/~dpwe/resources/matlab/dtw/">
+http://www.ee.columbia.edu/~dpwe/resources/matlab/dtw/</A>.
+</DD>
+</DL>
+<P>
+The code originated with our project on aligning MIDI descriptions to music audio recordings, </P>
+<DL>
+    <DT>
+    R. Turetsky and D. Ellis (2003)<BR></A>
+    <A HREF="http://www.ee.columbia.edu/~dpwe/pubs/ismir03-midi.pdf">Ground-Truth Transcriptions of Real Music from Force-Aligned MIDI Syntheses</A></DT>
+    <DD><I>4th International Symposium on Music Information Retrieval ISMIR-03</I>, pp. 135-141, Baltimore, October 2003. </DD>
+</DL>
+
+
+<h4>Copyright</h4>
+<P>
+This software is released under GPL.  See the <A HREF="COPYRIGHT">COPYRIGHT</A> file.
+</P>
+<address>
+Last updated: $Date: 2007-06-24 10:44:07 $</address>
+
+<br><a href="http://www.ee.columbia.edu/~dpwe/">Dan Ellis</a> &lt;<a href="mailto:dpwe@ee.columbia.edu">dpwe@ee.columbia.edu</a>>
+<br>&nbsp;
+</body>
+</html>

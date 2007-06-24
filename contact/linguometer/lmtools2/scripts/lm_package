@@ -68,12 +68,14 @@ foreach $folder_seq (@folders_seq) {
 	my @ws_values_t = mImportFile($ws_file);
 	my @ws_words = {};
 	my @ws_status = {};
+	my @ws_id = {};
 	my $entry = 0;
 	for(my $line_t = 0; $line_t < @ws_values_t; $line_t++) {
 		my $buffer = @ws_values_t[$line_t];
 		chomp($buffer);
 		if(substr($buffer, 0, 1) ne '#') {
 			my @array = split(/;/, $buffer);
+			@ws_id[$entry] = @array[1];
 			@ws_words[$entry] = @array[2];
 			@ws_status[$entry] = @array[6];
 			$entry++;
@@ -87,6 +89,22 @@ foreach $folder_seq (@folders_seq) {
 	
 	my $words =	@us_files;
 	print "Sequence $idx_seq: total $words\n";
+		
+	# Open a file that works as an index for the mat files
+	# This log file contains ONLY the correctly pronounced
+	# words (@ws_status[$entry] == 1)
+	# Format is:
+	#  filename id word experiment sequence word_number 
+	# in terms of arrays/vars:
+	#  $file_data @ws_id[$entry] @ws_word[$entry] $exp_idx $idx_seq $word
+  	# for all entries where the @ws_status[$entry] == 1 condition is
+	# verified.
+	# The filename implicity contains the word number ($word), but 
+	# some redundancy may be helpful (I need to perform some cleaning
+  	# onto the var. names).
+	my $file_index = sprintf('dist_%.4d/wd_index.txt', $idx_seq);
+	open(FILE_INDEX, ">$file_index");
+	print FILE_INDEX "#package id txt exp seq num\n";
 
 	for (my $word = 0; $word < $words; $word = $word + 1)
 	{
@@ -96,17 +114,30 @@ foreach $folder_seq (@folders_seq) {
 		print "  WD      $word\n";
 		print "  TXT     @ws_words[$word]\n";
 		print "  Status  @ws_status[$word]\n";
+			
 
+		# Yes, Matlab complains about this (e.g.: 'string' and not
+		# "string")
+		my $txt = @ws_words[$word];
+		$txt =~ s/'/`/g;
+		
+		my $file_txt = sprintf('seq_%.4d/wd_%.4d.txt', $idx_seq, $word);
+		open(FILE_TXT, ">$file_txt");
+		print FILE_TXT "#id txt status exp seq num\n";
+		print FILE_TXT "@ws_id[$word] @ws_words[$word] @ws_status[$word] $exp_idx $t_idx_seq $word\n";
+		close(FILE_TXT);
+		
 		if (@ws_status[$word]) {
-			my $file_data = sprintf('dist_%.4d/wd_%.4d.mat', $idx_seq, $word);
+			my $file_data = sprintf('wd_%.4d.mat', $word);
+			print FILE_INDEX "$file_data @ws_id[$word] $txt $exp_idx $t_idx_seq $word\n";
+			$file_data = sprintf('dist_%.4d/wd_%.4d.mat', $idx_seq, $word);
+
 			if (-e $file_data) {
 				print "File $file_data exists... Skipping packaging operations\n";
 			}
 			else {
 				print "File $file_data needs to be created\n";
 
-				my $txt = @ws_words[$word];
-				$txt =~ s/'/`/g;
 				system("matlab -nosplash -nojvm -r \"lmpkgAlignProxy($idx_seq,  $word, \'$file_data\', $param_invert, $exp_idx,\'$txt\');\" ");
 				#system("matlab -nosplash -nojvm -r \"lmpkgAddInfo(\'$file_data\', $exp_idx, $idx_seq, $word, \'@ws_words[$word]\');\" ");
 			}
@@ -116,4 +147,5 @@ foreach $folder_seq (@folders_seq) {
 		}
 		printf "\n\n";
 	}
+	close(FILE_INDEX);
 }
