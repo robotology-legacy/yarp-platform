@@ -61,7 +61,7 @@ if (defined($filter)) {
 		    $ok &&= ($fname =~ /^(.*\/)*[0-9]*_0*${seq}_/);
 		}
 		if ($wrd ne "") {
-		    $ok &&= ($fname =~ /^(.*\/)*[0-9]*_[0-9]*_0*${seq}$/);
+		    $ok &&= ($fname =~ /^(.*\/)*[0-9]*_[0-9]*_0*${wrd}$/);
 		}
 		if ($ok && (-e $img)) {
 		    if ($at>=$start && $#items<$block-1) {
