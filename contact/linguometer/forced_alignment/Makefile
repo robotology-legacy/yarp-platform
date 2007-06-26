@@ -6,7 +6,7 @@ OUTDIR = /scratch/linguometer/feature/exp_$(EXPERIMENT)/seq_${SEQUENCE}
 LABELS = /mnt/contact_cache/exp_$(EXPERIMENT)/temp/ws_sequence_${SEQUENCE}.txt
 WAVDIR = /mnt/contact_cache/exp_$(EXPERIMENT)/seq_${SEQUENCE}
 
-OUTALL = /scratch/linguometer/all
+OUTALL = /scratch/linguometer
 INALL = /mnt/contact_cache
 
 default:

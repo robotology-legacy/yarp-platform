@@ -26,6 +26,7 @@ while (<STDIN>) {
 		close(FOUT);
 		system "make img";
 		system sprintf("mv tmp/current.gif /tmp/wd_%04d_us.gif",$idx);
+		system sprintf("cp tmp/labelled.phseg /tmp/wd_%04d_us.txt",$idx);
 	    }
 	}
 	$ct++;

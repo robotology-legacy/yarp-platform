@@ -46,10 +46,14 @@ foreach my $target (@targets) {
 	my $LABELS = "$inbase/exp_$e/temp/ws_sequence_$s.txt";
 	my $WAVDIR = "$inbase/exp_$e/seq_$s";
 	system "mkdir -p $OUTDIR";
-	system "rm -f /tmp/wd*.gif";
+	system "rm -f /tmp/wd*.gif /tmp/wd*.txt";
 	system "cat $LABELS | ./process-sequence.pl $WAVDIR $w";
 	system "mv /tmp/wd*.gif $OUTDIR/${e}_${s}_${w}.gif";
-	print "MOVED image to  $OUTDIR/${e}_${s}_${w}.gif\n";
+	system "mv /tmp/wd*.txt $OUTDIR/${e}_${s}_${w}.seg";
+	system "( cat tmp/label.txt; echo ) > $OUTDIR/${e}_${s}_${w}.txt";
+	print "MOVED image  to $OUTDIR/${e}_${s}_${w}.gif\n";
+	print "MOVED region to $OUTDIR/${e}_${s}_${w}.seg\n";
+	print "MOVED label  to $OUTDIR/${e}_${s}_${w}.txt\n";
     }
 }
 
