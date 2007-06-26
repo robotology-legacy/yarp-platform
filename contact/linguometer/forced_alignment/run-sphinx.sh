@@ -27,6 +27,10 @@ echo "DUMMYWORD" > $WORK/transcript.txt
 cp $WAV $cur
 
 sox $WORK/current.wav -c 1 -r 16000 $WORK/resampled.wav
+
+#sox $WORK/current.wav -c 1 -r 16000 $WORK/resampled-noisy.wav
+#sox noise_us.wav ignore.wav noiseprof noise.profile
+#sox $WORK/resampled-noisy.wav $WORK/resampled.wav noisered noise.profile 0.2 || echo "sox complains, but seems to work anyway"
 wave2feat -mswav yes -i $WORK/resampled.wav -o $WORK/current.mfc
 echo $WORK/current > $WORK/list.ctl
 sphinx3_align sphinx-configuration.an4
