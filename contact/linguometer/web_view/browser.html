@@ -1,0 +1,66 @@
+<html>
+
+<head>
+<title>unofficial linguometer mini web interface</title>
+<style type= "text/css" media= "all">
+@import "browser.css";
+</style>
+</head>
+
+<body bgcolor="#ffffff">
+
+<h2>Word Search</h2>
+
+<TMPL_IF NAME=message>
+<p>
+<font size="+2" color=red>
+<TMPL_VAR NAME=message>
+</font>
+</p>
+</TMPL_IF>
+
+
+Search for words.  All fields are optional.  Regular expressions work.
+
+<form>
+exp#
+<input type=text name=exp SIZE=5 value="<TMPL_VAR NAME=exp ESCAPE=HTML>">
+seq#
+<input type=text name=seq SIZE=5 value="<TMPL_VAR NAME=seq ESCAPE=HTML>">
+word#
+<input type=text name=wrd SIZE=5 value="<TMPL_VAR NAME=wrd ESCAPE=HTML>">
+text
+<input type=text name=filter value="<TMPL_VAR NAME=filter ESCAPE=HTML>">
+(exact
+<input type=checkbox name=exact <TMPL_IF NAME=exact>CHECKED</TMPL_IF>>)
+<input type=submit value="show">
+</form>
+
+<TMPL_IF NAME=last>
+<font size="-1" color=green>Results <TMPL_VAR NAME=first>-<TMPL_VAR NAME=last> of <TMPL_VAR NAME=total></font><BR>
+</TMPL_IF>
+
+<TMPL_LOOP NAME=items>
+<div id=datum>
+"<B><A HREF='<TMPL_VAR NAME=baseUrl>?filter=<TMPL_VAR NAME=name ESCAPE=URL>&exact=1'><TMPL_VAR NAME=name></A></b>"
+<font size="-1">(exp#<A HREF="<TMPL_VAR NAME=baseUrl>?exp=<TMPL_VAR NAME=exp>"><TMPL_VAR NAME=exp></A> seq#<A HREF="<TMPL_VAR NAME=baseUrl>?exp=<TMPL_VAR NAME=exp>&seq=<TMPL_VAR NAME=seq>"><TMPL_VAR NAME=seq></A> word#<A HREF="<TMPL_VAR NAME=baseUrl>?wrd=<TMPL_VAR NAME=wrd>"><TMPL_VAR NAME=wrd></A>)</font>
+<BR>
+<IMG SRC=<TMPL_VAR NAME=image>><BR>
+</div>
+</TMPL_LOOP>
+
+<BR CLEAR=ALL>
+<TMPL_IF NAME=next>
+<A HREF="<TMPL_VAR NAME=nextUrl>">more results...</A>
+</TMPL_IF>
+
+<BR>
+
+<BR>
+
+<BR>
+
+</body>
+
+</html>
+

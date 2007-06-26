@@ -1,0 +1,15 @@
+
+#datum {
+       display: block;
+        float: left;
+        margin: 10px;
+        border: 1px solid #cccccc;
+        padding: 5px;
+        background-color: #EAEAF4;
+        overflow: auto;
+        -moz-border-radius-topleft: 9px;
+        -moz-border-radius-topright: 9px;
+        -moz-border-radius-bottomleft: 9px;
+        -moz-border-radius-bottomright: 9px;
+}
+
