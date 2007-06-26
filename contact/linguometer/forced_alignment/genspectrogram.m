@@ -20,13 +20,20 @@ for i=1:h
   row = ph(i,:);
   txt = char(row(3:5));
   silent = 1;
-  if txt ~= "SIL"
+  if min(txt == "SIL")==0
     silent = 0;
     pre = 0;
   end;
+  if txt == "SIL"
+    if !pre
+      post = 1;
+    endif;
+  endif;
 #  if txt != "IGNORE"
     start = round(row(1)*scale);
     stop = round(row(2)*scale);
+    disp(txt);
+    disp([start stop pre post silent]);
 #    disp(txt);
     if start<specLen
       if ((!pre)||(!silent)) 
@@ -44,11 +51,6 @@ for i=1:h
     base = 1-base;
 #  endif;
 
-  if txt == "SIL"
-    if !pre
-      post = 1;
-    endif;
-  endif;
 endfor;
 
 #imagesc(spec);
