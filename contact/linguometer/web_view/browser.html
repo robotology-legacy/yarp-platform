@@ -42,7 +42,8 @@ text
 
 <TMPL_LOOP NAME=items>
 <div id=datum>
-"<B><A HREF='<TMPL_VAR NAME=baseUrl>?filter=<TMPL_VAR NAME=name ESCAPE=URL>&exact=1'><TMPL_VAR NAME=name></A></b>"
+<TMPL_IF NAME=wav><A HREF="<TMPL_VAR NAME=wav>"><img src=audio.gif alt=wav WIDTH=25 HEIGHT=25 border=0></A></TMPL_IF>
+&#8220;<B><A HREF='<TMPL_VAR NAME=baseUrl>?filter=<TMPL_VAR NAME=name ESCAPE=URL>&exact=1'><TMPL_VAR NAME=name></A></b>&#8221;
 <font size="-1">(exp#<A HREF="<TMPL_VAR NAME=baseUrl>?exp=<TMPL_VAR NAME=exp>"><TMPL_VAR NAME=exp></A> seq#<A HREF="<TMPL_VAR NAME=baseUrl>?exp=<TMPL_VAR NAME=exp>&seq=<TMPL_VAR NAME=seq>"><TMPL_VAR NAME=seq></A> word#<A HREF="<TMPL_VAR NAME=baseUrl>?wrd=<TMPL_VAR NAME=wrd>"><TMPL_VAR NAME=wrd></A>)</font>
 <BR>
 <IMG SRC=<TMPL_VAR NAME=image>><BR>

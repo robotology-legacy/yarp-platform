@@ -31,6 +31,10 @@ if (!defined($exact)) { $exact = "0"; }
 if (!defined($start)) { $start = "0"; }
 my $next = "";
 
+if ($filter eq "" && $exact) {
+    $exact = 0;
+}
+
 print $q->header();
 
 setupLinguometer(1);
@@ -49,6 +53,7 @@ if (defined($filter)) {
 		my $fname = $1;
 		my $txt = $2;
 		my $img = "$fname.gif";
+		my $wav = "$fname.wav";
 		my $ok = 1;
 		if ($exact) {
 		    my $qm = quotemeta($filter);
@@ -73,6 +78,9 @@ if (defined($filter)) {
 			    $s = $3;
 			    $w = $4;
 			}
+			if (!(-e $wav)) {
+			    $wav = "";
+			}
 			push(@items, 
 			     {
 				 fname=>$fname, 
@@ -80,7 +88,8 @@ if (defined($filter)) {
 				 image=>"$fname.gif",
 				 exp => $e,
 				 seq => $s,
-				 wrd => $w
+				 wrd => $w,
+				 wav => $wav
 				 });
 		    } else {
 			if ($at>=$start) {
