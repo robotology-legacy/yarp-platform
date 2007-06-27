@@ -14,7 +14,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-if(0)
+if(1)
 	data = {};
 	data{1} = load ('dist_0000/wd_0001.mat');
 	data{2} = load ('dist_0001/wd_0001.mat');
@@ -32,33 +32,28 @@ original.time{1} = data{1}.misc.time;
 original.time{2} = data{2}.misc.time;
 original.time{3} = data{3}.misc.time;
 
-for type = 3
+for type = 1
 	if(type == 1)
-		original.sig{1} = data{1}.US.spc;
-		original.sig{2} = data{2}.US.spc;
-		original.sig{3} = data{3}.US.spc;
+		original.spc{1} = data{1}.US.spc;
+		original.spc{2} = data{2}.US.spc;
+		original.spc{3} = data{3}.US.spc;
 		my_title = 'US-Speech';
 	elseif(type == 2)
-		original.sig{1} = data{1}.AG.pos(:, 3);
-		original.sig{2} = data{2}.AG.pos(:, 3);
-		original.sig{3} = data{3}.AG.pos(:, 3);
+		original.pos{1} = data{1}.AG.pos(:, 3);
+		original.pos{2} = data{2}.AG.pos(:, 3);
+		original.pos{3} = data{3}.AG.pos(:, 3);
 		my_title = 'AG-POS';
 	elseif(type == 3)
-		original.sig{1} = data{1}.AG.amp(:, 3);
-		original.sig{2} = data{2}.AG.amp(:, 3);
-		original.sig{3} = data{3}.AG.amp(:, 3);
+		original.amp{1} = data{1}.AG.amp(:, 3);
+		original.amp{2} = data{2}.AG.amp(:, 3);
+		original.amp{3} = data{3}.AG.amp(:, 3);
 		my_title = 'AG-AMP';
-		
-		filter_fast = ones(round(48000*0.05),1);
-		original.sig{1} = filter2(filter_fast, original.sig{1}, 'same');
-		original.sig{2} = filter2(filter_fast, original.sig{2}, 'same');
-		original.sig{3} = filter2(filter_fast, original.sig{3}, 'same');
 	end
 
 	mtSimpleFig(type);
 	for i = 1:3
 		subplot(3, 2, 2*i - 1);
-		plot(original.time{i}, original.sig{i}, 'r');
+		plot(original.time{i}, original.spc{i}, 'r');
 		grid on;
 		axis tight;
 		ylabel(sprintf('Signal %d', i));
@@ -71,17 +66,18 @@ for type = 3
 
 	warped = {};
 	warped.rate   = original.rate;
-	warped.sig{1} = original.sig{1};
-	warped.sig{2} = mtWarp (warped.sig{1}, warped.rate, original.sig{2}, warped.rate);
-	warped.sig{3} = mtWarp (warped.sig{1}, warped.rate, original.sig{3}, warped.rate);
+	warped.spc{1} = original.spc{1};
+
+	[warped.spc{2}, warped.var{2}] = mtWarp(warped.spc{1}, warped.rate, original.spc{2}, warped.rate);
+	[warped.spc{3}, warped.var{3}] = mtWarp(warped.spc{1}, warped.rate, original.spc{3}, warped.rate);
 	for i = 1:3
-		warped.sig{i} = warped.sig{i}(2000:length(warped.sig{i})-2000);
+		warped.spc{i} = warped.spc{i}(2000:length(warped.spc{i})-2000);
 	end
-	warped.time   = mtTimeArray(warped.sig{1}, warped.rate);
+	warped.time   = mtTimeArray(warped.spc{1}, warped.rate);
 
 	for i = 1:3
 		subplot(3, 2, 2*i);
-		plot(warped.time, warped.sig{i}, 'r');
+		plot(warped.time, warped.spc{i}, 'r');
 		grid on;
 		axis tight;
 		ylabel(sprintf('Signal %d', i));

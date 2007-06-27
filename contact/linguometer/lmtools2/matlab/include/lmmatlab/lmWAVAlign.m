@@ -14,11 +14,18 @@
 % You should have received a copy of the GNU General Public License
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+%
+%function offset = lmWAVAlign(file_wd, file_cc_est, do_invert, channel)
 
-function offset = lmWAVAlign(file_wd, file_cc_est, do_invert, channel)
+%function offset = lmWAVAlign(file_wd, file_cc_est, do_invert, channel)
 
-
-do_plot = 0;
+if (1)
+	file_wd 	= 'wd_0017_us.wav';
+	file_cc_est = 'wd_0017_cc_est.wav';
+	do_invert 	= 0;
+	channel 	= 1;
+end
+do_plot = 1;
 
 %US<-->CC channel=2
 %US<-->LG channel=1
@@ -36,24 +43,33 @@ if (rate0 ~= rate1)
 end
 
 rate = rate0;
-% zap click peaks
-%[ignore peak] = max(wav0(:,2));
-%wav0(1:(peak+round(rate*0.1)),:) = 0;  % null out click at start
-%[ignore peak] = min(wav0(:,2));
-%wav0((peak-round(rate*0.1)):length(wav0),:) = 0;  % null out tail
-if (do_invert == 0)
-    [ignore peak] = max(wav0(:,2));
-    wav0(1:(peak+round(rate*0.1)),:) = 0;  % null out click at start
-    [ignore peak] = min(wav0(:,2));
-    wav0((peak-round(rate*0.1)):length(wav0),:) = 0;  % null out tail
-else
-    [ignore peak] = max(wav0(:,2));
-    wav0((peak-round(rate*0.1)):length(wav0),:) = 0;  % null out tail
-    [ignore peak] = min(wav0(:,2));
-    wav0(1:(peak+round(rate*0.1)),:) = 0;  % null out click at start
+
+if(0)
+	if (do_invert == 0)
+		[ignore peak] = max(wav0(:,2));
+		wav0(1:(peak+round(rate*0.1)),:) = 0;  % null out click at start
+		[ignore peak] = min(wav0(:,2));
+		wav0((peak-round(rate*0.1)):length(wav0),:) = 0;  % null out tail
+	else
+		[ignore peak] = max(wav0(:,2));
+		wav0((peak-round(rate*0.1)):length(wav0),:) = 0;  % null out tail
+		[ignore peak] = min(wav0(:,2));
+		wav0(1:(peak+round(rate*0.1)),:) = 0;  % null out click at start
+	end
 end
-% forget about stereo for comparison
+
 wav0 = wav0(:,2);
+if (do_invert == 1)
+	wav0 = wav0(:,2);
+end
+[wav0 zap0 zap1] = lmpkgZap(wav0(:,2), rate, 1);
+if (do_invert == 1)
+	wav0 = -wav0;
+end
+
+
+% forget about stereo for comparison
+%wav0 = wav0(:,2);
 wav1 = wav1(:,channel);
 
 % compute something energy-like -- easier to compare
