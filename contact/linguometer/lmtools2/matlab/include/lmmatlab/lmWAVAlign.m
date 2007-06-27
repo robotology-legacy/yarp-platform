@@ -17,15 +17,15 @@
 %
 %function offset = lmWAVAlign(file_wd, file_cc_est, do_invert, channel)
 
-%function offset = lmWAVAlign(file_wd, file_cc_est, do_invert, channel)
+function offset = lmWAVAlign(file_wd, file_cc_est, do_invert, channel)
 
-if (1)
+if (0)
 	file_wd 	= 'wd_0017_us.wav';
 	file_cc_est = 'wd_0017_cc_est.wav';
 	do_invert 	= 0;
 	channel 	= 1;
 end
-do_plot = 1;
+do_plot = 0;
 
 %US<-->CC channel=2
 %US<-->LG channel=1
@@ -62,14 +62,13 @@ wav0 = wav0(:,2);
 if (do_invert == 1)
 	wav0 = wav0(:,2);
 end
-[wav0 zap0 zap1] = lmpkgZap(wav0(:,2), rate, 1);
+[wav0 zap0 zap1] = lmpkgZap(wav0, rate, 1);
 if (do_invert == 1)
 	wav0 = -wav0;
 end
 
 
 % forget about stereo for comparison
-%wav0 = wav0(:,2);
 wav1 = wav1(:,channel);
 
 % compute something energy-like -- easier to compare
