@@ -26,18 +26,20 @@ opt_nolg = 0;
 data = {};
 printf('[lmpkgAlign] Running on SEQ %d, word %d\n', seq, num);
 
+% Few options, mainly for debug/devel
 std_rate = 48000;
 opt_plotcrap = 0;
 %opt_invert = 0;
 opt_spam = 0;
 
+% Let's create the data structure. Giampiero Salvi from IST
+% said that it would be a good idea to keep the original data
+% inside the MAT file.
+data = {};
+
 % Filters used for smoothing the signals
 filter_fast = ones(round(std_rate*0.01),1);
 filter_slow = ones(round(std_rate*0.1),1);
-%filter_fast = hamming(round(std_rate*0.01));
-%filter_slow = hamming(round(std_rate*0.1));
-%filter_fast = bartlett(round(std_rate*0.01));
-%filter_slow = bartlett(round(std_rate*0.1));
 if (0)
 	mtPlotFFT(filter_fast, 48e3, 10);
 end
@@ -64,6 +66,9 @@ wav_wd = owav_wd(:, 2);
 if (opt_invert)
 	wav_wd = -wav_wd;
 end
+% Save RAW data
+data.raw.US.spc = wav_wd;
+data.raw.US.spc_rate = 48000;
 [wav_wd zap0_wd zap1_wd] = lmpkgZap(wav_wd, std_rate, opt_bug);
 
 
@@ -73,6 +78,11 @@ wav_ag = resample(owav_ag, std_rate, orate_ag);
 if (opt_invert)
 	wav_ag = -wav_ag;
 end
+
+% Save RAW data
+data.raw.AG.spc = wav_wd;
+data.raw.AG.spc_rate = 16000;
+
 rate_ag = std_rate;
 [wav_ag zap0_ag zap1_ag] = lmpkgZap(wav_ag, std_rate, opt_bug);
 
@@ -95,31 +105,40 @@ if (opt_nolg == 0)
 end
 
 
+% Save RAW data
+data.raw.CC.spc = owav_cc;
+data.raw.CC.spc_rate = 48000;
 % Select the left CC-Speech channel
-wav_cc  = owav_cc(:, 1);
 wav_cc = owav_cc(:, 1);
 
 std_zap0 = max([zap0_wd zap0_ag]);
 std_zap1 = min([zap1_wd zap1_ag]);
 
-
 printf('[lmpkgAlign] Loading non-audio data\n');
 % Load AGAMP
 file_agamp = sprintf('seq_%.4d/wd_%.4d_ag.amp', seq, num); 
 odat_agamp = importdata(file_agamp);
+data.raw.AG.amp = odat_agamp;
+data.raw.AG.amp_rate = 200;
 dat_agamp = resample(odat_agamp, std_rate, 200, 0);
 % Load AGPOS
 file_agpos = sprintf('seq_%.4d/wd_%.4d_ag.pos', seq, num); 
 odat_agpos = importdata(file_agpos);
+data.raw.AG.pos = odat_agpos;
+data.raw.AG.pos_rate = 200;
 dat_agpos = resample(odat_agpos, std_rate, 200, 0);
 % Load USFF
 file_usff = sprintf('seq_%.4d/wd_%.4d_us.ff', seq, num); 
 odat_usff = importdata(file_usff);
+data.raw.US.fea = odat_usff;
+data.raw.US.fea_rate = 25;
 odat_usff = odat_usff(:,2:min(size(odat_usff)));
 dat_usff = resample(odat_usff, std_rate, 25, 0);
 % Load CCFF
 file_ccff = sprintf('seq_%.4d/wd_%.4d_cc.ff', seq, num); 
 odat_ccff = importdata(file_ccff);
+data.raw.CC.fea = odat_ccff;
+data.raw.CC.fea_rate = 25;
 odat_ccff = odat_ccff(:,2:min(size(odat_ccff)));
 dat_ccff = resample(odat_ccff, std_rate, 25, 0);
 
@@ -407,15 +426,15 @@ end
 data = {};
 data.US.spc = wav3_wd;
 data.US.fea = dat3_usff;
-data.US.or.spc = 48000;
-data.US.or.fea = 25;
+%data.US.or.spc = 48000;
+%data.US.or.fea = 25;
 
 data.AG.spc = wav3_ag;
 data.AG.amp = dat3_agamp;
 data.AG.pos = dat3_agpos;
-data.AG.or.spc = 16000;
-data.AG.or.amp = 200;
-data.AG.or.pos = 200;
+%data.AG.or.spc = 16000;
+%data.AG.or.amp = 200;
+%data.AG.or.pos = 200;
 
 if (opt_nolg == 0)
 	data.LG.egg = dat3_lg;
@@ -424,14 +443,14 @@ else
 	data.LG.egg = zeros(size(wav3_wd));
 	data.LG.spc = zeros(size(wav3_wd));
 end
-data.LG.or.spc = 16000;
-data.LG.or.egg = 16000;
+%data.LG.or.spc = 16000;
+%data.LG.or.egg = 16000;
 
 data.CC.fea = dat3_ccff;
 data.CC.spc = wav3_cc;
-data.CC.or.spc = 48000;
-data.CC.or.fea = 25;
+%data.CC.or.spc = 48000;
+%data.CC.or.fea = 25;
 
 data.misc.time = [0:1/std_rate:(length(data.US.spc) - 1)/std_rate];
-data.misc.rate = 48000;
+data.misc.rate = std_rate;
 data.misc.length = length(wav3_wd);
