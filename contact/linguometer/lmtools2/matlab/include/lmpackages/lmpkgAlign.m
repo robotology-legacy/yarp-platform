@@ -56,6 +56,11 @@ audio_cc = sprintf('seq_%.4d/wd_%.4d_cc.wav', seq, num);
 [owav_cc  orate_cc]  = wavread(audio_cc);
 try
 	[owav_lg  orate_lg]  = wavread(audio_lg);
+	data.raw.LG.spc = owav_lg(:, 1);
+	data.raw.LG.spc_rate = 16000;
+	data.raw.LG.egg = owav_lg(:, 2);
+	data.raw.LG.egg_rate = 16000;
+	opt_nolg = 0;
 catch
 	opt_nolg = 1;
 end
@@ -80,7 +85,7 @@ if (opt_invert)
 end
 
 % Save RAW data
-data.raw.AG.spc = wav_wd;
+data.raw.AG.spc = wav_ag;
 data.raw.AG.spc_rate = 16000;
 
 rate_ag = std_rate;
