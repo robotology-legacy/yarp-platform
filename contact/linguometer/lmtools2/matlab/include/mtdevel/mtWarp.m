@@ -57,3 +57,4 @@ var.D2 = D2;
 var.p  = p;
 var.q  = q;
 var.C  = C;
+var.SM = SM;
