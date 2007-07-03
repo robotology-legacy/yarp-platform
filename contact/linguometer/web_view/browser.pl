@@ -54,6 +54,7 @@ if (defined($filter)) {
 		my $txt = $2;
 		my $img = "$fname.gif";
 		my $wav = "$fname.wav";
+		my $lab = "$fname.txt";
 		my $ok = 1;
 		if ($exact) {
 		    my $qm = quotemeta($filter);
@@ -81,6 +82,9 @@ if (defined($filter)) {
 			if (!(-e $wav)) {
 			    $wav = "";
 			}
+			if (!(-e $lab)) {
+			    $lab = "";
+			}
 			push(@items, 
 			     {
 				 fname=>$fname, 
@@ -89,7 +93,8 @@ if (defined($filter)) {
 				 exp => $e,
 				 seq => $s,
 				 wrd => $w,
-				 wav => $wav
+				 wav => $wav,
+				 txt => $lab
 				 });
 		    } else {
 			if ($at>=$start) {
