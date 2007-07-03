@@ -423,7 +423,7 @@ if (opt_spam)
 	wavwrite(wav3_cc, std_rate, audio_cc_out);
 end
 
-data = {};
+%data = {};
 data.US.spc = wav3_wd;
 data.US.fea = dat3_usff;
 %data.US.or.spc = 48000;
