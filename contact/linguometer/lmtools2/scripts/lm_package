@@ -119,12 +119,15 @@ foreach $folder_seq (@folders_seq) {
 		# Yes, Matlab complains about this (e.g.: 'string' and not
 		# "string")
 		my $txt = @ws_words[$word];
-		$txt =~ s/'/`/g;
+		#$txt =~ s/'/`/g;
+		$txt =~ s/anco'ra/anc[o]ra/g;
+
 		
 		my $file_txt = sprintf('seq_%.4d/wd_%.4d.txt', $idx_seq, $word);
 		open(FILE_TXT, ">$file_txt");
 		print FILE_TXT "#id txt status exp seq num\n";
-		print FILE_TXT "@ws_id[$word] @ws_words[$word] @ws_status[$word] $exp_idx $t_idx_seq $word\n";
+		#print FILE_TXT "@ws_id[$word] @ws_words[$word] @ws_status[$word] $exp_idx $t_idx_seq $word\n";
+		print FILE_TXT "@ws_id[$word] $txt @ws_status[$word] $exp_idx $t_idx_seq $word\n";
 		close(FILE_TXT);
 		
 		if (@ws_status[$word]) {
@@ -138,7 +141,7 @@ foreach $folder_seq (@folders_seq) {
 			else {
 				print "File $file_data needs to be created\n";
 
-				system("matlab -nosplash -nojvm -r \"lmpkgAlignProxy($idx_seq,  $word, \'$file_data\', $param_invert, $exp_idx,\'$txt\');\" ");
+				system("matlab -nosplash -nojvm -r \"lmpkgAlignProxy($idx_seq,  $word, \'$file_data\', $param_invert, $exp_idx, \'$txt\');\"");
 				#system("matlab -nosplash -nojvm -r \"lmpkgAddInfo(\'$file_data\', $exp_idx, $idx_seq, $word, \'@ws_words[$word]\');\" ");
 			}
 		}
