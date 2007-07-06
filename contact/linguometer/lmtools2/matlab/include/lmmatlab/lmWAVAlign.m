@@ -57,11 +57,10 @@ if(0)
 		wav0(1:(peak+round(rate*0.1)),:) = 0;  % null out click at start
 	end
 end
-
 wav0 = wav0(:,2);
-if (do_invert == 1)
-	wav0 = wav0(:,2);
-end
+%if (do_invert == 1)
+%	wav0 = wav0(:,2);
+%end
 [wav0 zap0 zap1] = lmpkgZap(wav0, rate, 1);
 if (do_invert == 1)
 	wav0 = -wav0;
