@@ -97,7 +97,7 @@ sub pAlign {
 	print "  WDCC (est) $track_cc --> $file_cc_est (${padStart} + ${padLen} samples)\n";
 	my $cmd = "sox $track_cc $file_cc_est trim ${padStart}s ${padLen}s";
 	system($cmd);
-	#print "$cmd\n";
+	print "$cmd\n";
 
 	# Matlab complains for the "./" inherited from the "find" command.
 	# Let's make Matlab happy.
@@ -109,6 +109,7 @@ sub pAlign {
 
 	# get more exact match from correlation
     #  (aka pipe madness, could not work for earlier matlab versions!)
+	print "lmWAVAlign('$matlab_file_wd', '$matlab_file_cc_est', $matlab_invert, $matlab_ch)\n";
 	my $correction = `echo "lmWAVAlign('$matlab_file_wd', '$matlab_file_cc_est', $matlab_invert, $matlab_ch)" | matlab -nosplash -nojvm | grep "myans ="`;
 	chomp($correction);
 	$correction =~ s/myans = //;

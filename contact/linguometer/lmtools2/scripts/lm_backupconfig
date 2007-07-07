@@ -15,24 +15,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-CURRENT_PATH=`pwd`
-echo "Current path: $CURRENT_PATH";
-
-if [ "`pwd | grep lmtools2`" == "$CURRENT_PATH" ]; then
-	if [ "`pwd | grep scripts`" == "$CURRENT_PATH" ]; then
-		echo "     Warning: Script executed inside the lmtools2/script folder"
-		cd ../
-		CURRENT_PATH=`pwd`
-		echo "Correct path: $CURRENT_PATH"
-	fi
-
-	echo -e '\nAre you sure this is correct (Yes/no)? \c'
-    read USER_CHOICE;
-	if [ "$USER_CHOICE" == "Yes" ]; then
-		echo "Adding lmtools path to ~/.bashrc";
-		echo "# lmtools2 path" >> ~/.bashrc;
-		echo -e "export LMT2_ROOT=\"$CURRENT_PATH\"" >> ~/.bashrc;
-		echo -e "export PATH=\"\$LMT2_ROOT/bin:\$LMT2_ROOT/scripts:\${PATH}\"" >> ~/.bashrc;
-		echo -e "export LMT2_CACHE=\"/home/$USER/ContactCache/\"" >> ~/.bashrc;
-	fi
-fi
+for experiment in `ls -1 $LMT2_CACHE | grep exp_`; do
+	number=$(echo $experiment | sed -e 's/exp_//g');
+	echo "[!] $experiment --> $number";
+	tar cjvf $LMT2_ROOT/repo/config_$number.tar.bz2 $LMT2_CACHE/$experiment/config
+done

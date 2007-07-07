@@ -20,10 +20,10 @@
 function offset = lmWAVAlign(file_wd, file_cc_est, do_invert, channel)
 
 if (0)
-	file_wd 	= 'wd_0017_us.wav';
-	file_cc_est = 'wd_0017_cc_est.wav';
-	do_invert 	= 0;
-	channel 	= 1;
+	file_wd 	= 'seq_0000/wd_0000_us.wav';
+	file_cc_est = 'seq_0000/wd_0000_cc_est.wav';
+	do_invert 	= 1;
+	channel 	= 2;
 end
 do_plot = 0;
 
