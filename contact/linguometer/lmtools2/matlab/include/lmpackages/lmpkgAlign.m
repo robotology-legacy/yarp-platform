@@ -137,14 +137,16 @@ file_usff = sprintf('seq_%.4d/wd_%.4d_us.ff', seq, num);
 odat_usff = importdata(file_usff);
 data.raw.US.fea = odat_usff;
 data.raw.US.fea_rate = 25;
-odat_usff = odat_usff(:,2:min(size(odat_usff)));
+%%%%%%%%odat_usff = odat_usff(:,2:min(size(odat_usff)));
+odat_usff = odat_usff(:,1:min(size(odat_usff)));
 dat_usff = resample(odat_usff, std_rate, 25, 0);
 % Load CCFF
 file_ccff = sprintf('seq_%.4d/wd_%.4d_cc.ff', seq, num); 
 odat_ccff = importdata(file_ccff);
 data.raw.CC.fea = odat_ccff;
 data.raw.CC.fea_rate = 25;
-odat_ccff = odat_ccff(:,2:min(size(odat_ccff)));
+%%%%%%%%odat_ccff = odat_ccff(:,2:min(size(odat_ccff)));
+odat_ccff = odat_ccff(:,1:min(size(odat_ccff)));
 dat_ccff = resample(odat_ccff, std_rate, 25, 0);
 
 printf('[lmpkgAlign] Creating alignment energy-like signals\n');

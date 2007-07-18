@@ -21,4 +21,3 @@ figure(fig);
 set(fig, 'PaperPosition', [0 0 6 3]);
 set(fig, 'PaperPositionMode', 'auto');
 print ('-depsc2', file);
-
