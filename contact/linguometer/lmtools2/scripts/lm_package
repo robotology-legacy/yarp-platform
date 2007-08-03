@@ -47,9 +47,11 @@ my $ws_regex = "temp/ws_sequence_SSSS.txt";
 
 # I need to fetch the experiment number
 my $exp_pwd = getcwd;
+print "$exp_pwd\n";
 my $exp_idx = $exp_pwd;
 $exp_idx =~ /^(.*)(\/exp\_)(.*)$/;
-$exp_idx = int($exp_idx);
+$exp_idx = int($3);
+print "$exp_idx\n";
 
 # Parse each SEQ folder
 foreach $folder_seq (@folders_seq) {
@@ -125,14 +127,14 @@ foreach $folder_seq (@folders_seq) {
 		
 		my $file_txt = sprintf('seq_%.4d/wd_%.4d.txt', $idx_seq, $word);
 		open(FILE_TXT, ">$file_txt");
-		print FILE_TXT "#id txt status exp seq num\n";
+		print FILE_TXT "#id/txt/status/exp/seq/num\n";
 		#print FILE_TXT "@ws_id[$word] @ws_words[$word] @ws_status[$word] $exp_idx $t_idx_seq $word\n";
 		print FILE_TXT "@ws_id[$word] $txt @ws_status[$word] $exp_idx $t_idx_seq $word\n";
 		close(FILE_TXT);
 		
 		if (@ws_status[$word]) {
 			my $file_data = sprintf('wd_%.4d.mat', $word);
-			print FILE_INDEX "$file_data @ws_id[$word] $txt $exp_idx $t_idx_seq $word\n";
+			print FILE_INDEX "$file_data/@ws_id[$word]/$txt/$exp_idx/$t_idx_seq/$word\n";
 			$file_data = sprintf('dist_%.4d/wd_%.4d.mat', $idx_seq, $word);
 
 			if (-e $file_data) {

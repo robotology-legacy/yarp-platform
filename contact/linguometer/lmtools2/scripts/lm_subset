@@ -1,0 +1,130 @@
+#!/usr/bin/perl
+# Copyright (C) 2007 Michele Tavella <michele@liralab.it>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+use Getopt::Long;
+use File::Copy;
+use Cwd;
+use Term::ANSIColor;
+use Sys::Hostname;
+
+sub mImportFile {
+	my $file = $_[0];
+	
+	open(FID, "< $file") or die "Error ($file): $!\n";
+	my @data = <FID>;
+	close (FID);
+
+	return @data;
+}
+				
+sub mCheckDir {
+	my $dir_exp  = shift;
+	my $dir_dist = shift;
+	my $dir_seq  = shift;
+	my $verbose  = shift;
+
+	if (-d $dir_exp) {
+		if($verbose) {
+			print "Directory $dir_exp exists\n";
+		}
+	}
+	else {
+		mkdir($dir_exp, 0755) || die "Cannot mkdir newdir: $!";
+	}
+
+	if (-d $dir_dist) {
+		if($verbose) {
+			print "Directory $dir_dist exists\n";
+		}
+	}
+	else {
+		mkdir($dir_dist, 0755) || die "Cannot mkdir newdir: $!";
+	}
+
+	if (-d $dir_seq) {
+		if($verbose) {
+			print "Directory $dir_seq exists\n";
+		}
+	}
+	else {
+		mkdir($dir_seq, 0755) || die "Cannot mkdir newdir: $!";
+	}
+}
+
+my $file_index  = shift;
+my $path_data   = shift;
+my $path_export = shift;
+
+
+print "Index file:      $file_index\n";
+print "Experiment path: $path_data\n";
+print "Export path:     $path_export\n";
+
+my @wdsubset = mImportFile($file_index);
+
+print "WD Index files:\n";
+my $wdindexes = `find $path_data/dist_*/wd_index.txt`;
+chomp($wdindexes);
+my @wdarray = split("\n", $wdindexes);
+
+
+# For each word in the subset...
+foreach my $wdrecord (@wdsubset) {
+	chomp($wdrecord);
+	#print "$wdrecord\n";
+	# ... for each WD-Index file found...
+	foreach my $wdentry (@wdarray) {
+		chomp($wdentry);
+		#print "$wdentry\n";
+		
+		# ... import the WD-Index file and...
+		my @index = mImportFile($wdentry);
+		chomp(@index);
+
+		foreach my $line (@index) {
+			
+			my @line_values = split("/", $line);
+
+			if($wdrecord eq @line_values[2]) {
+				# Here I save a couple of fields
+				my $wd_txt = @line_values[2];
+				my $wd_exp = sprintf("%.4d", @line_values[3]);
+				my $wd_seq = sprintf("%.4d", @line_values[4]);
+				my $wd_num = sprintf("%.4d", @line_values[5]);
+
+				print "Match: \"@line_values[2]\" found in $wdentry\n";
+				
+				my $dir_S_exp  = "$path_data";
+				my $dir_S_dist = "$dir_S_exp/dist_$wd_seq";
+				my $dir_S_seq  = "$dir_S_exp/seq_$wd_seq";
+
+				my $dir_T_exp  = "$path_export/exp_$wd_exp";
+				my $dir_T_dist = "$dir_T_exp/dist_$wd_seq";
+				my $dir_T_seq  = "$dir_T_exp/seq_$wd_seq";
+				
+				
+				mCheckDir($dir_T_exp, $dir_T_dist, $dir_T_seq, 0);
+				print "$dir_S_dist --> $dir_T_dist\n";
+				system("cp $dir_S_dist/*$wd_num* $dir_T_dist/");
+				print "$dir_S_seq --> $dir_T_seq\n";
+				system("cp $dir_S_seq/*$wd_num* $dir_T_seq/");
+
+				system("echo $line >> $dir_T_dist/wd_index.txt");
+			}
+		}
+	}
+}
