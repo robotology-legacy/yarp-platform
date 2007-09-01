@@ -39,6 +39,7 @@ sub ff {
 	for ($i = 0; $i < $frames; $i++) {
 		print FILE_FF "$i 0 0 0 0 0 0\n";
 	}
+
 	close(FILE_FF);
 }
 
