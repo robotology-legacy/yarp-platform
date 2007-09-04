@@ -52,7 +52,8 @@ use_history = 	~isempty(findstr('-h', SmartcalOptions));
 generate_plots = 	~isempty(findstr('-p', SmartcalOptions));
 
 if ((length(ChanIdx) > 1) & generate_plots)
-	warn('Can not plot multi-channel calibration data.');
+	%warn('Can not plot multi-channel calibration data.');
+	disp('Can not plot multi-channel calibration data.');
 	generate_plots = logical(0);
 end
 
