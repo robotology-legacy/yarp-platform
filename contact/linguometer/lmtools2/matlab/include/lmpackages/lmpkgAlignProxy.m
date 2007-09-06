@@ -14,22 +14,21 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 %
-% function lmpkgAlignProxy(seq, num, file_data, opt_invert, xpr, txt)
-function lmpkgAlignProxy(seq, num, file_data, opt_invert, xpr, txt)
+% function lmpkgAlignProxy(seq, wd, file_data, opt_invert, xpr, txt)
+function lmpkgAlignProxy(seq, wd, file_data, opt_invert, xpr, txt)
 
 data = {};
-%file_data = sprintf('seq_%.4d/wd_%.4d.mat', seq, num);
+%file_data = sprintf('seq_%.4d/wd_%.4d.mat', seq, wd);
 
-data = lmpkgAlign(seq, num, 1, opt_invert, 1);
-
+data = lmpkgAlign2(seq, wd, 1, opt_invert, 1);
 if (isempty(data) == 1)
-	data = lmpkgAlign(seq, num, 1, opt_invert, 0);
+	data = lmpkgAlign2(seq, wd, 1, opt_invert, 0);
 end
 
 if (isempty(data) == 0)
 	data.misc.xpr = xpr;
 	data.misc.seq = seq;
-	data.misc.num = num;
+	data.misc.num = wd;
 	data.misc.txt = txt;
 
 	printf('[lmpkgAlignProxy] Saving data: %s\n', file_data);
