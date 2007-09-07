@@ -67,7 +67,7 @@ file_ccff = sprintf('seq_%.4d/wd_%.4d_cc.ff', seq, num);
 % Load data                       %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Load US, AG and CC data
-printf('[lmpkgAlign] Loading data\n');
+printf('[lmpkgAlign2] Loading data\n');
 try
 	[owav_ag  orate_ag] = wavread(audio_ag);
 	[owav_cc  orate_cc] = wavread(audio_cc);
@@ -78,7 +78,7 @@ try
 	odat_usff  = importdata(file_usff);
 	odat_ccff  = importdata(file_ccff);
 catch
-	printf('[lmpkgAlign] Something very bad happened while loading data...\n');
+	printf('[lmpkgAlign2] Something very bad happened while loading data...\n');
 	return 
 end
 	
@@ -86,7 +86,7 @@ end
 try
 	[owav_lg  orate_lg]	= wavread(audio_lg);
 catch
-	printf('[lmpkgAlign] LG signal not available...\n');
+	printf('[lmpkgAlign2] LG signal not available...\n');
 	opt_nolg = 1;
 end
 
@@ -94,7 +94,7 @@ end
 % Perform some useful corrections %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if (opt_invert)
-	printf('[lmpkgAlign] Inverting signals\n');
+	printf('[lmpkgAlign2] Inverting signals\n');
 	owav_us = -owav_us;
 	owav_ag = -owav_ag;
 end
@@ -102,7 +102,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Save RAW data                   %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-printf('[lmpkgAlign] Saving RAW data\n');
+printf('[lmpkgAlign2] Saving RAW data\n');
 data.raw.CC.spc 		= owav_cc;
 data.raw.CC.spc_rate 	= orate_cc;
 data.raw.US.spc 		= owav_us;
@@ -131,7 +131,7 @@ data.raw.CC.fea_rate 	= 25;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Resample the dataset            %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-printf('[lmpkgAlign] Resampling RAW data\n');
+printf('[lmpkgAlign2] Resampling RAW data\n');
 data.pre.CC.spc 		= data.raw.CC.spc(:, 1);
 data.pre.CC.spc_rate 	= data.raw.CC.spc_rate;
 data.pre.US.spc 		= data.raw.US.spc(:, 2);
@@ -160,7 +160,7 @@ data.pre.CC.fea_rate 	= rate_std;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Zap clicks                      %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-printf('[lmpkgAlign] Zapping clicks\n');
+printf('[lmpkgAlign2] Zapping clicks\n');
 [data.pre.US.spc zap0_us zap1_us] = lmpkgZap(data.pre.US.spc, rate_std, opt_bug);
 data.pre.US.spc_rate 	= rate_std;
 [data.pre.AG.spc zap0_ag zap1_ag] = lmpkgZap(data.pre.AG.spc, rate_std, opt_bug);
@@ -168,19 +168,21 @@ data.pre.AG.spc_rate 	= rate_std;
 
 if (zap1_ag < zap0_ag)
 	while (1)
-		printf('[lmpkgAlign] AG zap problem\n');
+		printf('[lmpkgAlign2] AG zap problem\n');
 		pause(60);
 	end
 end
 if (zap1_us < zap0_us) 
 	while (1)
-		printf('[lmpkgAlign] US zap problem\n');
+		printf('[lmpkgAlign2] US zap problem\n');
 		pause(60);
 	end
 end
 std_zap0 = max([zap0_us zap0_ag]);
 std_zap1 = min([zap1_us zap1_ag]);
 
+data.misc.zap.s0 = std_zap0;
+data.misc.zap.s1 = std_zap1;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -197,7 +199,7 @@ lmpkgPrintOffsets (data.off1, 'OFF1', opt_nolg)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 data.lag = data.pre;
 
-printf('[lmpkgAlign] Performing fine alignement\n');
+printf('[lmpkgAlign2] Performing fine alignement\n');
 printf('  AG.spc\n');
 data.lag.AG.spc = lagmatrix(data.pre.AG.spc, data.off1.ag);
 printf('  AG.amp\n');
