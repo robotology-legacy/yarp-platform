@@ -150,9 +150,11 @@ data.pre.AG.amp_rate	= rate_std;
 data.pre.AG.pos 		= resample(data.raw.AG.pos, rate_std, data.raw.AG.pos_rate, 0);
 data.pre.AG.pos_rate	= rate_std;
 % ------------------- %
-data.pre.US.fea 		= resample(data.raw.US.fea, rate_std, data.raw.US.fea_rate, 0);
+%data.pre.US.fea 		= resample(data.raw.US.fea, rate_std, data.raw.US.fea_rate, 0);
+data.pre.US.fea			= lmpkgResample(data.raw.US.fea, rate_std/data.raw.US.fea_rate);
 data.pre.US.fea_rate 	= rate_std;
-data.pre.CC.fea 		= resample(data.raw.CC.fea, rate_std, data.raw.CC.fea_rate, 0);;
+%data.pre.CC.fea 		= resample(data.raw.CC.fea, rate_std, data.raw.CC.fea_rate, 0);;
+data.pre.CC.fea			= lmpkgResample(data.raw.CC.fea, rate_std/data.raw.CC.fea_rate);
 data.pre.CC.fea_rate 	= rate_std;
 % ------------------- %
 
