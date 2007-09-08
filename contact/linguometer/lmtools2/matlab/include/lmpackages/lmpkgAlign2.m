@@ -181,8 +181,6 @@ end
 std_zap0 = max([zap0_us zap0_ag]);
 std_zap1 = min([zap1_us zap1_ag]);
 
-data.misc.zap.s0 = std_zap0;
-data.misc.zap.s1 = std_zap1;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -256,6 +254,9 @@ if (std_zap1 <= min(lengths))
 else
 	std_lenght = min(lengths);
 end
+
+data.misc.zap.s0 = std_zap0;
+data.misc.zap.s1 = std_lenght;
 
 data.aln.US.spc = data.aln.US.spc(std_zap0:std_lenght);
 data.aln.US.fea = data.aln.US.fea(std_zap0:std_lenght, :);
