@@ -20,9 +20,8 @@ if (size_in(1) < size_in(2))
 	printf('[lmpkgResample] Use colum-vectors!!!\n');
 	in = in';
 end
-in	
-samples_in = length(in)
-samples_out = factor*samples_in
+samples_in = length(in);
+samples_out = factor*samples_in;
 
 ds = 1;
 for i = 1:factor:samples_out

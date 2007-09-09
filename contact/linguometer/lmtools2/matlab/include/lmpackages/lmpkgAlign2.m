@@ -19,7 +19,7 @@ function data = lmpkgAlign2(seq, num, opt_plot, opt_invert, opt_bug);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options                         %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-opt_run_as_script 	= 1;
+opt_run_as_script 	= 0;
 opt_plot_filter 	= 0;
 
 if (opt_run_as_script)
