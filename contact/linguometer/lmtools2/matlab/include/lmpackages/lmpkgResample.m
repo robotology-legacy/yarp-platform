@@ -28,9 +28,13 @@ ds = 1;
 for i = 1:factor:samples_out
 	s0 = i;
 	s1 = s0 + factor - 1;
+	
+	tout = [];
 	for s = s0:s1
-		out(s, :) = in(ds,:);
+		tout = [tout; in(ds,:)];
 	end
+	out(s0:s1,:) = tout;
+
 	%printf('%d: %d --> %d \n',ds, i, i+1);
 	ds = ds + 1;
 end
