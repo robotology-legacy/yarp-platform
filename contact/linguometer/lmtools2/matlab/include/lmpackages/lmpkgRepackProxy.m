@@ -17,6 +17,7 @@
 function lmpkgRepackProxy(path)
 
 num  = 0;
+num_ul = 100;
 file = sprintf('%s/wd_%.4d.mat', path, num);
 
 while (1)
@@ -24,6 +25,9 @@ while (1)
 	if (exist(file, 'file'))
 		lmpkgRepack(file);
 		printf('[lmpkgRepackProxy] Re-Packing %s\n', file);
+		num = num + 1;
+	elseif (num < num_ul)
+		printf('[lmpkgRepackProxy] File %s does not exist... But I am feeling Luky (TM) since %d <= %d.\n', file, num, num_ul);
 		num = num + 1;
 	else
 		break;
