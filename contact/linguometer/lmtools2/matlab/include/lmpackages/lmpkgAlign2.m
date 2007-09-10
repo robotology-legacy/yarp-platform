@@ -190,7 +190,7 @@ std_zap1 = min([zap1_us zap1_ag]);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 data.nrg1 = lmpkgComputeEnergy (data.pre, filter_fast, 'second pass', opt_nolg);
 data.off1 = lmpkgComputeOffset (data.nrg1, 'first pass', opt_nolg);
-lmpkgPrintLenghts (data.pre, 'PRE', opt_nolg)
+lmpkgPrintLenghts (data.pre,  'PRE',  opt_nolg)
 lmpkgPrintOffsets (data.off1, 'OFF1', opt_nolg)
 
 
@@ -292,7 +292,7 @@ lmpkgWriteDescription (data)
 data.misc.status.CC = 1;
 data.misc.status.AG = 1;
 data.misc.status.US = 1;
-data.misc.status.LG = opt_nolg;
+data.misc.status.LG = 1 - opt_nolg;
 data.misc.time = [0:1/rate_std:(length(data.aln.US.spc) - 1)/rate_std];
 data.misc.rate = rate_std;
 data.misc.length = length(data.aln.US.spc);

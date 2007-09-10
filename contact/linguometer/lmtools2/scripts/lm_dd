@@ -53,7 +53,7 @@ fi
 if [ -e "$FIN" ]; then
 	dd if=$FIN of=$FOUT bs=$BS skip=$F0 count=$DF;
 else
-	echo "Error: binary file not found"
+	echo "Error: binary file not found ($FIN)"
 fi
 
 
