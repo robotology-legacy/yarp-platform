@@ -1,0 +1,59 @@
+#!/bin/bash
+# Copyright (C) 2007 Michele Tavella <michele@liralab.it>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+FIN=$1;
+FOUT=$2;
+F0=$3;
+DF=$4;
+
+BS="144000"
+
+function usage {
+	echo "Usage:   lm_dd \$FIN \$FOUT \$F0 \$DF";
+	echo "Example: lm_dd big_file.dv chunk.dv 10 100";
+	echo "Where:   10  (FIN)  first frame to be dumped in chunk.dv"
+	echo "         100 (DF)   number of frames to be dumped"
+}
+
+if [ "$FIN" == "" ]; then
+	echo -e "Error: missing \$FIN (at least :-)\n";
+	usage;
+	exit 0;
+fi
+if [ "$FOUT" == "" ]; then
+	echo -e "Error: missing \$FOUT (at least :-)\n";
+	usage;
+	exit 0;
+fi
+if [ "$F0" == "" ]; then
+	echo -e "Error: missing \$F0 (at least :-)\n";
+	usage;
+	exit 0;
+fi
+if [ "$DF" == "" ]; then
+	echo -e "Error: missing \$DF (at most :-)\n";
+	usage;
+	exit 0;
+fi
+
+if [ -e "$FIN" ]; then
+	dd if=$FIN of=$FOUT bs=$BS skip=$F0 count=$DF;
+else
+	echo "Error: binary file not found"
+fi
+
+
