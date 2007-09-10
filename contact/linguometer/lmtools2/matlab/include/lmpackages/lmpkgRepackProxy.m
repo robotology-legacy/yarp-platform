@@ -19,9 +19,13 @@ function lmpkgRepackProxy(path)
 num  = 0;
 file = sprintf('%s/wd_%.4d.mat', path, num);
 
-while (exist(file, 'file'))
+while (1)
 	file = sprintf('%s/wd_%.4d.mat', path, num);
-	lmpkgRepack(file);
-	printf('[lmpkgRepackProxy] Re-Packing %s\n', file);
-	num = num + 1;
+	if (exist(file, 'file'))
+		lmpkgRepack(file);
+		printf('[lmpkgRepackProxy] Re-Packing %s\n', file);
+		num = num + 1;
+	else
+		break;
+	end
 end
