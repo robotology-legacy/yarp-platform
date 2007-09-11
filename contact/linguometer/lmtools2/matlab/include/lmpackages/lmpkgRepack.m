@@ -231,8 +231,9 @@ function lmpkgWriteFea (dataptr, file)
 	fclose(fid);
 
 function lmpkgWriteAmpPos (dataptr, file)
-	rows = max(size(dataptr));
-	cols = min(size(dataptr));
+	tsize = size(dataptr);
+	rows = tsize(1);
+	cols = tsize(2);
 	fid = fopen(file, 'w');
 	for i = 1:rows
 		for j = 1:cols
