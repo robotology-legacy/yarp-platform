@@ -1,0 +1,249 @@
+
+\section{Introduction}
+
+Advanced Babbling: learning and producing patterns in adult
+speech. Algorithm(s) for extracting/clustering patterns in speech,
+with results.
+
+In order to achieve our objective we follow a developmental
+methodology. One of the chief virtues of a developmental approach is
+that it is a way to manage complexity, by reaching a final goal
+through a set of incremental stages, with each stage building on the
+capabilities of the previous one. We envision three distinct stages
+for our embodied system. The three developmental stages envisioned
+roughly map to the three years of the project.
+
+The organization of the workplan can be seen either chronologically in
+terms of the three developmental stages, or discipline-wise (Artifact,
+Neuroscience, Experimental Psychology,..) as a set of five
+workpackages, each of which span all three years. We first adopt the
+former (chronological) view to describe the workplan, as it better
+gives a sense of the interactions between the partners on the issues
+at each stage of the project, as well as is closer in spirit to the
+developmental approach we have chosen. Then in later sections, we
+present in more detail the workpackage view of the project to
+emphasize the overall deliverables, management, and dissemination.
+
+Stage/Year 1: Learning initial production-perception maps for speech
+and manipulation
+
+At "birth" the artifacts' first task is learn about the capabilities
+of its own body, and distinguish it from the rest of the
+environment. To facilitate this, the system is driven by two primitive
+behaviors: targeted reaching for manipulation, and babbling for
+speech, to discover it's initial production-perception space by
+exploration. Targeted reaching drives the system to relentlessly reach
+towards objects, thus providing data to build up a Visual-Motor-Map
+(VMM). The VMM is a bi-directional association between a visual
+gesture of its arm and the motor program that causes that
+gesture. Similarly babbling allows the system to explore its
+articulatory capabilities and learn the acoustic consequences. This
+will provide the basis to build up a Audio-Motor-Map (AMM), i.e. a
+bi-directional association between an acoustic vocalization and the
+motor program that generated that vocalization. The system thus learns
+its first production-perception couplings by actively trying out
+various production parameter sets, and building up an association with
+the resulting perceptions. The PP couplings learned in this first
+stage are characterized by the fact that it is the body learning a
+model of its own capabilities, i.e. its sensors perceiving its own
+actions.
+
+Note that for manipulation, for this stage we are only concerned with
+"reaching" as it must first learn to "reach" before it can do any
+manipulation (objects and their properties become important in the
+second and third stages, after the artifact has learned to reach for
+them).
+
+The very first deliverable will be a review article merging what's
+known about the Development of Speech \& Manipulation across the
+disciplines of all the partners
+
+Beyond the initial setup for speech and manipulation, the key issues
+at this stage for both babbling and reaching are the exploration
+strategies of the motor production spaces the learning mechanisms that
+close the loop -i.e. learn the associations between the production
+parameters and the resulting perceptions.
+
+The design meeting at month 5 of all the partners will be focused on
+these two issues. Note that the experiments of UNIUP and US
+symmetrically address the same issues for reaching, and speech. They
+will measure, and analyze the variability of reaching movements and
+babbling, to detect simplifications that hint at which motor control
+parameters are coupled. If possible this will be done for the same set
+of infants providing a truly unique opportunity to explore the
+mechanisms underlying parallel development of speech and manipulation
+in the same individuals. UNIFE will measure in real-time the dynamic
+modifications of the phonoarticulatory tract during the production of
+phonemes, syllables and simple words. The data collected from
+different speakers, will be fed to an artificial learning system
+(e.g. neural network) to extract motor invariants, associated with the
+motor commands at the basis of speech production. The input of these
+three experimental groups at the meeting will be key for deciding on
+the babbling and reaching behaviors for the artifact.
+
+The possibility exists that we may come up with two different learning
+mechanisms (for babbling and reaching), but the strong hope of course
+is that a single mechanism emerges that explains the data from the
+UNIFE , UNIUP , and US experiments.
+
+The design that emerges for the meeting will be subsequently be
+implemented by UGDIST , IST , and US for the remainder of the first
+year. At month 12, there will once again be a review meeting to
+discuss the results of the implementation as well as the final results
+of the speech and reaching motor production experiments.
+
+
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+
+
+Stage 2: Discovering Meaning and Context through acting on objects
+
+Having learned initial perception-production models of its own body,
+the system is now in a position to explore external objects and
+discover the effects of its actions on them. The goal of this stage is
+to characterize objects and their behavior by tirelessly acting on
+them (pushing, dropping, shaking), and learn a whole new set of
+perception-production couplings. We hypothesize that it is these PP
+couplings discovered through exploration, that form the natural
+"grounding of meaning" for interpreting other people's speech and
+action.
+
+The patterns or structures that emerge from the resulting experience,
+characterize both individual objects (e.g. balls move a particular way
+when pushed), as well as actions irrespective of objects (e.g. after
+"releasing" something, it moves downward, no matter what kind of
+object it is). The first type of quantity "defines" an object by its
+appearance and behavior, and forms a natural perceptual category that
+denotes the object. while the second type of quantity defines the
+effect of an action, and forms a natural perceptual category denoting
+"goals".
+
+The experiment of trying out a small repertoire of actions on a small
+set of objects and characterizing the resulting behavior is simple in
+scope, but nevertheless provides a rich set of outcomes depending on
+the objects and actions. Most importantly, the system plays, and
+structures its experience to develop new perceptual categories
+(roughly effects on objects), which are once again tightly coupled to
+motor-production (roughly the actions that produce those
+effects). Note however, that these new perception-production couplings
+are qualitatively at a different level from the ones of the previous
+stage, because they are grounded in the body's effect on external
+objects, rather than body's effects on itself (which is essentially
+what the perception-production couplings of stage 1 denote).
+
+The second stage goals for speech perception-production closely
+parallel the ones for manipulation. Just as the visual categorization
+of objects and actions requires extracting a lot more structure from
+the visual input (compared to stage 1), similarly the speech
+perceptual categories learned have a lot more structure (vowels,
+phonemes), compared to the categories in stage 1. The system actively
+tries to produce the perceptual categories that it learns in a kind of
+"advanced babbling" behavior. Perception thus once again leads
+production, a well known pattern in the development of human speech as
+well [5].
+
+It is important to remember that the advanced babbling is occurring
+simultaneously with the active exploration of the objects, this means
+that the perception and production are being associated with the
+current context or meaning as well.
+
+The key issues for the second stage are:
+Extraction of higher-order structure from perceptual experience 
+Very goal-directed, exploration of production space. 
+
+In the first three months of the second year, UGDIST and IST will
+jointly develop Vision algorithms for characterizing the manipulative
+actions and their effects on objects, while US will develop algorithms
+for extracting patterns (such as vowels, phonemes) from adult
+speech. Soon after, in month 16 we will have the main integrative
+event of the year -an all partners meeting to jointly design the
+motor-exploration behaviors for the advanced babbling and exploratory
+play. The two ongoing experiments: one by UNIFE investigating the
+speech production areas also involved in perception in the human
+brain, and one by UNIUP investigating the integration of motor units
+in complex movements -will be particularly relevant to this design
+meeting. Thereafter UGDIST and IST will spend the next 6 months
+implementing the joint design, after which there will be an another
+all partner assessment meeting to analyze the results for the year.
+
+
+
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+
+
+Stage 3: Mapping words and manipulatory gestures to meaning
+
+In the third and final stage, a human engages the system in
+interactive turn-taking play using the same objects, that the system
+has already played with and already understands in terms of
+visuo-motor behavior. The human performs similar actions (pickup,
+drop, ..) described in the previous stage with the same set of
+objects, while simultaneously speaking simple sentences about the
+event (e.g. "Look at this ball", or "You dropped the ball"). The task
+of the system is to
+
+Map the observed human action on the object to a motor-goal that it
+has already learned, (based on the effect on the object) and thus
+bring the humans action into correspondence with its own (because,
+from Stage 2, it already knows which of its actions produces the same
+goal)
+
++ Extract salient repetitive patterns from the adult's speech (see [4]
+  for a possible technique for doing this that does not assume
+  syntactic knowledge)
+
++ Map the newly learned acoustic patterns to both a motor-production
+  model, as well as a meaning model (one of the noun or verb meaning
+  structures already learned in the previous stage). We are well aware
+  of the challenges and pitfalls in learning word-meaning (see
+  [6]). Infants, very likely use a whole array of cues including
+  theory of mind, syntactic constraints, and lexical contrast to infer
+  what the human is referring to, and also infer the syntactic type
+  (e.g. noun vs verb) of a new word they hear. However, we will
+  simplify the problem by making some assumptions: There will be an
+  initial bias for the meaning of the most frequent speech "chunks" to
+  be mapped to the object that is in the shared-attention of the human
+  and the embodied system. If the object word has already been learned
+  then the assumption is that it is the action on the object that is
+  being referred to (an implicit "theory of mind" constraint that the
+  human is unlikely to teach things already learned).
+
+Having made a guess of the motor goal of the human's action (whether
+it is a speech or a manipulative gesture, or both together), the
+artifact demonstrates it's comprehension in a turn-taking behavior by
+reproducing the same effect, i.e. the same motor-goal but via its own
+actions. It is important to note that this is not mimicry at the
+"action or movement" level, but at the more sophisticated level of
+perceiving, guessing, and reproducing the intended motor goal of the
+human.
+
+Three experiments -very relevant to issues of this stage- will be
+conducted through the course of the year: The role of Broca's area in
+representing motor-meaning (UNIFE), how infants solve spatial
+manipulation problems by imitation (UNIUP), and the equivalent in
+speech of "imitation of adult speech patterns and pre-recorded
+babbling" (US). As in the previous stages, a design meeting involving
+all partners will be held early in the year to decide on the details
+of the shared-attention and turn-taking behaviors, at the heart of
+which is the mechanism that maps a perception to a previously learned
+motor-goal (learned in stage 2).
+
+The three stage developmental process described represents our
+working-hypothesis of how increasingly more complex
+perception-production couplings are formed, finally resulting in an
+ability to interpret another person's manipulatory gestures and
+speech. However, we hasten to point out that the demarcations between
+these stages may not be as clean-cut as they've been described above,
+the transitions may be gradual. However, they serve as a useful
+unifying framework in exposing the common mechanism in the development
+of both speech and manipulatory acts, and certainly a useful
+hypothesis to test on an embodied system.
+
+
+
