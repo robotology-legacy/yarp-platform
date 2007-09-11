@@ -84,7 +84,7 @@ foreach my $file (@files) {
 	my $size_new = 0;
 	for (my $chunk = 0; $chunk < $chunks + 1; $chunk++) {
 		my $file_new = fix_folder($file);
-		$file_new =~ s/\./_lm_$split\./g;
+		#$file_new =~ s/\./_lm_$split\./g;
 		
 		if($chunk - $chunks == 0) {
 			$dc = $remaining;
@@ -100,7 +100,7 @@ foreach my $file (@files) {
 		my $file_ini = $file;
 		$file_ini =~ s/\.pos/\.ini/g;
 		my $file_ini_new = fix_folder($file_ini);
-		$file_ini_new =~ s/\./_lm_$split\./g;
+		#$file_ini_new =~ s/\./_lm_$split\./g;
 		
 		print "[lm_hackpos] Linking/Copying ini file\n";
 		#system("ln -sf $file_ini $file_ini_new");
