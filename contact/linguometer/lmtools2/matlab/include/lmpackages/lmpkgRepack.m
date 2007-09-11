@@ -14,12 +14,17 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-function lmpkgRepack(matfile)
+function retval=lmpkgRepack(matfile)
 
 cmd_stdo = '1&>/dev/null  2&>/dev/null';
 
 printf('[lmpkgRepack] Loading %s\n', matfile);
 data = load(matfile);
+
+
+%function test = lmpkgComputeSlowOffset (dataptr, datasr, rawsr, idxcol)
+retval=lmpkgComputeSlowOffset(data.aln.CC.fea, data.aln.CC.fea_rate, data.raw.CC.fea_rate, 1);
+return;
 
 % Compute the 48 kHz offset back in original rates
 raw.off.US_spc = lmpkgResampleOffset(data.off1.us, data.misc.rate, data.raw.US.spc_rate, 'US_spc');
@@ -69,11 +74,7 @@ if(data.misc.status.LG)
 	raw.zap.LG_egg.s1 = round(zap_s1 / data.misc.rate * data.raw.LG.egg_rate);
 end
 
-% Ok, now I know offsets and zap values.
-% Let's try to align the raw signals.
 
-
-% Offset compensation
 if(0)
 	v = [1:1:20]';
 	off1 = +2;
@@ -84,7 +85,7 @@ if(0)
 	u2 = v(-off2+1:length(v));
 end
 
-% Lag
+% Lag compensation
 printf('[lmpkgRepack] Performing lag correction\n');
 raw.lagd.US.spc = lagmatrix(data.raw.US.spc, raw.off.US_spc);
 raw.lagd.US.fea = lagmatrix(data.raw.US.fea, raw.off.US_fea);
@@ -99,7 +100,7 @@ if(data.misc.status.LG)
 end
 
 
-% Crop
+% Cropping signals
 printf('[lmpkgRepack] Cropping dataset\n');
 raw.cropd.US.spc = lmpkgCrop(raw.lagd.US.spc, raw.off.US_spc);
 raw.cropd.US.fea = lmpkgCrop(raw.lagd.US.fea, raw.off.US_fea);
@@ -113,6 +114,7 @@ if(data.misc.status.LG)
 	raw.cropd.LG.egg = lmpkgCrop(raw.lagd.LG.egg, raw.off.LG_egg);
 end
 
+ % Zapping clicks
 printf('[lmpkgRepack] Zapping dataset\n');
 raw.zapd.US.spc = raw.cropd.US.spc(raw.zap.US_spc.s0:raw.zap.US_spc.s1, :);
 raw.zapd.US.fea = raw.cropd.US.fea(raw.zap.US_fea.s0:raw.zap.US_fea.s1, :);
@@ -126,6 +128,7 @@ if(data.misc.status.LG)
 	raw.zapd.LG.egg = raw.cropd.LG.egg(raw.zap.LG_egg.s0:raw.zap.LG_egg.s1, :);
 end
 
+% Writing result
 printf('[lmpkgRepack] Ready to export to ALN folders\n');
 faln_us_wav  = sprintf('aln_%.4d/wd_%.4d_us.wav', data.misc.seq, data.misc.num);
 faln_us_dv   = sprintf('aln_%.4d/wd_%.4d_us.dv',  data.misc.seq, data.misc.num);
@@ -175,9 +178,14 @@ if(data.misc.status.LG)
 	wavwrite(raw.zapd.LG.all, data.raw.LG.spc_rate, 16, faln_lg_wav);
 end
 
+printf('       Writing TXT data\n');
 fid = fopen(faln_txt, 'w');
 fprintf(fid, '%s', data.misc.txt);
 fclose(fid);
+
+% It's about time to check
+
+
 
 function rawoff = lmpkgResampleOffset(alnoff, alnsr, rawsr, type)
 	off_float = alnoff * rawsr / alnsr;
@@ -188,14 +196,20 @@ function rawoff = lmpkgResampleOffset(alnoff, alnsr, rawsr, type)
 	rawoff = off_int;
 
 
-%function test = lmpkgComputeSlowOffset (dataptr, datasr, rawsr, idxcol)
-%	s0 = 1;
-%	s1 = datasr/rawsr; 
-%	frame_min = min(dataptr(s0:s1, idxcol));
-%	frame_max = max(dataptr(s0:s1, idxcol));
-%	printf('[lmpkgComputeSlowOffset] Data frame: %d-%d (samples)\n', s0, s1);
-%	printf('                         Min/Max:    %d/%d (frames)\n', frame_min, frame_max);
-%	test=dataptr(s0:s1, idxcol);
+function delta = lmpkgComputeSlowOffset (dataptr, datasr, rawsr, idxcol)
+	s0 = 1;
+	s1 = datasr/rawsr; 
+	frame_min = min(dataptr(s0:s1, idxcol));
+	frame_max = max(dataptr(s0:s1, idxcol));
+	printf('[lmpkgComputeSlowOffset] Data frame: %d-%d (samples)\n', s0, s1);
+	printf('                         Min/Max:    %d/%d (frames)\n', frame_min, frame_max);
+	delta = dataptr(s0:s1, idxcol);
+	min_s0 = min(find(delta==frame_min))
+	min_s1 = max(find(delta==frame_min)) 
+	
+	max_s0 = min(find(delta==frame_max))
+	max_s1 = max(find(delta==frame_max))
+
 
 function lmpkgWriteFea (dataptr, file)
 	rows = max(size(dataptr));

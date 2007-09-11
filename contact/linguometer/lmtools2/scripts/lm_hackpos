@@ -1,0 +1,127 @@
+#!/usr/bin/perl
+# Copyright (C) 2007 Michele Tavella <michele@liralab.it>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+use Getopt::Long;
+use File::Copy;
+use Cwd;
+use Term::ANSIColor;
+use Sys::Hostname;
+use POSIX qw(ceil floor);
+use strict;
+
+my $data_type = shift;
+my $file_type = "";			# AMP or POS?
+my $bmax      = 0;			# Max size (in blocks) for NormPos
+my $cmd_stdo  = "1>/dev/null 2>/dev/null";
+
+my $bsize = 0;
+if ($data_type eq "pos") {
+	$bsize 		= 336;
+	$bmax 		= 15000;
+	$file_type  = ".pos";
+}
+else {
+	die "[lm_hackpos] Sorry buddy, data type \"$data_type\" not supported (yet)\n";
+}
+
+
+# Check folders etc
+my $folder_src = "root/AG/Sweeps/rawpos/";
+my $folder_trg = fix_folder($folder_src);
+
+print "[lm_hackpos] Data type is \"$file_type\", block size is $bsize bytes\n";
+print "             Source folder: $folder_src\n";
+print "             Target folder: $folder_trg\n";
+
+if (-e $folder_trg == 0) {
+	system("mkdir $folder_trg $cmd_stdo");
+}
+else {
+	system("rm -v $folder_trg/*.ini");
+	system("rm -v $folder_trg/*.pos");
+}
+die "[lm_hackpos] Error: SOURCE folder does not exist" unless -e $folder_src ;
+die "[lm_hackpos] Error: TARGET folder does not exist" unless -e $folder_trg ;
+
+
+my $folder_rx = "$folder_src*$file_type";
+my @files_ns  = `find $folder_rx`;
+my @files     = sort {$a cmp $b} @files_ns;
+
+
+foreach my $file (@files) {
+	chomp($file);
+	my $size = -s $file;
+	my $btot = $size / $bsize;
+	print "[lm_hackpos] Processing file   $file\n";
+	print "             Binary size       $size bytes\n";
+	print "             Blocks            $btot\n";
+	
+	my $chunks = floor($btot / $bmax);
+	my $remaining  = $btot - $bmax * $chunks;
+	print "[lm_hackpos] Splitting binary file into:\n";
+	print "             a. $chunks chunks of $bmax blocks\n";
+	print "             b. 1 chunk  of $remaining blocks\n";
+
+	my $split = 0;
+	my $c0 = 0;
+	my $c1 = 0;
+	my $dc = 0;
+	my $size_new = 0;
+	for (my $chunk = 0; $chunk < $chunks + 1; $chunk++) {
+		my $file_new = fix_folder($file);
+		$file_new =~ s/\./_lm_$split\./g;
+		
+		if($chunk - $chunks == 0) {
+			$dc = $remaining;
+		}
+		else {
+			$dc = $bmax;# - 1;
+		}
+		$c1 = $c0 + $dc - 1;
+		print "[lm_hackpos] Writing $file_new\n";
+		print "             From $c0 to $c1 (delta = $dc)\n";
+		system("dd if=$file of=$file_new bs=$bsize skip=$c0 count=$dc $cmd_stdo");
+		
+		my $file_ini = $file;
+		$file_ini =~ s/\.pos/\.ini/g;
+		my $file_ini_new = fix_folder($file_ini);
+		$file_ini_new =~ s/\./_lm_$split\./g;
+		
+		print "[lm_hackpos] Linking/Copying ini file\n";
+		#system("ln -sf $file_ini $file_ini_new");
+		system("cp $file_ini $file_ini_new");
+		
+		$c0 = $c0 + $bmax;
+		$split++;
+		$size_new += -s $file_new;
+	}
+	my $size_error = $size_new - $size;
+	print "[lm_hackpos] Done!\n";
+	print "             Original binary:  $size bytes\n";
+	print "             Binary chunks:    $size_new bytes\n";
+	print "             Error:            $size_error bytes\n";
+
+	print "\n\n";
+}
+
+
+sub fix_folder {
+	my $folder_in = shift;
+	$folder_in =~ s/rawpos/lm_rawpos/g;
+	return $folder_in;
+}
