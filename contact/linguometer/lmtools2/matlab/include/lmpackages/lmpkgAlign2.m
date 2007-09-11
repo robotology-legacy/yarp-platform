@@ -354,6 +354,16 @@ function nrgptr = lmpkgComputeEnergy (alnptr, filter, type, opt_nolg)
 		nrgptr.lg = filter2(filter, abs(alnptr.LG.spc), 'same');
 	end
 
+
+function lmpkgWriteInfo (dataptr)
+	[status, user] = system('whoami');
+	[status, host] = system('hostname');
+	[status, uname] = system('uname -a');
+	dataptr.misc.signature.user = user;
+	dataptr.misc.signature.host = host;
+	dataptr.misc.signature.date = datestr(now);
+	dataptr.misc.signature.uname = uname;
+
 function lmpkgWriteDescription (dataptr)
 	dataptr.raw.description   = '[step-1] RAW  Data: signals loaded from SEQ folders';
 	dataptr.pre.description   = '[step-2] PRE  Data: resampled RAW Data';

@@ -16,15 +16,15 @@
 
 function retval=lmpkgRepack(matfile)
 
-cmd_stdo = '1&>/dev/null  2&>/dev/null';
+cmd_stdo = '1>/dev/null  2>/dev/null';
 
 printf('[lmpkgRepack] Loading %s\n', matfile);
 data = load(matfile);
 
 
 %function test = lmpkgComputeSlowOffset (dataptr, datasr, rawsr, idxcol)
-retval=lmpkgComputeSlowOffset(data.aln.CC.fea, data.aln.CC.fea_rate, data.raw.CC.fea_rate, 1);
-return;
+%retval=lmpkgComputeSlowOffset(data.aln.CC.fea, data.aln.CC.fea_rate, data.raw.CC.fea_rate, 1);
+%return;
 
 % Compute the 48 kHz offset back in original rates
 raw.off.US_spc = lmpkgResampleOffset(data.off1.us, data.misc.rate, data.raw.US.spc_rate, 'US_spc');
@@ -155,7 +155,7 @@ printf('       Writing US-DV data (via dd/lm_dd)\n');
 us_f0 = min(raw.zapd.US.fea(:,1));
 us_f1 = max(raw.zapd.US.fea(:,1));
 us_df = us_f1 - us_f0 + 1;
-system(sprintf('lm_dd seq_%.4d/wd_%.4d_us.dv %s %d %d ', data.misc.seq, data.misc.num, faln_us_dv, us_f0, us_df));
+system(sprintf('lm_dd seq_%.4d/wd_%.4d_us.dv %s %d %d %s', data.misc.seq, data.misc.num, faln_us_dv, us_f0, us_df, cmd_stdo));
 
 printf('       Writing CC data\n');
 wavwrite(raw.zapd.CC.spc, data.raw.CC.spc_rate, 16, faln_cc_wav);
@@ -165,7 +165,7 @@ printf('       Writing CC-DV data (via dd/lm_dd)\n');
 cc_f0 = min(raw.zapd.CC.fea(:,1));
 cc_f1 = max(raw.zapd.CC.fea(:,1));
 cc_df = cc_f1 - cc_f0 + 1;
-system(sprintf('lm_dd seq_%.4d/wd_%.4d_cc.dv %s %d %d ', data.misc.seq, data.misc.num, faln_cc_dv, cc_f0, cc_df));
+system(sprintf('lm_dd seq_%.4d/wd_%.4d_cc.dv %s %d %d %s', data.misc.seq, data.misc.num, faln_cc_dv, cc_f0, cc_df, cmd_stdo));
 
 printf('       Writing AG data\n');
 wavwrite(raw.zapd.AG.spc, data.raw.AG.spc_rate, 16, faln_ag_wav);
@@ -183,8 +183,7 @@ fid = fopen(faln_txt, 'w');
 fprintf(fid, '%s', data.misc.txt);
 fclose(fid);
 
-% It's about time to check
-
+retval = raw;
 
 
 function rawoff = lmpkgResampleOffset(alnoff, alnsr, rawsr, type)
