@@ -127,6 +127,7 @@ if(data.misc.status.LG)
 	raw.zapd.LG.spc = raw.cropd.LG.spc(raw.zap.LG_spc.s0:raw.zap.LG_spc.s1, :);
 	raw.zapd.LG.egg = raw.cropd.LG.egg(raw.zap.LG_egg.s0:raw.zap.LG_egg.s1, :);
 end
+retval = raw;
 
 % Writing result
 printf('[lmpkgRepack] Ready to export to ALN folders\n');
@@ -183,7 +184,6 @@ fid = fopen(faln_txt, 'w');
 fprintf(fid, '%s', data.misc.txt);
 fclose(fid);
 
-retval = raw;
 
 
 function rawoff = lmpkgResampleOffset(alnoff, alnsr, rawsr, type)
@@ -221,11 +221,12 @@ function lmpkgWriteFea (dataptr, file)
 			else
 				fprintf(fid, '%.6f', dataptr(i,j));
 			end
-			if (j ~= numel(dataptr))
+			if (j == cols)
+				fprintf(fid, '\n');
+			else
 				fprintf(fid, ' ');
 			end
 		end
-		fprintf(fid, '\n');
 	end
 	fclose(fid);
 
@@ -236,10 +237,11 @@ function lmpkgWriteAmpPos (dataptr, file)
 	for i = 1:rows
 		for j = 1:cols
 			fprintf(fid, '%.6f', dataptr(i,j));
-			if (j ~= numel(dataptr))
+			if (j == cols)
+				fprintf(fid, '\n');
+			else
 				fprintf(fid, ' ');
 			end
 		end
-		fprintf(fid, '\n');
 	end
 	fclose(fid);
