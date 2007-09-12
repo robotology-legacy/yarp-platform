@@ -27,7 +27,6 @@ my $data_type = shift;
 my $file_type = "";			# AMP or POS?
 my $cmd_stdo  = "1>/dev/null 2>/dev/null";
 
-my $bsize = 0;
 if ($data_type eq "pos") {
 	$file_type  = ".pos";
 }
@@ -39,7 +38,7 @@ else {
 # Check folders etc
 my $folder_src = "root/AG/Sweeps/lm_pos/";
 
-print "[lm_mergepos] Data type is \"$file_type\", block size is $bsize bytes\n";
+print "[lm_mergepos] Data type is \"$file_type\"\n";
 print "              Source folder: $folder_src\n";
 
 
