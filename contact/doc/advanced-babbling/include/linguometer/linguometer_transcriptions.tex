@@ -1,0 +1,58 @@
+\section{Phonetic Transcriptions}
+IST has created time aligned phonetic transcriptions
+for the Linguometer data. The transcriptions have been automatically
+generated with \emph{forced alignment} based on the orthographic
+transcriptions included in the database, a lexicon, and speaker
+independent phonetic models for Italian. The phonetic models are
+Gaussian mixure based hidden Markov models trained using the RefRec
+scripts \cite{gs:LindbergEtAl2000} on the SpeechDat corpus (European
+project, Contract LE2-4001). The corpus contains recordings of more than
+three thousand speakers of different age, gender, and accent. The
+SpeechDat lexicon was used to convert orthographic into phonetic
+transcriptions. Out of vocabulary words were added to the lexicon,
+including the pseudo-words used in the
+database. Table~\ref{tab:linguometer:transcriptions:lexicon} lists the
+words and their pronunciations specified in SAMPA symbols
+(\url{http://www.phon.ucl.ac.uk/home/sampa/}). As a
+reference, Table~\ref{tab:linguometer:transcriptions:sampa} contains
+the complete set of SAMPA symbols for Italian.
+
+\begin{table}
+\scriptsize
+\input{lexicon}
+\caption{Pronunciation model for the Linguometer corpus (SAMPA symbols)}
+\label{tab:linguometer:transcriptions:lexicon}
+\end{table}
+
+\input{sampa_it}
+
+\subsection{Limitations}
+There are a number of limitations when creating phonetic
+transcriptions with the method described above. The main problems are:
+\begin{itemize}
+\item the lexicon specifies the canonical pronunciation for each
+  word. Possible deviations from the canonical pronunciation are not
+  captured by the method. A possible solution would be to specify a
+  number of anternative pronunciations for each word and select
+  automatically the one that best fits the data. However, this problem
+  is of secondary impoprtance in this case, as the variation of
+  pronunciation is limited when the subject reads a set of isolated
+  words,
+\item the time resolution of the method is 10 msec,
+\item the acoustic models were trained on telephone speech recorded at
+  8 kHz sampling fequency. Even though the Linguometer material was
+  filtered and downsampled to match the training data, there
+  might be a residual channel mismatch.
+\end{itemize}
+
+\subsection{Examples}
+
+\begin{tabular}{l}
+\epsfig{file=include/linguometer/images/exp_0001_seq_0000_wd_0007_lavatoio.eps,width=1.00\textwidth} \\
+lavatoio \\
+\epsfig{file=include/linguometer/images/exp_0001_seq_0000_wd_0022_bufalo.eps,width=1.00\textwidth} \\
+bufalo \\
+\epsfig{file=include/linguometer/images/exp_0005_seq_0000_wd_0002_papa.eps,width=0.60\textwidth} \\
+papa
+\end{tabular}
+\endinput
