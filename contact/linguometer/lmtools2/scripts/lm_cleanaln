@@ -15,5 +15,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+echo -e '[lm_cleanaln] Waiting 10 seconds: \c';
+for x in `seq 0 9`; do
+	echo -e "$((9 - $x)) \a\c";
+	sleep 1;
+done;
+
 echo "[lm_cleanaln] Looking for files"
 for i in `find aln*`; do rm -v $i; done

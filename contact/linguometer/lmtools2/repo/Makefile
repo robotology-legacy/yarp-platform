@@ -2,7 +2,7 @@ CFG_NICE=config/lm_nice
 VAL_NICE=`if [ -e "$(CFG_NICE)" ]; then cat $(CFG_NICE); else echo 0; fi`
 CMD_NICE=/usr/bin/nice -n $(VAL_NICE)
 
-all:  build process pack
+all: build process pack repack
 clean: cleantemp cleanseq
 build: cleantemp prepare collect 
 process: cleanseq detect segment align aligncc features plot
@@ -46,10 +46,18 @@ aligncc:
 	@$(CMD_NICE) lm_segmentcc
 
 features:
+	@echo "Running feature extraction code (CC, US)"
 	@$(CMD_NICE) lm_features
 
 plot:
+	@echo "Saving log files"
 	@$(CMD_NICE) lm_plotlog
 
 pack:
+	@echo "Packing dataset for distribuition (dist_*/*, MAT files)"
 	@$(CMD_NICE) lm_package
+
+repack:
+	@echo "Packing dataset for distribuition (aln_*/*)"
+	@$(CMD_NICE) lm_cleanaln
+	@$(CMD_NICE) lm_repack

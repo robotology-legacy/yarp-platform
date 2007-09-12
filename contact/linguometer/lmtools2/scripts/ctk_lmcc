@@ -1,0 +1,6 @@
+for image in `ls -1 *.png`; do
+	echo "[CC] Processing $image"
+
+	mogrify -rotate '90>' $image
+	mogrify -geometry 398x720! $image 
+done

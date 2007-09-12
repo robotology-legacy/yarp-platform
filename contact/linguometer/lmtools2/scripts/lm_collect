@@ -37,7 +37,8 @@ $path_cache = "temp";
 
 # Experiment paths
 $path_AGAMP = "root/AG/Sweeps/amps";
-$path_AGPOS = "root/AG/Sweeps/rawpos";
+#$path_AGPOS = "root/AG/Sweeps/rawpos";
+$path_AGPOS = "root/AG/Sweeps/lm_pos";
 $path_WA = "root/AG/Sweeps/wav";
 $path_LG = "root/LG";
 $path_WS = "root/WS";
