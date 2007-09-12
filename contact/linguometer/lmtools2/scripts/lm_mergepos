@@ -49,5 +49,39 @@ my @pattern_ns = `find $folder_src | grep "_0.pos"`;
 my @pattern    = sort {$a cmp $b} @pattern_ns;
 
 foreach my $pat (@pattern) {
-	print "$pat\n";
+	chomp($pat);
+
+	my $pat_find = $pat;
+	$pat_find =~ s/_0/_*/g;
+	my $trg_file = $pat;
+	$trg_file =~ s/_0//g;
+	print "[lm_mergepos] Pattern:\n";
+	print "    $pat --> $trg_file\n";
+	#print "    ($pat_find)\n";
+
+
+	my @chunks_ns = `find $pat_find`;
+	my @chunks    = sort {$a cmp $b} @chunks_ns;
+
+	if (-e $trg_file) {
+		print "[lm_mergepos] Removing TRG file:\n";
+		system("rm $trg_file");
+	}
+
+	print "[lm_mergepos] Looking for chunks:\n";
+	my $size_chunks = 0;
+	foreach my $chunk (@chunks) {
+		chomp($chunk);
+		my $size_chunk = -s "$chunk";
+		print "   $chunk [$size_chunk bytes]\n";
+		system("cat $chunk >> $trg_file ");
+
+		$size_chunks = $size_chunks + $size_chunk;
+	}
+	my $size_trg = -s "$trg_file";
+	my $size_err = $size_chunks - $size_trg;
+	print "[lm_mergepos] Dump details\n";
+	print "  Dump error:  $size_err bytes\n";
+	print "  Chunks size: $size_chunks bytes\n";
+	print "  Target size: $size_trg bytes\n\n";
 }
