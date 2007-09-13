@@ -1,5 +1,5 @@
 % ---------------------------------------------------------------------------- %
-\section{Architecture}
+\section{Linguometer architecture}
 \label{ch:linguometer:architecture}
 % ---------------------------------------------------------------------------- %
 The mechanisms underlying the Linguometer setup could be fairly complex to
@@ -15,7 +15,7 @@ At the end of this Section the synchronization mechanism should be clear and
 the reader should be able to understand how and why the data-streams are routed
 through particular paths. 
 % ---------------------------------------------------------------------------- %
-\subsection{Building blocks}
+%%\subsection{Building blocks}
 \label{sec:linguometer:architecture:blocks}
 % ---------------------------------------------------------------------------- %
 Figure~\ref{fig:linguometer:architecture:schematics} shows the complete
@@ -25,7 +25,7 @@ single block is here considered, describing the input/output data formats.
 Furthermore, each block is to be considered as a ``meta-block'' since each
 device is described with some degree of abstraction.
 % ---------------------------------------------------------------------------- %
-\subsubsection{Recording instrumentation}
+\subsection{Recording instrumentation}
 % ---------------------------------------------------------------------------- %
 \input{include/linguometer/fig.bb-instruments.tex}
 Figure~\ref{fig:linguometer:architecture:bb:instruments} shows the recording
@@ -96,7 +96,7 @@ The camcorder data format consists of a video track of facial expressions (YUV2,
 $720\times576$ pixels, 25 frames per second) and a stereo audio track 
 of the speech signal (PCM Stereo, 16 bit, 48 kHz).
 % ---------------------------------------------------------------------------- %
-\subsubsection{Setup-control computers}
+\subsection{Setup-control computers}
 % ---------------------------------------------------------------------------- %
 A total of four computers are used to control the Linguometer setup.
 Each computer is customized to run a specific task, such as instrumentation 
@@ -189,7 +189,7 @@ expressions is saved on the hard drive.
 Finally, the \sig{PC3} notebook is used to monitor data acquisition and data 
 transfer in real-time.
 % ---------------------------------------------------------------------------- %
-\subsubsection{Audio/Video routing and acquisition devices}
+\subsection{Audio/Video routing and acquisition devices}
 % ---------------------------------------------------------------------------- %
 \input{include/linguometer/fig.bb-routing.tex}
 A total of two devices are used to route and acquire the audio/video signals:
