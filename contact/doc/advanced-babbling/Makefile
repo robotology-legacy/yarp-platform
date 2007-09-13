@@ -29,6 +29,9 @@ happy:
 	make figs
 	make bounce
 
+# if on debian, get needed packages
+deb:
+	sudo apt-get install tipa texlive-latex-extra texlive-humanities
 
 ############################################################################
 ############################################################################

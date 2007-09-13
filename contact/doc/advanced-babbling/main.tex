@@ -35,11 +35,13 @@
 %\usepackage{topcaption}
 \usepackage{setspace}
 \usepackage{rotating}
+\usepackage{hyperref}
 
 % from Giampiero
 \usepackage{longtable}
 \usepackage{tipa}
-\newcommand{\url}[1]{\texttt{#1}}
+%%\newcommand{\url}[1]{\texttt{#1}} % conflicts with hyperref, 
+%% and doesn't seem to be in use right now
 
 \usepackage{isodateo}
 \usepackage[british]{babel}
@@ -205,8 +207,8 @@
 \pagenumbering{arabic}
 
 \clearpage
-%%%%\tableofcontents
-%%%%\clearpage
+\tableofcontents
+\clearpage
 
 
 %%\input{section-index}
