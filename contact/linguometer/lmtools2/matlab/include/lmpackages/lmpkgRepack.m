@@ -201,8 +201,9 @@ fout_off 	= sprintf('aln_%.4d/wd_%.4d_cc.off', data.misc.seq, data.misc.num)
 
 system(sprintf('lm_dv2wav %s %s 1>/dev/null 2>/dev/null', faln_us_dv, fout_us));
 system(sprintf('lm_dv2wav %s %s 1>/dev/null 2>/dev/null', faln_cc_dv, fout_cc));
-
 lmpkgComputeAndWriteUSCCOffset(fout_us, fout_cc, fout_off)
+system(sprintf('rm -f %s 1>/dev/null 2>/dev/null', fout_us));
+system(sprintf('rm -f %s 1>/dev/null 2>/dev/null', fout_cc));
 
 function rawoff = lmpkgResampleOffset(alnoff, alnsr, rawsr, type)
 	off_float = alnoff * rawsr / alnsr;
