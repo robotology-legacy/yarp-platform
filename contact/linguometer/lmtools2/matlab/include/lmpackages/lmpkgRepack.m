@@ -185,6 +185,18 @@ fprintf(fid, '%s', data.misc.txt);
 fclose(fid);
 
 
+% US and CC DV frames are sampled at 25Hz. 
+% Being the two streams not acquires syncroneously, 
+% and being the frame-rate so low, I need to calculate 
+% the offset value between:
+%  aln_*/wd_*_us.dv and aln_*/wd_*_cc.dv
+%system('lm_dv2wav aln_0000/wd_0000_cc.dv cc_dump.wav 1>/dev/null 2>/dev/null');
+%system('lm_dv2wav aln_0000/wd_0000_us.dv us_dump.wav 1>/dev/null 2>/dev/null');
+
+printf('[lmpkgRepack] Ready to export to ALN folders\n');
+faln_us_dv = sprintf('aln_%.4d/wd_%.4d_us.dv', data.misc.seq, data.misc.num);
+faln_cc_dv = sprintf('aln_%.4d/wd_%.4d_us.dv', data.misc.seq, data.misc.num);
+
 
 function rawoff = lmpkgResampleOffset(alnoff, alnsr, rawsr, type)
 	off_float = alnoff * rawsr / alnsr;
