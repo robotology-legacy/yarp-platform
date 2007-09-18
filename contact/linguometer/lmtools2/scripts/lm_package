@@ -127,7 +127,7 @@ foreach $folder_seq (@folders_seq) {
 		
 		my $file_txt = sprintf('seq_%.4d/wd_%.4d.txt', $idx_seq, $word);
 		open(FILE_TXT, ">$file_txt");
-		print FILE_TXT "#id/txt/status/exp/seq/num\n";
+		print FILE_TXT "#id txt status exp seq num\n";
 		#print FILE_TXT "@ws_id[$word] @ws_words[$word] @ws_status[$word] $exp_idx $t_idx_seq $word\n";
 		print FILE_TXT "@ws_id[$word] $txt @ws_status[$word] $exp_idx $t_idx_seq $word\n";
 		close(FILE_TXT);
