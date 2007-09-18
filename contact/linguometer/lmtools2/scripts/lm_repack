@@ -31,13 +31,10 @@ sub mImportFile {
 
 	return @data;
 }
-
 # Look for SEQ folders
 my $folders_dist_rx = "dist_*";
 my @folders_dist_ns = `find . -iname "$folders_dist_rx"`;
 my @folders_dist = sort {$a cmp $b} @folders_dist_ns;
-
-
 foreach my $folder_dist (@folders_dist) {
 	chomp($folder_dist);
 	print "[lm_repack] Working folder: $folder_dist\n";
@@ -45,3 +42,55 @@ foreach my $folder_dist (@folders_dist) {
 	my $cmd_matlab = "matlab -nosplash -nojvm -r \"lmpkgRepackProxy(\'$folder_dist\');\"";
 	system($cmd_matlab);	
 }
+
+# Look for TXT files
+my $folders_aln_rx = "aln_*";
+my @folders_aln_ns = `find . -iname "$folders_aln_rx"`;
+my @folders_aln = sort {$a cmp $b} @folders_aln_ns;
+foreach my $folder_aln (@folders_aln) {
+	chomp($folder_aln);
+	print "[lm_repack] Working folder: $folder_aln\n";
+
+	my $files_txt_rx = "wd_*.txt";
+	my @files_txt_ns = `find $folder_aln -iname "$files_txt_rx" | grep -v index`;
+	my @files_txt = sort {$a cmp $b} @files_txt_ns;
+	foreach my $aln_txt (@files_txt) {
+		chomp($aln_txt);
+		my $seq_txt = $aln_txt;
+		$seq_txt =~ s/aln/seq/g;
+	
+		my $aln_dump = `cat $aln_txt`;
+		my $seq_dump = `cat $seq_txt | grep -v "#"`;
+
+		chomp($aln_dump);
+		chomp($seq_dump);
+
+		print "            File ALN/TXT: $aln_txt {$aln_dump}\n";
+		print "            File SEQ/TXT: $seq_txt {$seq_dump}\n";
+
+		my @seq_values = split(' ', $seq_dump);
+
+		if (@seq_values[1] eq $aln_dump) {
+			#system("cp $seq_txt $aln_txt");
+		}
+		else {
+			print "Error: ALN-SEQ TXT words do not match\n";
+			while(1) {
+				sleep(1);
+			}
+		}
+	}
+	my $wd_index = $folder_aln;
+	$wd_index =~ s/aln/dist/g;
+	$wd_index = $wd_index . "/wd_index.txt";
+	
+	my $wd_index_new = $wd_index; 
+	$wd_index_new =~ s/dist/aln/g; 
+
+	print "[lm_repack] Copying WD Index:\n";
+	print "            From: $wd_index\n";
+	print "            To:   $wd_index_new\n";
+	system("cat $wd_index | sed -e s/\\.mat//g > $wd_index_new");
+	print("\n\n");
+}
+
