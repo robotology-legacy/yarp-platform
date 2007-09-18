@@ -192,11 +192,17 @@ fclose(fid);
 %  aln_*/wd_*_us.dv and aln_*/wd_*_cc.dv
 %system('lm_dv2wav aln_0000/wd_0000_cc.dv cc_dump.wav 1>/dev/null 2>/dev/null');
 %system('lm_dv2wav aln_0000/wd_0000_us.dv us_dump.wav 1>/dev/null 2>/dev/null');
+printf('[lmpkgRepack] Ready to compute CC/US offset\n');
+faln_us_dv 	= sprintf('aln_%.4d/wd_%.4d_us.dv', data.misc.seq, data.misc.num)
+faln_cc_dv 	= sprintf('aln_%.4d/wd_%.4d_cc.dv', data.misc.seq, data.misc.num)
+fout_us 	= 'cache/tmp_audio_us.wav';
+fout_cc 	= 'cache/tmp_audio_cc.wav';
+fout_off 	= sprintf('aln_%.4d/wd_%.4d_cc.off', data.misc.seq, data.misc.num) 
 
-printf('[lmpkgRepack] Ready to export to ALN folders\n');
-faln_us_dv = sprintf('aln_%.4d/wd_%.4d_us.dv', data.misc.seq, data.misc.num);
-faln_cc_dv = sprintf('aln_%.4d/wd_%.4d_us.dv', data.misc.seq, data.misc.num);
+system(sprintf('lm_dv2wav %s %s 1>/dev/null 2>/dev/null', faln_us_dv, fout_us));
+system(sprintf('lm_dv2wav %s %s 1>/dev/null 2>/dev/null', faln_cc_dv, fout_cc));
 
+lmpkgComputeAndWriteUSCCOffset(fout_us, fout_cc, fout_off)
 
 function rawoff = lmpkgResampleOffset(alnoff, alnsr, rawsr, type)
 	off_float = alnoff * rawsr / alnsr;
@@ -257,4 +263,37 @@ function lmpkgWriteAmpPos (dataptr, file)
 			end
 		end
 	end
+	fclose(fid);
+
+function lmpkgComputeAndWriteUSCCOffset(file_us, file_cc, file_off)
+	sig_cc = wavread(file_cc);
+	sig_us = wavread(file_us);
+	rate = 48e3;
+	
+	filter_fast = ones(round(rate*0.01),1);
+	L = min([length(sig_cc), length(sig_us)]);
+
+	sig_cc = sig_cc(1:L, 1);
+	sig_us = sig_us(1:L, 2);
+
+	abs_us = filter2(filter_fast, abs(sig_us), 'same');
+	abs_cc = filter2(filter_fast, abs(sig_cc), 'same');
+	[c lag] = xcorr(abs_us, abs_cc);
+	[ignore winner] = max(c);
+	offset = lag(winner);
+
+	mtSimpleFig(1);
+	plot(sig_cc, 'r');
+	hold on;
+	plot(sig_us, 'b');
+	hold off;
+	grid on;
+	legend('CC', 'US');
+	axis tight;
+	title(sprintf('ALN REPKG: US/CC\nOffset is %d samples at 48kHz', offset));	
+
+
+	fid = fopen(file_off, 'w');
+	fprintf(fid, '#rate offset\n'); 
+	fprintf(fid, '48000 %d\n', offset);
 	fclose(fid);
