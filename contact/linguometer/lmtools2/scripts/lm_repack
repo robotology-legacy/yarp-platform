@@ -71,7 +71,7 @@ foreach my $folder_aln (@folders_aln) {
 		my @seq_values = split(' ', $seq_dump);
 
 		if (@seq_values[1] eq $aln_dump) {
-			#system("cp $seq_txt $aln_txt");
+			system("cp $seq_txt $aln_txt");
 		}
 		else {
 			print "Error: ALN-SEQ TXT words do not match\n";
