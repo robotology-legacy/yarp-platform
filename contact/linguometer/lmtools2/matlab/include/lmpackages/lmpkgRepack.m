@@ -292,7 +292,7 @@ function lmpkgComputeAndWriteUSCCOffset(file_us, file_cc, file_off)
 	legend('CC', 'US');
 	axis tight;
 	title(sprintf('ALN REPKG: US/CC\nOffset is %d samples at 48kHz', offset));	
-
+	drawnow;
 
 	fid = fopen(file_off, 'w');
 	fprintf(fid, '#rate offset\n'); 
