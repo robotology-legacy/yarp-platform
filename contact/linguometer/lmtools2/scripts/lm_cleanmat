@@ -22,8 +22,12 @@ for x in `seq 0 9`; do
 done;
 
 echo "[lm_cleanmat] Looking for .mat files"
-for i in `find seq*/* | grep .mat `; do rm -v $i; done
-for i in `find dist*/* | grep .mat `; do rm -v $i; done
+#for i in `find seq*/* | grep .mat `; do rm -v $i; done
+#for i in `find dist*/* | grep .mat `; do rm -v $i; done
+for i in seq_*/*.mat; do rm -v $i; done
+for i in dist_*/*.mat; do rm -v $i; done
 echo "[lm_cleanmat] Looking for .txt files"
-for i in `find seq*/* | grep .txt `; do rm -v $i; done
-for i in `find dist*/* | grep .txt `; do rm -v $i; done
+#for i in `find seq*/* | grep .txt `; do rm -v $i; done
+#for i in `find dist*/* | grep .txt `; do rm -v $i; done
+for i in seq_*/*.txt; do rm -v $i; done
+for i in dist_*/*.txt; do rm -v $i; done
