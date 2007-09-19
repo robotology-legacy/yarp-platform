@@ -22,4 +22,4 @@ for x in `seq 0 9`; do
 done;
 
 echo "[lm_cleanaln] Looking for files"
-for i in `find aln*/*`; do rm -v $i; done
+for i in `find aln_*/`; do rm -v $i; done
