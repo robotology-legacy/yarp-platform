@@ -20,10 +20,11 @@ for x in `seq 0 9`; do
 	echo -e "$((9 - $x)) \a\c";
 	sleep 1;
 done;
+echo " ";
 
 echo "[lm_cleanaln] Looking for files"
 #for i in `find aln_*/`; do rm -v $i; done
 for i in aln_000*/*;
 do 
-	rm -v $i; 
+	rm -fv $i; 
 done

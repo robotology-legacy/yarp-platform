@@ -17,5 +17,5 @@
 
 #for i in `find seq*/* | grep _cc `; do rm -v $i; done
 #for i in `find seq*/* | grep _lg `; do rm -v $i; done
-for i in aln_000*/*_cc*; do rm -v $i; done
-for i in aln_000*/*_lg*; do rm -v $i; done
+for i in aln_000*/*_cc*; do rm -fv $i; done
+for i in aln_000*/*_lg*; do rm -fv $i; done
