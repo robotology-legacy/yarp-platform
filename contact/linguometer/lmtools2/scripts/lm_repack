@@ -64,7 +64,12 @@ foreach my $folder_aln (@folders_aln) {
 
 		chomp($aln_dump);
 		chomp($seq_dump);
-
+		
+		# Very quick hack, I'm leaving for a meeting.
+		$aln_dump =~ s/ \[/PP/g;
+		$aln_dump =~ s/\]/PP/g;
+		$seq_dump =~ s/ \[/PP/g;
+		$seq_dump =~ s/\]/PP/g;
 		print "            File ALN/TXT: $aln_txt {$aln_dump}\n";
 		print "            File SEQ/TXT: $seq_txt {$seq_dump}\n";
 
