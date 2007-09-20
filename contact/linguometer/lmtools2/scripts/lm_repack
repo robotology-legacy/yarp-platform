@@ -60,6 +60,8 @@ foreach my $folder_aln (@folders_aln) {
 		$seq_txt =~ s/aln/seq/g;
 		
 		if (1) {
+			print "            File ALN/TXT: $aln_txt\n";
+			print "            File SEQ/TXT: $seq_txt\n";
 			system("cp $seq_txt $aln_txt");
 		}
 		else {
@@ -100,7 +102,7 @@ foreach my $folder_aln (@folders_aln) {
 	print "[lm_repack] Copying WD Index:\n";
 	print "            From: $wd_index\n";
 	print "            To:   $wd_index_new\n";
-	system("cat $wd_index | sed -e "s/\.mat//g" > $wd_index_new");
+	system("cat $wd_index | sed -e \"s/\\.mat//g\" > $wd_index_new");
 	print("\n\n");
 }
 
