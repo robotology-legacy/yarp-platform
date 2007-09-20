@@ -22,8 +22,6 @@
   \drafttrue
 \fi
 
-
-
 \usepackage{graphicx}
 \usepackage{fullpage}
 \usepackage{multirow}
@@ -39,7 +37,10 @@
 
 % from Giampiero
 \usepackage{longtable}
-\usepackage{tipa}
+\usepackage[safe]{tipa}
+\usepackage{dsfont}
+\usepackage{amsmath}
+\newcommand{\argmin}{\mbox{argmin}}
 %%\newcommand{\url}[1]{\texttt{#1}} % conflicts with hyperref, 
 %% and doesn't seem to be in use right now
 
@@ -229,6 +230,7 @@
 \input{include/linguometer/linguometer_transcriptions.tex}
 \input{include/conclusions/conclusions.tex}
 \input{include/babbling/babbling.tex}
+\input{include/vowels/2dspace.tex}
 
 
 
