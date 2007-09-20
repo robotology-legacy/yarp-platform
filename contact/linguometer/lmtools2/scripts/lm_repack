@@ -40,7 +40,7 @@ foreach my $folder_dist (@folders_dist) {
 	print "[lm_repack] Working folder: $folder_dist\n";
 
 	my $cmd_matlab = "matlab -nosplash -nojvm -r \"lmpkgRepackProxy(\'$folder_dist\');\"";
-	system($cmd_matlab);	
+	#system($cmd_matlab);	
 }
 
 # Look for TXT files
@@ -58,30 +58,35 @@ foreach my $folder_aln (@folders_aln) {
 		chomp($aln_txt);
 		my $seq_txt = $aln_txt;
 		$seq_txt =~ s/aln/seq/g;
-	
-		my $aln_dump = `cat $aln_txt`;
-		my $seq_dump = `cat $seq_txt | grep -v "#"`;
-
-		chomp($aln_dump);
-		chomp($seq_dump);
 		
-		# Very quick hack, I'm leaving for a meeting.
-		$aln_dump =~ s/ \[/PP/g;
-		$aln_dump =~ s/\]/PP/g;
-		$seq_dump =~ s/ \[/PP/g;
-		$seq_dump =~ s/\]/PP/g;
-		print "            File ALN/TXT: $aln_txt {$aln_dump}\n";
-		print "            File SEQ/TXT: $seq_txt {$seq_dump}\n";
-
-		my @seq_values = split(' ', $seq_dump);
-
-		if (@seq_values[1] eq $aln_dump) {
+		if (1) {
 			system("cp $seq_txt $aln_txt");
 		}
 		else {
-			print "Error: ALN-SEQ TXT words do not match\n";
-			while(1) {
-				sleep(1);
+			my $aln_dump = `cat $aln_txt`;
+			my $seq_dump = `cat $seq_txt | grep -v "#"`;
+
+			chomp($aln_dump);
+			chomp($seq_dump);
+			
+			# Very quick hack, I'm leaving for a meeting.
+			$aln_dump =~ s/ \[/PP/g;
+			$aln_dump =~ s/\]/PP/g;
+			$seq_dump =~ s/ \[/PP/g;
+			$seq_dump =~ s/\]/PP/g;
+			print "            File ALN/TXT: $aln_txt {$aln_dump}\n";
+			print "            File SEQ/TXT: $seq_txt {$seq_dump}\n";
+
+			my @seq_values = split(' ', $seq_dump);
+
+			if (@seq_values[1] eq $aln_dump) {
+				system("cp $seq_txt $aln_txt");
+			}
+			else {
+				print "Error: ALN-SEQ TXT words do not match\n";
+				while(1) {
+					sleep(1);
+				}
 			}
 		}
 	}
@@ -95,7 +100,7 @@ foreach my $folder_aln (@folders_aln) {
 	print "[lm_repack] Copying WD Index:\n";
 	print "            From: $wd_index\n";
 	print "            To:   $wd_index_new\n";
-	system("cat $wd_index | sed -e s/\\.mat//g > $wd_index_new");
+	system("cat $wd_index | sed -e "s/\.mat//g" > $wd_index_new");
 	print("\n\n");
 }
 
