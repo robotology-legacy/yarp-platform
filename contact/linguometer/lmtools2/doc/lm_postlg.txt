@@ -1,0 +1,14 @@
+################################################################
+#                                                              #
+# lm_postlg.png rough tutorial                                 #
+# How to determine the ALLG values (file config/lm_postlg.cfg) #
+#                                                              #
+# Draft by M. Tavella                                          #
+#                                                              #
+################################################################
+
+1.  Open praat
+
+2.  Load cache/us_track.wav, "view" it
+
+3.  [...]
