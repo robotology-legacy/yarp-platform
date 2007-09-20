@@ -40,7 +40,7 @@ foreach my $folder_dist (@folders_dist) {
 	print "[lm_repack] Working folder: $folder_dist\n";
 
 	my $cmd_matlab = "matlab -nosplash -nojvm -r \"lmpkgRepackProxy(\'$folder_dist\');\"";
-	#system($cmd_matlab);	
+	system($cmd_matlab);	
 }
 
 # Look for TXT files
