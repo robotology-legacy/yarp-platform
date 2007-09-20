@@ -1,0 +1,47 @@
+#!/bin/bash
+# Copyright (C) 2007 Michele Tavella <michele@liralab.it>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+FIN=$1;
+FOUT=$2;
+F0=$3;
+DF=$4;
+
+BS="144000"
+
+function usage {
+	echo "Usage:   lm_dv2wav \$FIN \$FOUT";
+	echo "Example: lm_dv2wav file.dv file.wav";
+}
+
+if [ "$FIN" == "" ]; then
+	echo -e "Error: missing \$FIN (at least :-)\n";
+	usage;
+	exit 0;
+fi
+if [ "$FOUT" == "" ]; then
+	echo -e "Error: missing \$FOUT (at least :-)\n";
+	usage;
+	exit 0;
+fi
+
+if [ -e "$FIN" ]; then
+	if [ -e "$FOUT" ]; then
+		rm -f $FOUT;
+	fi
+	ffmpeg -i $FIN -vn -acodec pcm_s16le -ar 48000 -ac 2 $FOUT
+fi
+
