@@ -1,0 +1,33 @@
+dvdec
+=====
+David Moore <dcm@csail.mit.edu>
+
+What is it?
+
+    dvdec consists of three matlab function, dvopen, dvread, and dvclose
+    to enable the use of raw DV files within Matlab.
+
+What are the prerequisites?
+
+    You'll need the libdv library under Linux, which provides an API
+    for parsing and decoding DV files.  It may work under Windows
+    too, but I haven't tried it.
+
+    And of course, you'll need Matlab and the mex build tools that
+    come with it.
+
+How do I build it?
+
+    Type 'make'.  If your prereqs are satisfied, there will be no
+    errors.
+
+How do I use it?
+
+    Add this directory to your Matlab path after building.  The three
+    functions dvopen, dvread, and dvclose are now available.  For
+    their usage, refer to the sample function playdv.m, which simply
+    plays a DV file inside a Matlab figure.
+
+What license does dvdec use?
+
+    dvdec is licensed under the GNU General Public License.
