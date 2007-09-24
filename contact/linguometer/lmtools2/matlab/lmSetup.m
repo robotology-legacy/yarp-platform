@@ -9,6 +9,7 @@ if (isunix())
 	path(path,[path_pwd '/include/mtmatlab/']);
 	path(path,[path_pwd '/include/lmpackages']);
 	path(path,[path_pwd '/include/dtw']);
+	path(path,[path_pwd '/include/dvdec']);
 	warning('on');
 else
 	warning('off');
@@ -20,6 +21,7 @@ else
 	path(path,[path_pwd '\include\mtdevel\']);
 	path(path,[path_pwd '\include\lmpackages']);
 	path(path,[path_pwd '\include\dtw']);
+	path(path,[path_pwd '\include\dvdec']);
 	warning('on');
 end
 savepath
