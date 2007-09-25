@@ -10,6 +10,7 @@ if (isunix())
 	path(path,[path_pwd '/include/lmpackages']);
 	path(path,[path_pwd '/include/dtw']);
 	path(path,[path_pwd '/include/dvdec']);
+	path(path,[path_pwd '/include/rastamat']);
 	warning('on');
 else
 	warning('off');
@@ -22,6 +23,7 @@ else
 	path(path,[path_pwd '\include\lmpackages']);
 	path(path,[path_pwd '\include\dtw']);
 	path(path,[path_pwd '\include\dvdec']);
+	path(path,[path_pwd '\include\rastamat']);
 	warning('on');
 end
 savepath
