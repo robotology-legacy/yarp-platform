@@ -1,0 +1,133 @@
+#!/usr/bin/perl
+# Copyright (C) 2007 Michele Tavella <michele@liralab.it>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+use Getopt::Long;
+use File::Copy;
+use Cwd;
+use Term::ANSIColor;
+use Sys::Hostname;
+use POSIX qw(ceil floor);
+use strict;
+
+sub mImportFile {
+	my $file = $_[0];
+	
+	open(FID, "< $file") or die "Error ($file): $!\n";
+	my @data = <FID>;
+	close (FID);
+
+	return @data;
+}
+
+my $dir_exp = shift;
+my $dir_trg = shift;
+die "Usage: lm_makemovie /path/to/exp_0001 /path/to/movies\n" unless $dir_trg ne "";
+
+my @usdv_files_ns  = `find $dir_exp | grep us | grep dv`;
+my @usdv_files     = sort {$a cmp $b} @usdv_files_ns;
+
+my $us_dir = "temp/us";
+my $cc_dir = "temp/cc";
+my $ag_dir = "temp/ag";
+my $vor_dir = "temp/vor";
+my $vof_dir = "temp/vof";
+
+for my $usdv_file (@usdv_files) {
+	chomp($usdv_file);
+	my $ccdv_file = $usdv_file;
+	my $uswav_file = $usdv_file;
+	my $agpos_file = $usdv_file;
+	my $wdtxt_file = $usdv_file;
+
+	$ccdv_file =~ s/us/cc/g;
+	$uswav_file =~ s/dv/wav/g;
+	$agpos_file =~ s/us/ag/g;
+	$agpos_file =~ s/dv/pos/g;
+	$wdtxt_file =~ s/_us//g;
+	$wdtxt_file =~ s/dv/txt/g;
+	
+	print "[lm_makemovie] Input files:\n";
+	print "   US-DV   $usdv_file\n";
+	print "   CC-DV   $ccdv_file\n";
+	print "   US-WAV  $uswav_file\n";
+	print "   AG-POS  $agpos_file\n";
+	print "   WD-TXT  $wdtxt_file\n";
+	
+	die "US-DV  ($usdv_file):  $!\n" unless -e $usdv_file;
+	die "CC-DV  ($ccdv_file):  $!\n" unless -e $ccdv_file;
+	die "US-WAV ($uswav_file): $!\n" unless -e $uswav_file;
+	die "AG-POS ($agpos_file): $!\n" unless -e $agpos_file;
+	die "WD-TXT ($wdtxt_file): $!\n" unless -e $wdtxt_file;
+
+	my $wdtxt_data = `cat $wdtxt_file | grep -v "#"`;
+	chomp($wdtxt_data);
+	my @wdtxt_vals = split(' ', $wdtxt_data);
+	my $wd_txt = @wdtxt_vals[1];
+	my $wd_exp = sprintf("%.4d", @wdtxt_vals[3]);
+	my $wd_seq = sprintf("%.4d", @wdtxt_vals[4]);
+	my $wd_num = sprintf("%.4d", @wdtxt_vals[5]);
+	my $ag_title = "$wd_exp/$wd_seq/$wd_num ($wd_txt)";
+
+
+	my $cmd_redirect = "1>/dev/null 2>/dev/null";
+	my $cmd_usdv2png = "mplayer " . $usdv_file . " -vo png -ao null " . $cmd_redirect;
+	my $cmd_ccdv2png = "mplayer " . $ccdv_file . " -vo png -ao null " . $cmd_redirect;
+	
+	print "[lm_makemovie] Cleaning\n";
+	system("rm -f $us_dir/*");
+	system("rm -f $cc_dir/*");
+	system("rm -f $ag_dir/*");
+	system("rm -f $vof_dir/*");
+	system("rm -f $vor_dir/*");
+	
+	print "[lm_makemovie] US-DV --> PNG\n";
+	system($cmd_usdv2png);
+	system("mv *.png $us_dir");
+	system("cd $us_dir; ctk_lmus");
+
+	print "[lm_makemovie] CC-DV --> PNG\n";
+	system($cmd_ccdv2png);
+	system("mv *.png $cc_dir");
+	system("cd $cc_dir; ctk_lmcc");
+
+	print "[lm_makemovie] AG-POS --> PNG\n";
+	my $cmd_agpos2png = "matlab -nosplash -nojvm -r \"lmAG2Frames(\'$agpos_file\', \'$ag_dir\', \'$ag_title\'); quit\"";
+	
+	system($cmd_agpos2png);
+	
+	my @agimg_files_ns  = `ls -1 $ag_dir | grep png`;
+	my @agimg_files     = sort {$a cmp $b} @agimg_files_ns;
+	for my $image (@agimg_files) {
+		chomp($image);
+		my $frame = $image;
+		$frame  =~ s/png/jpg/g;
+
+		print "[lm_makemovie] Current frames: [AG, US, CC]->$image\n";
+		system("convert -quality 100 -geometry x424 $us_dir/$image $us_dir/$image");
+		system("convert -quality 100 -geometry x424 $cc_dir/$image $cc_dir/$image");
+		my $cmd_argv = "$cc_dir/$image $us_dir/$image $ag_dir/$image $vor_dir/$image";
+		system("montage -tile 3x -background black -geometry +0+0 $cmd_argv");
+		system("convert -geometry 1352x424 $vor_dir/$image $vor_dir/$image");
+		system("convert $vor_dir/$image $vof_dir/$frame");
+		
+	}
+	print "[lm_makemovie] Finally encoding HQ movie\n";
+	my $cmd_encoder = "mencoder \"mf://$vof_dir/*.jpg\" -mf fps=25 -o ";
+	my $cmd_argv_hq = "-ovc lavc -lavcopts vcodec=msmpeg4v2:vbitrate=16000 -oac pcm -audiofile";
+	my $cmd_argv_uq = "-ovc lavc -oac pcm -audiofile";
+	system("$cmd_encoder $dir_trg/lmvi_hq_$wd_exp-$wd_seq-$wd_num.avi $cmd_argv_hq $uswav_file");
+}
