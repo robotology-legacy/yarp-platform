@@ -31,7 +31,7 @@ happy:
 
 # if on debian, get needed packages
 deb:
-	sudo apt-get install tipa texlive-latex-extra texlive-humanities
+	sudo apt-get install tipa texlive-latex-extra texlive-humanities texlive-fonts-extra
 
 ############################################################################
 ############################################################################
