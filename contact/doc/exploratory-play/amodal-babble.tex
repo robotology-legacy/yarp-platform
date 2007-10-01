@@ -1,11 +1,39 @@
 
-\section{Amodal babble}
+\begin{figure}[bt]
+\centerline{\includegraphics[height=6cm]{images/amodal-modules}}
+\caption {
+%
+\label{fig:amodal-module}
+%
+The system for stochastic exploration and amodal stimulation.
+Exploration exercises a set of motor groups, moving them
+to random locations within their nominal ranges.
+Amodal stimulation modulates the state of a motor group
+in a rhythmic fashion, and looks for signs of that rhythm 
+showing up in a sensor group. If the amodal signal does in
+fact get transmitted, a reinforcement signal is sent to the
+exploration model, biasing further exploration towards the
+current configuration of the motor groups.
+%
+The specific scenario shown here is for visual hand/arm coordination.
+The state of the head and arm are explored, while watching for
+an amodal connection between the arm and vision.
+%
+}
+\end{figure}
 
-Implemented motor "babble" that uses step-wise stochastic search of the control knobs of a motor system, "twiddling" them in a rhythmic fashion.
+\section{Stochastic exploration and amodal stimulation}
 
-Then looks for a "resonance" in a specified sensed value (e.g. visual motion, or clear pitch).  This can be very selective to the rhythm - helps discount unrelated events.
+Implemented motor ``babble'' that uses step-wise stochastic search of
+the control knobs of a motor system, ``twiddling'' them in a rhythmic
+fashion.
 
-Gives automatic method for finding configuration of motor system that produces desired result.
+Then looks for a ``resonance'' in a specified sensed value
+(e.g. visual motion, or clear pitch).  This can be very selective to
+the rhythm - helps discount unrelated events.
+
+Gives automatic method for finding configuration of motor system that
+produces desired result.
 
 
 \begin{figure}[p]
