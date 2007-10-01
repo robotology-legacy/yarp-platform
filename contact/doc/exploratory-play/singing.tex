@@ -26,13 +26,28 @@ adjust their behavior accordingly.
 
 \subsection{Mechanism}
 
-(see previous deliverable, d N.N)
+The theoretical mechanism was reported in deliverable 1.6.
+We now describe the outcome of a practical application
+of that mechanism to vocal interaction.
+
+
+\begin{figure}[hbt]
+\centerline{\includegraphics[height=6cm]{images/sing-modules}}
+\caption {
+%
+The system for vocal interaction.
+The behavior is implemented in the module labelled {\bf render} which
+takes the output both of the pitch detector ({\bf pitch}) and a simultaneous 
+prediction of what the pitch ``ought'' to be (from {\bf extend})
+and decides what sound to make if any.
+%
+}
+\end{figure}
 
 
 \subsection{Implementation}
 
-Work has now been applied in practice.
-As a proof-of-co
+Work has now been applied in practice, as a proof-of-concept.
 
  to a pitch
 perception/production experiment.  We attached prediction to the
