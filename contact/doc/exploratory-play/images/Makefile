@@ -45,7 +45,7 @@ all: $(EPS)
 %.eps: %.pssrc
 ifeq ($(shell uname),Linux)
 	@echo "On linux, so using straightforward eps generation method"
-	ps2eps -f -C  -n -c $<
+	ps2eps -f -C -l  -n -c $<
 #	ps2eps --size=a0 -f -C  -n -c $<
 	mv $<.eps $@
 else
