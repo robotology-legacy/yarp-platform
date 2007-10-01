@@ -3,7 +3,7 @@
 \centerline{\includegraphics[height=6cm]{images/amodal-modules}}
 \caption {
 %
-\label{fig:amodal-module}
+\label{fig:amodal-module-vision}
 %
 The system for stochastic exploration and amodal stimulation.
 Exploration exercises a set of motor groups, moving them
@@ -23,6 +23,26 @@ an amodal connection between the arm and vision.
 \end{figure}
 
 \section{Stochastic exploration and amodal stimulation}
+
+We have previously investigated methods for learning certain motor
+skills, such as visually-guided reaching.  As part of the CONTACT
+project, UGDIST is considering whether there are mechanisms for
+learning such skills that are applicable to both speech and
+manipulation.
+%
+This work revisits themes already examined, but under a more general
+framework.
+
+Figure~\ref{fig:amodal-module-vision} shows a crude but general system
+for learning certain motor-sensor mappings.  We assume that the
+learning problem will be posed as follows: given a collection of motor
+groups and sensor groups, and a particular feature derived from the
+sensed data, find a configuration of the motor groups such that local
+changes in that configuration lead to systematic changes in the
+derived feature.
+
+
+
 
 Implemented motor ``babble'' that uses step-wise stochastic search of
 the control knobs of a motor system, ``twiddling'' them in a rhythmic
