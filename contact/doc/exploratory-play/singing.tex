@@ -24,16 +24,20 @@ available to the human partner, who can reasonably be expected to
 adjust their behavior accordingly.
 
 
-\subsection{Mechanism}
+\subsection{Real-time vocal interaction}
 
-The theoretical mechanism was reported in deliverable 1.6.
-We now describe the outcome of a practical application
-of that mechanism to vocal interaction.
+The theoretical mechanism was reported in deliverable 1.6.  
+UGDIST has made a practical application of that mechanism to
+vocal interaction, specifically, to a pitch perception/production
+experiment.  We attached prediction to the property of acoustic pitch
+as shown in Figure~\ref{fig:sing-module}
 
 
 \begin{figure}[hbt]
 \centerline{\includegraphics[height=6cm]{images/sing-modules}}
 \caption {
+%
+\label{fig:sing-module}
 %
 The system for vocal interaction.
 The behavior is implemented in the module labelled {\bf render} which
@@ -44,49 +48,123 @@ and decides what sound to make if any.
 }
 \end{figure}
 
-
-\subsection{Implementation}
-
-Work has now been applied in practice, as a proof-of-concept.
-
- to a pitch
-perception/production experiment.  We attached prediction to the
-property of acoustic pitch.
+\subsection{Some results}
 
 
-- Apply across multiple signals
+\begin{figure}[hbt]
 
-- Different aspects of speech sounds
-
-- Arm movements, gesturing
-
-- Exploit knowledge of structure for learning of parts
-
-
-\subsection{Summary}
-
-(spectrograms just show a low frequency range, to make the pitch visible).
-
+\centerline{
+a)
 \includegraphics[height=2cm]{images/chico-output-separate-high-low}
-
+\ \ 
+\ \ 
+b)
 \includegraphics[height=2cm]{images/chico-output-pair-high-low}
-
+\ \ 
+\ \ 
+c)
 \includegraphics[height=2cm]{images/chico-output-ohm}
+}
 
-\subsection{Tone sequence}
+\caption{
+%
+\label{fig:outcome}
+%
+Outcome: during a single session the artifact was induced
+to generate three distinch patterns of ``speech'': a) two separated
+vocalizations with rising pitch; b) a single vocalization with
+two tones of falling pitch; and c) a long vocalization of low, steady
+pitch.
+%
+These spectrogram fragments are taken from one continuous session
+with the artifact.  Fragments (a) and (b) are generated entirely
+by the artifact; fragment (c) is overlaid by sound from
+the human partner as well (it was a simultaneous ``meditative chant'').
+%
+}
 
-\includegraphics[height=2cm]{images/chico-separate-begin}
+\end{figure}
 
-\includegraphics[height=2cm]{images/chico-separate-together}
+
+
+
+
+\begin{figure}[hbt]
+
+\centerline{(a) \includegraphics[height=2cm]{images/chico-separate-begin-labelled}}
+
+\ \\
+
+\centerline{(b) \includegraphics[height=2cm]{images/chico-separate-together-labelled}}
+
+\ \\
+
+\centerline{(c) \includegraphics[height=1cm]{images/chico-pair}}
+
+\ \\
+
+\centerline{(d) \includegraphics[height=1cm]{images/chico-ohm}}
+
+
+\caption{
+%
+Sequence (a) is a spectrogram of the first 14 seconds of human/artifact 
+interaction in a 54-second experiment. 
+Since we are only concerned with pitch, the 
+spectrogram is cropped to emphasis the vertical ``striping'' of 
+horizontal lines that reflects the pitch (the greater 
+the distance between stripes, the higher the frequency).
+The blue bar at the bottom of the spectrogram is added to 
+indicate when the human is vocalizing.
+%
+We see that the human initiates with a short vocalization
+and the artifact responds with a short vocalization.  When it
+finishes, the human makes a vocalization with a higher pitch.
+The artifact responds with a vocalization with a higher pitch.
+The human then repeats the first, lower, vocalization.
+The artifact responds.  The human repeats the higher vocalization.
+The artifact responds with a very abbreviated low tone, then a delay,
+then the ``correct'' hight tone.  The human remains silent at this
+point, and the robot starts generating a seqence of low and high
+tones.
+%
+Sequence (b) follows on immediately from sequence (a), with 
+the human ``joining in'', vocalizating at the same or overlapping time 
+as the artifact.  The pattern of vocalization continues low-high,
+low-high, like a very simple tune.
+%
+The tune has been introduced to the artifact without any
+explicit or mandatory turn-taking.
+%
+Sequences (c) and (d) show periods within the same 54-second experiment
+where the artifact's behavior is ``shaped'' in the same way
+to produce two other tunes.
+}
+
+\end{figure}
+
+
+
+
+
+
 
 \subsection{Prosodic unit}
 
-\includegraphics[height=1cm]{images/chico-pair}
 
-\subsection{Ohm}
-
-\includegraphics[height=1cm]{images/chico-ohm}
+\subsection{Next steps}
 
 
+\begin{itemize}
+
+\item Apply across multiple signals
+
+\item Different aspects of speech sounds
+
+\item Arm movements, gesturing
+
+\item Exploit knowledge of structure for learning of parts
+
+\end{itemize}
 
 
