@@ -41,8 +41,12 @@ sensed data, find a configuration of the motor groups such that local
 changes in that configuration lead to systematic changes in the
 derived feature.
 
+More formally, if we have motor control variables $m_i$ and
+sensor variables $s_i$, with some chosen feature $f(s_1,s_2,...,s_n)$,
+then we are searching for some configuration $C=<m_1,m_2,...,m_N>$
+to maximise:
 
-
+...
 
 Implemented motor ``babble'' that uses step-wise stochastic search of
 the control knobs of a motor system, ``twiddling'' them in a rhythmic
