@@ -8,8 +8,29 @@ Then looks for a "resonance" in a specified sensed value (e.g. visual motion, or
 Gives automatic method for finding configuration of motor system that produces desired result.
 
 
-\includegraphics[width=\textwidth]{images/find-arm}
-
+\begin{figure}[p]
+\centerline{\includegraphics[width=\textwidth]{images/find-arm}}
+\caption{
+%
+A simulated robot, performing motor exploration on its
+head/eyes and left arm.  The head, eyes, and arms move around randomly
+within their range of movement.
+%
+A periodic ``shaking'' movement of the arm is made about its
+current position, and the effect of this movement is searched 
+for visually.
+%
+When resonance occurs, the configution of head/eyes and left arm
+is reinforced so that the robot is more likely to return to that
+configuration.
+%
+This is why 
+in early snapshots (top) the robot is unlikely to be looking at 
+its arm, and in later snapshots (bottom) the robot is looking at
+its arm more often than not.
+%
+}
+\end{figure}
 
 Why?
 
