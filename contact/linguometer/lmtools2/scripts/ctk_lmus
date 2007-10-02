@@ -21,7 +21,7 @@ for image in `ls -1 *.png`; do
 	#convert $image -gravity South -chop 0x140 $image
 	#convert $image -gravity North -chop 0x90 $image
 	
-	echo "[US] Processing $image"
+	echo "[ctk_lmus] Processing $image"
 	convert $image -gravity West -chop 130x0 $image
 	convert $image -gravity East -chop 95x0 $image
 	convert $image -gravity South -chop 0x140 $image

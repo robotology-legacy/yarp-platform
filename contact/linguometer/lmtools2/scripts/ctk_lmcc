@@ -16,7 +16,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 for image in `ls -1 *.png`; do
-	echo "[CC] Processing $image"
+	echo "[ctk_lmcc] Processing $image"
 
 	mogrify -rotate '90>' $image
 	mogrify -geometry 398x720! $image 
