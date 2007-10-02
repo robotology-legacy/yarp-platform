@@ -41,11 +41,39 @@ sensed data, find a configuration of the motor groups such that local
 changes in that configuration lead to systematic changes in the
 derived feature.
 
-More formally, if we have motor control variables $M=\langle{}m_1,m_2,...,m_N\rangle{}$ and
-sensor variables $S=\langle{}s_1,s_2,...,s_n\rangle{}$, 
-with some chosen feature $f(S)$,
-then we attempt to find an $M$ to maximize $|\nabla{}f|$.
+More formally, suppose we have motor control variables
+$m=(m_1,m_2,...,m_N)$ and sensor variables $s=(s_1,s_2,...,s_n)$.
+Suppose we have some chosen feature of interest $f(s)$.  We know that
+$s$ is a function of both $m$ and a set of environmental variables
+representing all other influences and state, $e=(e_1,e_2,...)$.
+We are interested in how $f$ changes with $m$:
 
+\begin{equation}
+\nabla f  = \left(\frac{\partial f}{\partial m_1 }, \frac{\partial f}{\partial m_2 }, \dots,  \frac{\partial f}{\partial m_N }  \right)
+\end{equation}
+
+We would like to maximize $|\nabla{}f|$.  We estimate this value
+directly through measurement by systematically perturbing $m$ and
+measuring $f$.
+%
+In fact, we really are only concerned with making $|\nabla{}f|$ 
+non-zero, since it is quite possible that in much of the motor space 
+changes in $m$ have completely no impact on $f$.
+%
+In that case, we can measure the change in a random motor 
+direction $\Delta{}m=(\Delta{}m_1,\Delta{}m_2,...,\Delta{}m_N)$.
+%
+Unless we are unlucky enough to pick a direction orthogonal to 
+the gradient, we should see some change in $f$.
+
+However, as we were perturbing $m$, other environmental variables
+may also have been changing, causing arbitrary effects on $f$.
+We can make this less problematic by simply repeating our perturbation
+rhythmically and seeing if the behavior on $f$ seems truly
+systematic.
+
+
+***
 
 Implemented motor ``babble'' that uses step-wise stochastic search of
 the control knobs of a motor system, ``twiddling'' them in a rhythmic
