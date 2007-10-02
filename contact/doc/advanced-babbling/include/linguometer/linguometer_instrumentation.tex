@@ -1,14 +1,9 @@
 % ---------------------------------------------------------------------------- %
-\section{The Linguometer instrumentation}
-
-\label{ch:linguometer:instrumentation}
+\section{The purpose of the  Linguometer}
 
 %\label{ch:linguometer}
 %Simultaneous acquisition of phono-articulatory features
 % ---------------------------------------------------------------------------- %
-We describe the work done for the CONTACT
-Project assembling and running an experimental setup for the simultaneous 
-acquisition of phono-articulatory features, the ``Linguometer''.
 The data recorded with the Linguometer will be used to build an audio-motor map 
 that will allow a robot to recognize at least a small subset of words.
 If the hypothesis that speech relies on invariant motor commands is correct, 
@@ -43,19 +38,19 @@ model
 of the mirror system was effectively able to learn the motor invariance common
 to different grasping types.
 In order to feed the appropriate kinesthetic information to the system, a data
-glove (CyberGlove by Immersion) with 22 sensors.
+glove (CyberGlove by Immersion) with 22 sensors was used.
 A magnetic tracker recorded the position and the orientation of the hand with
 respect to a reference frame.
 Tactile features were provided by two touch sensors. The actions performed by
 the subjects were recorded using a pair of CCD cameras, thus providing the
 visual information required by the visuomotor model. 
 The six recorded subjects were asked to grasp three different objects 
-(e.g.: a small glass ball, a rectangular solid, and a large sphere) making three
-different grasping actions (e.g.: precision grasping, power grasp and power
+(a small glass ball, a rectangular solid, and a large sphere) making three
+different grasping actions (precision grasping, power grasp and power
 grasp).
 The visual features of the grasping actions were recorded from 12 different
 locations. Moreover, each action was performed 5 times.
-Once the data was recorded using the setup here described, the model was
+Once the data was recorded, the model was
 trained and tested in two cases. Classification rate of the perceived actions is
 used to describe the performance of the model.
 In the first case, the model was trained and tested only using visual
@@ -98,6 +93,15 @@ described, in terms of both principles and implementation
 % ---------------------------------------------------------------------------- %
 %\subsection{Instrumentation}
 % ---------------------------------------------------------------------------- %
+
+
+\section{The Linguometer instrumentation}
+\label{ch:linguometer:instrumentation}
+
+We describe the work done for the CONTACT
+Project assembling and running an experimental setup for the simultaneous 
+acquisition of phono-articulatory features, the ``Linguometer''.
+%
 The Linguometer consists of ``a constellation of hardware and
 software''\footnote{CONTACT Annex I - ``Description of Work'',
 March 2005} that allows the simultaneous recording of acoustic and articulatory
