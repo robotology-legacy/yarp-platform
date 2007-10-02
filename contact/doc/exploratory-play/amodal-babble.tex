@@ -24,6 +24,8 @@ an amodal connection between the arm and vision.
 
 \section{Stochastic exploration and amodal stimulation}
 
+\label{sect:motor-babble}
+
 We have previously investigated methods for learning certain motor
 skills, such as visually-guided reaching.  As part of the CONTACT
 project, UGDIST is considering whether there are mechanisms for
@@ -65,31 +67,44 @@ direction $\Delta{}m=(\Delta{}m_1,\Delta{}m_2,...,\Delta{}m_N)$.
 %
 Unless we are unlucky enough to pick a direction orthogonal to 
 the gradient, we should see some change in $f$.
-
-However, as we were perturbing $m$, other environmental variables
+%
+However, as we are perturbing $m$, other environmental variables
 may also have been changing, causing arbitrary effects on $f$.
 We can make this less problematic by simply repeating our perturbation
 rhythmically and seeing if the behavior on $f$ seems truly
 systematic.
 
+When we detect that $f$ appears to be influenced by $m$ in this
+sense, we have discovered a configuration of $m$ which could
+be useful as a starting point for exploring the local mapping
+from motors ($m$) to sensors ($s$) or between sets of motors.
+We call this a ``resonance.''
+In the abstract, this discovery is similar to the 
+infant's ``discovery'' of its hand in its field of view.
+Figures~\ref{fig:amodal-module-vision} and \ref{fig:find-arm}.
+show an analogous experiment for a robot, where a configuration
+of the arm and head that brings the arm into view is discovered.
 
-***
-
-Implemented motor ``babble'' that uses step-wise stochastic search of
-the control knobs of a motor system, ``twiddling'' them in a rhythmic
-fashion.
-
-Then looks for a ``resonance'' in a specified sensed value
-(e.g. visual motion, or clear pitch).  This can be very selective to
-the rhythm - helps discount unrelated events.
-
-Gives automatic method for finding configuration of motor system that
-produces desired result.
+Since $f$ is computed based on sensor input, we should
+expect to occasionally be mislead.  Therefore, rather 
+than stopping once we find a good value of $m$, we use
+a stochastic search method.  
+%
+Currently, we maintain a population of possible motor configurations,
+initially random.  In each step, we select a configuration randomly,
+perturb it (or with a small probability randomize it entirely), and if
+it results in an apparent resonance, we copy that configuration to 10\%
+of the population.
+%
+A configuration that consistently results in resonance therefore quickly 
+propagates to the entire population.
 
 
 \begin{figure}[p]
 \centerline{\includegraphics[width=\textwidth]{images/find-arm}}
 \caption{
+%
+\label{fig:find-arm}
 %
 A simulated robot, performing motor exploration on its
 head/eyes and left arm.  The head, eyes, and arms move around randomly
@@ -99,7 +114,7 @@ A periodic ``shaking'' movement of the arm is made about its
 current position, and the effect of this movement is searched 
 for visually.
 %
-When resonance occurs, the configution of head/eyes and left arm
+When resonance occurs, the configuration of head/eyes and left arm
 is reinforced so that the robot is more likely to return to that
 configuration.
 %
@@ -111,41 +126,56 @@ its arm more often than not.
 }
 \end{figure}
 
-Why?
 
-Want a way of expressing capabilities (such as "bring hand in front of head") in a robust form.
+We would like to stress that developing a general purpose learning
+mechanism of this kind for a robot does not mean be believe the robot
+should start off its developmental process as a ``tabula rasa.''  In
+fact, there may well be just as much or more information involved in
+specifying how to explore (expressing the motor groups to use, their
+scales, and what sensory cue to monitor) as there would be in just
+giving numerical pose information.
+%
+The advantage we are looking for is robustness to the details of 
+the motor and perceptual system, such that changes in scale or the
+ranges of joints do not disrupt everything.
+%
+We want a way of expressing capabilities such as ``bring the hand in
+front of head'' which can be developed operationally, rather than
+relying on parameters supplied for a particular instantiation
+of a robot body.
 
-Does NOT assume a tabula rasa - in fact, there is at least as much information involved in exploration (expressing the motor groups to use, their scales, and what sensory cue to monitor) as there would be in just giving numerical pose information.
+As a side benefit, our robot should not be completely stumped if
+expected to control its arm seem via a mirror or other distortion.
+Any transformation that is spatially smooth should be manageable;
+however delays introduced in perception would be as disastrous for our
+system as they are for humans.
 
-The difference is robustness to the details of the hand and the head; e.g. could use mirror.
-
-Limitations?
-
-Such stochastic search is very dumb.
-
-Once an initial point of contact has been found, tracking methods would be more efficient for exploring a region of motor space.
-
-Shaking is just one of several amodal cues that could be used (and not a very realistic one)
-
-xref?
-
-Could automate motor space classification examples: gesture recognition, speech recognition
-
-Would have to be a lot simpler than offline, human-mediated work of course.
+Of course, the specific method described so far is very crude.  It is
+intended only to locate an initial point of contact between motor
+spaces or between motor and sensor spaces.  Once that point has been
+found, tracking methods would be more efficient for exploring a region
+of motor space.
 
 
-\subsection{Towards meaning}
 
-The richer the robot's "internal life" is, the more interesting kinds
-of "meanings" there can be in its world
+%%Could automate motor space classification examples: gesture
+%%recognition, speech recognition
 
-- Continuous, broad, shared, structured experience
+%%Would have to be a lot simpler than offline, human-mediated work of course.
 
-- Meaning as a process, not a label
 
-Off-line data collection, segmentation, labelling, training of
-classifiers, etc work, but restrict the potential semantic universe of
-the robot.
+%% \subsection{Towards meaning}
 
-For Year 3, online behaviors would be useful.
+%% The richer the robot's "internal life" is, the more interesting kinds
+%% of "meanings" there can be in its world
+
+%% - Continuous, broad, shared, structured experience
+
+%% - Meaning as a process, not a label
+
+%% Off-line data collection, segmentation, labelling, training of
+%% classifiers, etc work, but restrict the potential semantic universe of
+%% the robot.
+
+%% For Year 3, online behaviors would be useful.
 

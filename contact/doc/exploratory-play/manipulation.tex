@@ -1,4 +1,7 @@
 \section{Manipulation: exploring the environments to learn}
+
+\label{sect:manipulation}
+
 IST has continued working on the acquisition and usage of affordance
 knowledge (see Deliverable 1.6). The work has focused on two different
 directions: (i) the extension of the Bayesian network model described
@@ -13,7 +16,7 @@ robot is able to build through exploration a network describing the
 relations between its actions, the object features and the resulting
 effects of the action. In the last months, we have completed the set
 of experiments to validate the Bayes network affordance model. More
-precisely, we have shown how extra features help to dissambiguate
+precisely, we have shown how extra features help to disambiguate
 situations and improve the prediction capabilities of the
 model. Figure~\ref{fig:manipulation:affordances}(a) shows the playground used in the experiments and
 Figure~\ref{fig:manipulation:affordances}(b) shows the resulting network.
@@ -21,12 +24,13 @@ Figure~\ref{fig:manipulation:affordances}(b) shows the resulting network.
 For instance, the difference of touch and tap on a ball is clear when
 applied to objects that roll such as a ball. However, when tapping or
 touching a box-like object, the resulting effects are the same. In
-this case, it is important to add propioceptive features such as
+this case, it is important to add proprioceptive features such as
 contact information to dissambiguate both cases. By using this
-propioceptive information, the robot is able to improve the model of
+proprioceptive information, the robot is able to improve the model of
 the world. Figure~\ref{fig:manipulation:affordances}(c) compares the action recognition ratio using a
-model with contact information (Figure~\ref{fig:manipulation:affordances}(b)) and a model witouth this
+model with contact information (Figure~\ref{fig:manipulation:affordances}(b)) and a model without this
 information.
+This work has been published in \cite{montesano:etal:2007}.
 
 \begin{figure}
 \begin{tabular}{ccc}
@@ -42,7 +46,6 @@ information.
 \label{fig:manipulation:affordances}
 \end{figure}
 
-This work has been published in \cite{montesano:etal:2007}.
 
 \begin{figure}
 \centering
@@ -61,7 +64,7 @@ affordance model to develop imitation behaviors. The proposed
 framework is shown in Figure\ref{fig:manipulation:path}. The robot
 first learn the affordance network model. Then, it uses this model to
 estimate a rough transition model for the proposed task , to extract
-information from the demosntrations and translate them into its own
+information from the demonstrations and translate them into its own
 motion repertoire. Using Bayesian inverse reinforcement learning, the
 robot interprets the demonstrations and extracts its own policy to
 achieve the same goal.
@@ -77,8 +80,8 @@ framework. Figure~\ref{fig:manipulation:experim}(b) shows the impact
 of action recognition errors in the learn policy. Although more
 studies are needed, the results suggests the proposed framework is
 able to cope with the uncertainty and model errors.
-
-This wok has been published in \cite{montesano:etal:2007}.
+%
+This work has been published in \cite{montesano:etal:2007}.
 \begin{figure}
 \begin{tabular}{cc}
 \includegraphics[width=0.45\columnwidth]{images/Recycler.eps} &
