@@ -1,7 +1,48 @@
 
 \section{Introduction}
 
-Exploratory Play Behavior, learning by doing. Artifact tries a fixed
+The topic of this deliverable is ``exploratory play behavior: learning
+by doing.''  In the technical annex, it was envisaged at this point that
+the artifact (the robot) would at this point be capable of trying a fixed
 set of actions on a fixed set of objects, learning about the objects
-and actions using algorithms of D1.5 and D1.6.
+and actions using the algorithms of D1.5/D1.6 (``vision algorithms for characterizing objects/actions'').
+%
+In fact, IST already reported work of this nature in D1.5/D1.6, 
+and here provide an update of this work (Section XXX).
+%
+The robot behavior is organized on the basis of {\em affordance
+discovery and exploitation}.  Affordances in this context are the
+particular actions which the robot can apply to particular classes
+of objects.  The action set used are kept simple: tapping and touching.
+The object set is also quite simple: brightly colored foam balls and
+bars.  We concentrate on the problem of {\em learning} to exploit 
+affordances through autonomous exploration.
+
+In D1.5/D1.6, we merged work on actions and objects into a single
+report, since we believe that the mechanisms for perceiving both
+need to be integrated.  The current pair of deliverables,
+D1.7 (``exploratory play'') and D1.4 (``advanced babbling'')
+create a division between work on speech and work on manipulation.
+And indeed, this is appropriate, since the methods we have
+developed and reported in the two areas are, so far, distinct.
+But this is somewhat at odds to the goals of the project:
+
+\begin{quote}
+
+``It should be emphasized that the primary goal of the project is not
+the engineering of a robotic artifact but a scientific one: of finding
+common sensorimotor mechanisms between speech and manipulation''
+{\it (CONTACT Technical Annex)}
+
+\end{quote}
+
+UGDIST has begun work that is explicitly designed at being applicable
+to both speech and manipulation, and we report it here as
+``exploratory play'' and ``learning by doing'' mechanisms that
+are potentially useful in both modalities.  Section XXX reports
+a mechanism for participation in rhythmic events, which we see
+as a possible precursor to turn-taking behavior.  Section XXX
+reports a general form of ``motor babble.''
+
+
 
