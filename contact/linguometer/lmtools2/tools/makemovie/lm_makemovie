@@ -37,7 +37,7 @@ my $dir_exp = shift;
 my $dir_trg = shift;
 die "Usage: lm_makemovie /path/to/exp_0001 /path/to/movies\n" unless $dir_trg ne "";
 
-my @usdv_files_ns  = `find $dir_exp | grep us | grep dv`;
+my @usdv_files_ns  = `find $dir_exp | grep us | grep dv | grep -v "LMNOT"`;
 my @usdv_files     = sort {$a cmp $b} @usdv_files_ns;
 
 my $us_dir = "temp/us";
