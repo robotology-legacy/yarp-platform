@@ -1,0 +1,35 @@
+#!/bin/bash
+
+PROC=$1;
+NICE=$2;
+DT=$3;
+
+DIE=0;
+if [ "$PROC" == "" ]; then
+	DIE=1;
+fi
+if [ "$NICE" == "" ]; then
+	DIE=1;
+fi
+if [ "$DT" == "" ]; then
+	DIE=1;
+fi
+if [ "$DIE" == "1" ]; then
+	echo "Usage: lm_renice_pids PROCESS NICE INTERVAL"
+	exit 1;
+fi
+
+while sleep $DT; do 
+	PIDS=`ps -eo pid,comm | grep $PROC | sed -e "s/ $PROC//g"`;
+	PID_TOT="0";
+	PID_LIST="";
+	for PID in $PIDS; do
+		PID_TOT=$(( $PID_TOT + 1 ));
+		PID_LIST="$PID_LIST $PID";	
+	done
+	echo "[lm_renice_pids] <`date +"%I:%M %p"`> $PROC instances found for process $PID_TOT"
+	if [ $PID_TOT -ne "0" ]; then 
+		renice $NICE -p $PID_LIST;
+	fi
+done
+
