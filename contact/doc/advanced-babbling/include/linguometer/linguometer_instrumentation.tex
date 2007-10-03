@@ -77,16 +77,16 @@ Secondly, no Linguometer-like instrumentation is available on the market.
 Lastly, speech production should not be affected by the recording devices.
 Taking these three points into account, the Linguometer has been assembled 
 interconnecting different instruments, building custom devices, and finally
-writing the required software (e.g.: setup-control, stimuli presentation, data
+writing the required software (setup-control, stimuli presentation, data
 handling, data processing, signal synchronization and segmentation).
-Once the Linguometer was finally been built, a total of nine
-experiments have been run (Section~\ref{ch:experiments}) and the data has been
+Once the Linguometer was built, a total of nine
+experiments were run (Section~\ref{ch:experiments}) and the data has been
 processed (Section~\ref{ch:results}).\\
 
-This section describes how the Linguometer has been built, using a bottom-up
-approach. 
-Firstly, the instrumentation on which the Linguometer is based is briefly
-described, in terms of both principles and implementation
+%This section describes how the Linguometer has been built, using a bottom-up
+%approach. 
+%Firstly, the instrumentation on which the Linguometer is based is briefly
+%described, in terms of both principles and implementation
 
 %(Section~\ref{ch:linguometer:instrumentation}).
 %(to be continued). 
@@ -107,8 +107,9 @@ software''\footnote{CONTACT Annex I - ``Description of Work'',
 March 2005} that allows the simultaneous recording of acoustic and articulatory
 data.
 It is made up of several interconnected devices; some of those are 
-synchronized in hardware, while the remaining rely on post-processing
-synchronization.
+synchronized in hardware, while others rely on synchronization
+during post-processing.
+%
 The devices and the recording room were made available by the CRIL 
 laboratory\footnote{CRIL: Centro di Ricerca Interdisciplinare sul Linguaggio 
 (Interdisciplinary Language Research Center).
@@ -120,11 +121,11 @@ important for the recordings required by the CONTACT Project.
 %Few technical issues are presented here, the building blocks the
 %Linguometer relies on are better discussed in
 %Section~\ref{ch:linguometer:architecture}.
-Firstly the author describes the recording devices that characterize the
-Linguometer (Section~\ref{ch:linguometer:instrumentation}).
-Secondly, the Linguometer's architecture is discussed, mainly focusing onto the
-synchronization topic (Section~\ref{ch:linguometer:architecture}).
-Lastly, the author presents and discusses few technical issues emerged during
+Firstly we describe the recording devices that characterize the
+Linguometer.
+Secondly, the Linguometer's architecture is discussed, mainly focusing on the
+topic of synchronization (Section~\ref{ch:linguometer:architecture}).
+Then we discuss important technical concerns that emerged during
 the integration process (Section~\ref{ch:linguometer:technical}).
 % ---------------------------------------------------------------------------- %
 \subsection{Electromagnetic articulograph}
@@ -132,10 +133,10 @@ the integration process (Section~\ref{ch:linguometer:technical}).
 % ---------------------------------------------------------------------------- %
 An electromagnetic articulograph (EMA) was used to track the movements of a set
 of sensors glued on the tongue, on the lips, on the front teeth and on 
-a pair of glasses, as it is shown in Figure~\ref{fig:experiments:map}.
+a pair of glasses, as shown in Figure~\ref{fig:experiments:map}.
 %(for head-movement compensation).
 The pictures in Figure~\ref{fig:linguometer:ag:tongue} show how the sensors are
-positioned onto the tongue to track tongue movements during speech production.
+positioned on the tongue to track tongue movements during speech production.
 The device used for the Linguometer is an ``Articulograph AG500'' made by
 Carstens Medizinelektronik GmbH, G\"ottingen, Germany.
 
@@ -148,7 +149,7 @@ The measuring sensors are single axis coils.
 Six reference coils, arranged to form a three-dimensional frame of
 reference, emit six magnetic fields at different frequencies:
 7500, 8750, 10000, 11250, 12500 and 13750 Hz.
-The alternating current induced in the sensor by the alternating magnetic fiels
+The alternating current induced in the sensor by the alternating magnetic fields
 of the reference coils is measured.
 The measuring device distinguishes and separates the alternating voltages
 induced by the individual alternating magnetic fields by their 
@@ -186,29 +187,28 @@ distortions.
 The twelve sensors (or less, it depends on how many sensors the investigation 
 requires) are placed in appropriate magazines mounted on a dish (Circal) inside
 the  frame of reference (EMA-Cube).
-Figure~\ref{fig:linguometer:ag:intro} shows the previously mentioned devices.
+Figure~\ref{fig:linguometer:ag:intro} shows the sensors.
 A program developed by Carstens Medizinelektronik GmbH rotates the Circal using an
 electrical motor (located on top of the EMA-Cube) moving each sensor until it 
 reaches a well known position.
 Once the target position is reached, the corresponding current amplitudes  
 are acquired. The control PC then calculates the calibration factors that are
 necessary to convert the currents acquired during an
-investigation in consistent positions.
+investigation to consistent positions.
 A synchronization device (Sybox Opto-4) is connected to the articulograph
 AG500 and
 %This device is used by the Linguometer to allow the synchronized acquisition of
 %phono-articulatory gestures.
 it is heavily used by the Linguometer in order to allow the synchronized 
 acquisition of phono-articulatory gestures.
-For this reason, a few words should be spent describing how this device works.
 
 Both the Sybox Opto-4 device and a microphone are connected to the Line-In jack
 of the control PC sound card (left and right channel respectively).
-After an investigation is started, the recording software asks the AG500 to
+After an experiment is started, the recording software asks the AG500 to
 start sending data and waits for the synchronization signal to appear on the
 left-channel of the Line-In connector.
 When the synchronization signal is detected, the acquisition software starts
-recording both the speech data and the amplitudes data.
+recording both the speech data and the amplitude data.
 A ``low enough'' delay affects the synchronized signals, although its value is
 unpredictable and not constant (Bahne Cartsens, personal  communication. 
 November 2006).
@@ -222,13 +222,13 @@ Once the amplitudes have been recorded, positions can be calculated using the
 Cartsens Medizinelektronik GmbH software or the open source TAPADM ToolBox by A.
 Zeirdt\footnote{TAPADM homepage:
 http://www.phonetik.uni-muenchen.de/\~{}andi/EMAPage/}.
-Furthermore, since the subject's head is not constraint during the
+Furthermore, since the subject's head is not constrained during the
 investigation, three sensors are used to track head movement and then to
 compensate for it.
 Moreover, the sensors do need to be kept close to the geometrical center of the
 frame of reference.
 %center of mass. 
-Particularly, Carstens Medizinelektronik GmbH recommends to keep the sensors
+In particular, Carstens Medizinelektronik GmbH recommends keeping the sensors
 inside the 15 cm diameter spherical volume that shares its geometrical center 
 with the geometrical center of the frame of reference.
 % ---------------------------------------------------------------------------- %
@@ -245,7 +245,7 @@ the tongue and recording tongue motion on the sagittal plane using the Toshiba
 Aplio XV Ultrasound System provided with a low frequency convex transducer by
 Toshiba, positioned submentally.
 Ultrasound investigation of the tongue motion is both non-invasive and non
-obtrusive, thus non affecting speech production.
+obtrusive, and thus does not affect speech production.
 Furthermore, ultrasound images provide the full profile of the tongue
 dorsum, although the apex and the radix are often occluded during speech
 production
@@ -259,7 +259,7 @@ Medical sonography uses high frequency (2-14 MHz) sound waves emitted from a
 piezoelectric crystal that produces an image by using the reflective properties
 of sound waves.
 Piezoelectric crystals undergo a change in size when a voltage is applied.
-If the voltage is alternating, the crystal oscillate at high frequency,
+If the voltage is alternating, the crystal oscillates at high frequency,
 producing high frequency sound waves.
 Piezoelectric crystals can also be used as ultrasound waves detectors. 
 In fact, if a force is applied to a crystal, it generates a voltage.
@@ -271,7 +271,7 @@ echoes to voltage values. Voltage values are then processed and the image
 is reconstructed.
 In order to generate pressure waves, the crystals are heated at high 
 temperature so that the molecules they are made of are magnetically aligned  
-by the means of dipolar molecular alignment.
+by means of dipolar molecular alignment.
 When a voltage is applied to the crystals, the molecules first twist in one
 direction increasing the crystals' thickness, then in the reverse direction
 thus decreasing the thickness~\citep{stone:2005}.
@@ -287,18 +287,19 @@ transducer (\emph{ibid}).
 When an ultrasound wave reaches an interface between materials with different
 impedance properties, it is reflected. Large density gradients create a strong
 echo (e.g.: tissue/air and tissue/bone interfaces) while low density gradients
-bring to weak echoes (e.g.: tissue/water and tissue/tissue interfaces).
+lead to weak echoes (e.g.: tissue/water and tissue/tissue interfaces).
 Figure~\ref{fig:linguometer:us:frame} shows a frame grabbed from an ultrasound
 investigation of tongue motion.
 The brightest area in the image is the subject's tongue. The brighter the
-pixel is, the higher the density gradient is, thus the acquired echoes.
+pixel is, the higher the density gradient is, and thus the
+stronger the acquired echoes.
 Tongue lamina is clearly visible since a great density gradient exists between
 the muscle tissue/air interface.
 The same happens for the lower tongue surface.
 The hard palate, the hyoid bone and the jaw are not visible since they adsorb
 the sound waves, and thus do not produce echoes. 
 At the beginning of this Section, it has been said that the tongue and the
-palate play a critical role in articulation, since the they modulate the shape
+palate play a critical role in articulation, since they modulate the shape
 of the vocal tract.
 Due to the facts here described, acquiring the palate's profile during the
 experiments is not possible, and for this reason the subjects' palates were
@@ -313,7 +314,7 @@ by~\citet{stone:2005}.
 Firstly, female subjects appear to be better candidates for speech production
 investigation. Women often image better than men, probably because the tongues
 of men are thicker and fatter (fat tissue scatters sound).
-Furthermore, men do have a bigger larynx that protrudes from the neck. This
+Furthermore, men have a bigger larynx that protrudes from the neck. This
 anatomical difference plays a crucial role in speech production recordings,
 because the ultrasound transducer is placed submentally and when the larynx
 moves, it touches the transducer. 
@@ -345,7 +346,7 @@ A RAW frame is intended to be the reconstructed tongue image without any
 processing applied.
 The acquired sequences are temporarily accumulated in a hardware buffer until
 the maximum capacity of the buffer is reached. 
-Once it is full, the buffer needs to be emptied saving the RAW data on the 
+Once it is full, the buffer needs to be emptied, saving the RAW data on the 
 Aplio XV internal hard drive, shared on the network via the SMB/CIFS network
 protocol\footnote{SMB/CIFS: Microsoft standard resource exchange protocol.}.
 
@@ -361,8 +362,8 @@ is required to handle the RAW recordings.
 For those reasons, the RAW plug-in was dropped, and the S-Video output was
 recorded. 
 \input{include/linguometer/fig.us-frame.tex}
-Surely the S-Video output does not ensure an image quality comparable with the
-RAW data image quality, but consistently simplifies the recording work flow.
+The S-Video output necessarily offers lower image quality that the
+RAW data image, but consistently simplifies the recording work flow.
 A non trivial problem arises recording the S-Video stream. In fact, the 
 Toshiba Aplio XV system is a closed source device intended for clinical use 
 and probably the image reconstruction does not happen in real-time. 
@@ -370,7 +371,7 @@ Toshiba Medical System Europe did not provide enough details about the
 processing the reconstructed frames undergo before visualization on the monitor
 or presentation on the S-Video connector. 
 Frame persistence\footnote{Frame persistence: a technique used to enhance the
-quality of a video stream by averaging each frame with few surrounding ones.} 
+quality of a video stream by averaging each frame with a few surrounding ones.} 
 and many other filters have been disabled in
 order to record frames ``corrupted'' by the smallest possible amount of 
 post-processing operations.
@@ -387,16 +388,16 @@ The EGG device used for the Linguometer is a ``Laryngograph Microprocessor`` by
 Laryngograph Ltd, London, United Kingdom. 
 \input{include/linguometer/fig.lg-intro.tex}
 
-An high frequency current, small both in voltage and amperage, passes between
+A high frequency current, small both in voltage and amperage, passes between
 two electrodes situated at the surface of the throat at the level of the 
 thyroid cartilage. The sensors are shown in 
-Fig.\ref{fig:linguometer:lg:intro:sensors} while the correct positioning onto
+Fig.\ref{fig:linguometer:lg:intro:sensors} while the correct positioning on
 the subjects' neck is shown in Fig.\ref{fig:linguometer:lg:intro:strap}.
 The electrodes, kept in fixed position by an elastic band, are made of copper
 and their area ranges from 3 to 9 cm$^{2}$.
 An alternated current generator supplies an high frequency (usually from 300 kHz
-to 5 MHz) sinusoidal current to the electrodes. The current amplitude is in the
-oder of few milliamperes while the applied voltage is around 0.5 V.
+to 5 MHz) sinusoidal current to the electrodes. The current amplitude is on the
+order of few milliamperes while the applied voltage is around 0.5 V.
 When the vocal folds move, a rapid variation of the conductance is observed in
 the EGG signal applied across the larynx.
 The percentage of amplitude modulation reflects the percentage change in the
@@ -413,12 +414,12 @@ folds~\citep{childers.krishnamurthy:1985}.
 The amplitude of the EGG signal depends on many factors such as the
 positioning of the electrodes, the amount of fat and muscles tissue in the 
 subjects neck, the impedance of the skin, the position of the 
-larynx and the and shape of the surrounding cartilages.
-The EEG signal is made up by two different components. The first one depends on
-the vibrational movement of the vocal folds, and is referred as the 
+larynx and the shape of the surrounding cartilages.
+The EEG signal is made up of two different components. The first one depends on
+the vibrational movement of the vocal folds, and is referred to as the 
 \emph{Lx} signal. 
-The latter one is due the slower movement of other structures (e.g.: vertical
-movements of the larynx characterize swallowing) and it is referred as the
+The latter one is due to the slower movement of other structures (e.g.: vertical
+movements of the larynx characterize swallowing) and it is referred to as the
 \emph{Gx} component. The Gx signal could be easily filtered since its frequency
 is much lower than the frequency of the Lx signal.
 
@@ -434,29 +435,30 @@ speech and EGG signals.
 \label{ch:linguometer:instrumentation:av}
 % ---------------------------------------------------------------------------- %
 In order to acquire the speech signal, two microphones were used.
-The first microphone, a Shure SM7B, recorded the speech signal successively
+The first microphone, a Shure SM7B, recorded the speech signal 
 routed to the articulograph AG500 PC.
 A second microphone, a Shure SM58, was directly attached to the EGG device
 by Laryngograph Ltd.
 \input{include/linguometer/fig.av-intro.tex}
-A Behringher Xenyx 802 Mixer was used to mix speech ans synchronization signals.
+A Behringher Xenyx 802 Mixer was used to mix speech and synchronization signals.
 A Terratec CameoConvert audio/video acquisition card was used to acquire the
 ultrasound system S-Video stream, the speech and the synchronization signals.
 Finally, a Canon MV960 DV camcorder was used to record facial expressions. 
-Figure~\ref{fig:linguometer:av:intro} shows the previously cited devices.
-The connections between those instruments and few technical issues are discussed
+Figure~\ref{fig:linguometer:av:intro} shows these devices.
+The connections between the instruments and some technical issues are discussed
 in Sections~\ref{ch:linguometer:architecture}
 and~\ref{ch:linguometer:technical}.
 % ---------------------------------------------------------------------------- %
 \subsection{Recording support devices}
 \label{ch:linguometer:instrumentation:custom}
 % ---------------------------------------------------------------------------- %
-As already explained, the main goal reached with the Linguometer pertains to the
+As already explained, the main goal of the Linguometer is
 simultaneous acquisition, using the instrumentation previously described, of
 a wide set of phono-articulatory features.
 The instrumentation used for the Linguometer was not designed for parallel
-recording, albeit the Cartsens GmbH AG500 articulograph was shipped with a
-synchronization devices suitable for synchronizing a maximum of three
+recording, apart from the Cartsens GmbH AG500 articulograph 
+which was shipped with a
+synchronization device suitable for synchronizing a maximum of three
 other devices.
 A total of three custom devices, here described, have been designed and built.
 %The motivation that brought to the building process better described 
@@ -465,8 +467,8 @@ A total of three custom devices, here described, have been designed and built.
 The first device that has been built is an ultrasound transducer stand.
 As discussed at the beginning of the Section, the articulograph AG500 plays a
 crucial role in the design of the Linguometer. 
-In fact, it allows to track up to twelve sensors at very high frequency (200Hz),
-thus allowing to detect very fast movements of the
+In fact, it allows us to track up to twelve position/orientation sensors at very high frequency (200Hz),
+thus allowing us to detect very fast movements of the
 articulators~(Section~\ref{sec:linguometer:instrumentation:ag}).
 On the other hand, the articulograph provides low spatial resolution recordings
 of the tongue.
@@ -487,10 +489,11 @@ six emitting coils generate a magnetic field inside the EMA-Cube.
 Furthermore, electromagnetically conductive objects interfere with
 the generated field.
 If the interfering object (in this case the ultrasound system transducer) 
-is kept in fixed position respect the six emitting coils, the interference
-remains  constant in time, thus it is possible to compensate
-for it by the means of calibration (Section~\ref{ch:linguometer:technical}).
-The ultrasound system transducer is alimented by a DC power supply and it is
+is kept in a fixed position
+with respect to the six emitting coils, the interference
+remains  constant in time, and so it is possible to compensate
+for it by means of calibration (Section~\ref{ch:linguometer:technical}).
+The ultrasound system transducer is powered by a DC power supply and it is
 probably magnetically shielded (e.g.: a thin foil of aluminum could have been
 placed between the external shell the internal circuitry, as it usually 
 happens for biomedical devices designed with clinical application in mind).
@@ -506,25 +509,26 @@ Both the prototypes and the final version of the stand have been designed
 and built with Alba Progetto Legno Srl, Lecce, Italy. 
 
 Designing and building the probe stand has been a fairly complicated process. 
-Firstly, the probe stand should not have contained metal objects nor being
-built in metal, in order not to create additional interferences.
+Firstly, the probe stand could not contain metal objects nor be
+built with metal, in order to not create additional interferences.
 Secondly, the stand had to fit inside the EMA-Cube and had to keep the
 ultrasound system probe fixed. 
-Lastly, a regulation mechanisms (inclination, height and depth) was required to
+Lastly, a pose adjustment mechanism 
+(inclination, height and depth) was required to
 fit subjects with different anatomical characteristics (e.g.: height, weight and
 neck/throat shapes).
 
 \input{include/linguometer/fig.od-subject.tex}
-The first and the second design goals have been accomplished building the 
-stand gluing two shaped pieces of wood together.
+The first and the second design goals have been accomplished by building the 
+stand by gluing two shaped pieces of wood together.
 Figure~\ref{fig:linguometer:od:stand:2} shows how the stand perfectly fits the 
 articulograph frame of reference. 
 Before nesting the transducer inside the stand, the transducer shell was wrapped
 in a piece of rubber kept tight by a plastic strap. 
-Paper-made adhesive tape was used as an interface between the rubber and the
+Adhesive tape was used as an interface between the rubber and the
 wooden nest, in order to increase friction between the transducer and the
 stand.
-Since the nest is perfectly designed to accommodate the transducer and the
+Since the base is perfectly designed to accommodate the transducer and the
 wrapping materials, the result is effective and highly reliable. 
 Furthermore, it is really easy to extract the transducer and use it for other
 experiments.
@@ -541,7 +545,7 @@ Furthermore, by using couples of plugs with different heights, it is possible to
 regulate the inclination of the stand 
 ($\pm$0$^{\circ}$, $\pm$5$^{\circ}$, $\pm$10$^{\circ}$ and $\pm$15$^{\circ}$).
 Figure~\ref{fig:linguometer:od:stand:6} shows the stand at $\pm$10$^{\circ}$
-while Figure~\ref{fig:linguometer:od:subject:2} shows a subjects during a
+while Figure~\ref{fig:linguometer:od:subject:2} shows a subject during a
 recording session (10 cm block for height regulation, 5$^{\circ}$ inclination).
 %In order to provide a functional and metal-free mechanism for regulation, also
 %a table and a stool have been made.
@@ -565,23 +569,23 @@ In fact, the uniform background facilitates the feature extraction process.
 \label{ch:linguometer:instrumentation:setup}
 A total of four computers have been used to record and store the data.
 A computer with Microsoft Windows XP Professional installed (\emph{PC1})
-did run the Cartsens Medizinelektronik GmbH software to calibrate and record 
+ran the Cartsens Medizinelektronik GmbH software to calibrate and record 
 the data of the articulograph.
-Furthermore, it did run the software required by the laryngograph
+It also ran the software required by the laryngograph
 (Laryngograph Ltd).
 
-The remaining computer did run Gentoo Linux. 
+The remaining computer ran Gentoo Linux. 
 A workstation and a server have been designed and assembled at LIRA-Lab. 
 The workstation (\emph{PC0}) handled stimuli presentation and generated the
 segmentation signals via the \emph{LMTools1} 
 toolkit\footnote{LMTools1 is a collection of programs (C/C++)
-and scripts (Perl/Bash/Matlab) used by the author during data recording,
+and scripts (Perl/Bash/Matlab) used during data recording,
 processing and storing}. This computer was also used to acquire the stream
 generated by the Terratec CameoConvert acquisition card
 (Section~\ref{ch:linguometer:instrumentation:av}).
-The host \emph{PC0} did run a low-latency Linux 
+The host \emph{PC0} ran a low-latency Linux 
 Kernel (v.2.6.18) to increase responsiveness.
-The server (\emph{PC2}) shared on the network, by the means of NFS,
+The server (\emph{PC2}) shared on the network, by means of NFS,
 a RAID1 array used to store the data recorded during the investigations.
 Lastly, a notebook computer was used to control the recording
 apparatus and to monitor the execution of the \emph{LMTools1} processes.

@@ -3,14 +3,14 @@
 \label{ch:linguometer:architecture}
 % ---------------------------------------------------------------------------- %
 The mechanisms underlying the Linguometer setup could be fairly complex to
-describe since most of the instrumentation used during the investigations is
+describe since most of the instrumentation used is
 not specifically designed with simultaneous recordings in mind.
 Furthermore, just a part of the synchronization is done in hardware; 
 data alignment, segmentation and correction is done in post-processing.
 As a result, synchronization is not ``one-shot'', and in order to describe the
-whole process clearly, the bottom-up approach is initially used.
-As soon as the dissertation covers few critical technical issues, the
-description will follow the more appropriate top-down approach.
+whole process clearly, a bottom-up approach is used.
+Once we have covered a few critical technical issues, the
+description will follow a more classical top-down approach.
 At the end of this Section the synchronization mechanism should be clear and 
 the reader should be able to understand how and why the data-streams are routed
 through particular paths. 
@@ -21,7 +21,7 @@ through particular paths.
 Figure~\ref{fig:linguometer:architecture:schematics} shows the complete
 Linguometer block diagram.
 In order to provide a straightforward description of the Linguometer, each
-single block is here considered, describing the input/output data formats.
+single block is considered in turn, describing the input/output data formats.
 Furthermore, each block is to be considered as a ``meta-block'' since each
 device is described with some degree of abstraction.
 % ---------------------------------------------------------------------------- %
@@ -31,7 +31,7 @@ device is described with some degree of abstraction.
 Figure~\ref{fig:linguometer:architecture:bb:instruments} shows the recording
 instrumentation: the laryngograph (\sig{LG}), the articulograph (\sig{AG}) and
 the ultrasound system (\sig{US}).
-
+%
 Two sensing devices are connected to the \sig{LG} block: the laryngograph
 electrodes \sig{LGE} and the Shure SM58 microphone \sig{M1}.
 The \sig{LG} device acquires and digitizes both the analog EGG signal
@@ -50,7 +50,7 @@ The \sig{AG} block communicates via TCP/IP with the instrumentation control
 computer \sig{PC1} via the \sig{AGAMP} Ethernet interface.
 As a matter of fact, \sig{AG} acquires and digitizes the analog amplitudes
 \sig{AGAMPa}, then transmits the acquired data to the control PC via the 
-\sig{AGAMP} interface by the means of TCP/IP.
+\sig{AGAMP} interface by means of TCP/IP.
 The \sig{AGAMP} data sampling rate is 200 Hz and the dimensionality is equal to 
 72. In fact, 12 is the number of sensors and 6 is the number of reference coils.
 Since each coil induces, via a generated EM field, a current on each sensor, the
@@ -175,7 +175,7 @@ equipped with an IEEE-1394 interface (\sig{IEEE 1394}), to which the
 \sig{ACD} acquisition card is connected. 
 The \sig{ACD} card digitizes the \sig{USVIDEO} signal, the \sig{AM0} signal
 mixed with the segmentation signals and the \sig{AGSYNC} synchronization signal.
-\sig{PC0} acquires the stream and store it (via \sig{LMT1-SC}) onto a network
+\sig{PC0} acquires the stream and stores it (via \sig{LMT1-SC}) onto a network
 drive shared by the data-caching server \sig{PC2}.
 A standard DVSD container is used to store the signals digitized by \sig{ACD}.
 
@@ -217,12 +217,12 @@ and then is routed to \sig{Mixer R-OUT}.
 The synchronization signal \sig{AGSYNC} is directly routed to \sig{Mixer L-OUT}
 and it is not mixed with any other signal, so it preserves the original
 information.
-The \sig{Mixer L-OUT} and the \sig{Mixer R-OUT} outputs are the routed to the
+The \sig{Mixer L-OUT} and the \sig{Mixer R-OUT} outputs are then routed to the
 \sig{ACD} acquisition card, where they are synchronously digitized and then
 acquired, via the \sig{IEEE 1394} interface, by \sig{PC0}.
 The speech signal recorded by the acquisition card is then sent to \sig{PC1}
 through the \sig{L-OUT} connector, and is recorded by the \sig{AG control}
-software (as discussed few paragraphs ago).
+software (as discussed earlier).
 % ---------------------------------------------------------------------------- %
 \subsection{Workflow and complete block diagrams}
 \label{sec:linguometer:architecture:diagram}
@@ -243,12 +243,12 @@ whole explanation to a friendlier level.\\
 
 The complete block diagram, the Linguometer schematic, describes the Linguometer
 at the ``connection level'' and constitutes by itself an important source of
-information, although it is does not turn useful in the task of describing
+information, but does not completely describe the task of running
 the Linguometer from a temporal perspective.
-For this reason, the author decided to introduce the workflow diagram, shown
-in Figure~\ref{fig:linguometer:architecture:workflow}, and to use it as a
+For this reason, we introduce the workflow diagram, shown
+in Figure~\ref{fig:linguometer:architecture:workflow}, and use it as a
 starting point to describe the whole synchronization process.
-When needed, the description will jump back at the connection level, switching
+When needed, the description will jump back to the connection level, switching
 from the higher-level abstraction to the lower-level physical connections.
 Furthermore, it is important to specify that the term ``workflow'' refers to 
 the set of operations performed by the
@@ -265,17 +265,17 @@ Although the recording-support devices (table, stool and stand,
 Section~\ref{ch:linguometer:instrumentation:custom}) have been designed and 
 built 
 to provide a sufficient degree of compliance, the subjects started suffering
-the forced position after circa 45 minutes, becoming impatient and moving very
+from the forced position after circa 45 minutes, becoming impatient and moving very
 often. 
 The subjects also reported that salivation increases during the experiment,
 surely due to the fact that 9 out of 12 articulograph sensors were placed on the
 tongue, lips and teeth.
 If salivation increases, the subjects swallow more often, thus moving the
-larynx. Such a kind of frequent movements compress the
-larynx onto the ultrasonograpic transducer, inflicting pain to the subject.
+larynx. This kind of movement presses the
+larynx against the ultrasonograpic transducer, inflicting pain on the subject.
 
 As discussed later in this Section, the subjects had to read and utter circa 630
-between words and syllables (70\% words, 30\% syllables), divided in 9 batches.
+utterances (words and syllables: 70\% words, 30\% syllables), divided in 9 batches.
 Recording such a large amount of stimuli requires the recording devices and
 the recording software to be stable and to endow fast crash-recovery
 capabilities.
@@ -284,15 +284,15 @@ capabilities.
 %capabilities. 
 A quite poor example of those two qualities is provided by the Cartsens AG500
 articulograph. 
-In fact, not only the control software (\sig{AG control}) 
-kept crashing during the majority of the experiments (6 out of 9), but each 
-software crash required to reboot both the control computer and the 
-articulograph itself, thus loosing precious time\footnote{It is important to
-specify that Carstens Medizinelektronik GmbH is working on the new version of
+In fact, not only did the control software (\sig{AG control}) 
+keep crashing during the majority of the experiments (6 out of 9), but each 
+software crash required the rebooting of both the control computer and the 
+articulograph itself, thus losing precious time\footnote{Carstens 
+Medizinelektronik GmbH is working on the new version of
 the control and acquisition software. Details at: http://wiki.ag500.net/}. 
 Moreover, the device crashed in an unpredictable
 way (e.g.: while recording and/or while starting a recording session), so that
-it was not possible to forestall neither to foresee the odd behavior.
+it was not possible to forestall the odd behavior.
 
 A total of three key-words emerge from the preceding paragraphs: 
 duration, stability and crash-recovery capabilities.
@@ -305,24 +305,25 @@ In this context, a well designed workflow protocol plays a very important role,
 since it allows the experimenters to record easily and eventually to recover
 from hardware and software failures without invalidating the whole experiment.
 
-From a practical point of view, recording with the Linguometer turns out in
+From a practical point of view, recording with the Linguometer requires
 starting/stopping one half of the recording devices ``una tantum'', that is at
 the beginning and at the end of the experiments respectively (e.g.: ultrasound 
 system and
 camcorder).
 The remaining devices are started/stopped before and after each one of the 9
 batches of stimuli (e.g.: articulograph and laryngograph).
-The need to start/stop the acquisition arises from few limitation at the
+The need to start/stop the acquisition arises from limitations at the
 software level of the articulograph and the laryngograph.
 In fact, the articulograph control software can record a maximum of 65000 
-samples\footnote{Each sample has to be intended as 72 values of current
-amplitude (12 sensors, 6 reference coils).} at 200 Hz, thereby the maximum
+samples\footnote{Each ``sample'' is  72 values of current
+amplitude (12 sensors, 6 reference coils).} at 200 Hz, and 
+therefore the maximum
 duration of the sweep is 325 seconds (circa 5 minutes and 25 seconds).
 Similarly, the laryngograph control software supports a maximum of 10 minutes
 for each recording, but this duration is still too short if compared to the
 total duration of each experiment~(circa~35~minutes).
 
-On the other hand, recording the facial expressions with the camcorder and the
+On the other hand, recording facial expressions with the camcorder and 
 tongue motion with the ultrasound system is fairly simple.
 The audio/video data recorded with the camcorder is immediately stored on a
 MiniDV digital tape, and
@@ -355,7 +356,7 @@ in longer sequences.
 
 In the workflow area, five bars are shown (\wf{CC}, \wf{US}, \wf{LG},
 \wf{AG} and \wf{WD}): each one represents a particular time interval and a 
-couple of time labels pintpoint its beginning and its end.
+pair of time labels pinpoint its beginning and its end.
 For example, the first bar (\wf{CC}) starts at \tstart{CC} and ends at 
 \tstop{CC}.
 It represents the interval of time in which the camcorder is recording facial 
@@ -378,15 +379,16 @@ In this perspective, the camcorder is the first device to start recording,
 followed by the ultrasound system, the laryngograph and the articulograph.
 When all the devices are recording, the stimuli are submitted via 
 the \emph{lmwords} program so that the first and the second word are then 
-sequentially displaied onto the screen and read by the subject.
+sequentially displayed onto the screen and read by the subject.
 Stimuli submission did require an experimenter to check if the word was
-pronounced correcly and eventually mark the word to be submitted again at the
+pronounced incorrectly and 
+eventually mark the word to be submitted again at the
 end of the batch.
 At the beginning of a batch of stimuli (\tstart{WD}) and at its end 
 (\tstop{WD}), \emph{lmwords} produces two different segmentation signals.
 In the same way, each word is delimited by two analogue signals 
 (e.g.: \tstarti{WD}{0} and \tstopi{WD}{0}).
-At the bottom Figure~\ref{fig:linguometer:architecture:workflow}, 
+At the bottom of Figure~\ref{fig:linguometer:architecture:workflow}, 
 the legend shows the symbolic waveform adopted for such signals (word batch
 start/stop and word start/stop).
 Those signals, routed to the \sig{AMX} mixer and mixed with the main speech
@@ -394,7 +396,7 @@ signal \sig{AM0}, are largely used in post processing to automatically align
 and segment the dataset.
 
 Dr. M. Ferro\footnote{NEUROLAB, Universit\`a di Ferrara, Ferrara, Italy.} lead
-the stimuli submission protocol while the author of this Thesis controlled the
+the stimuli submission protocol while M. Tavella controlled the
 setup, starting and stopping the devices as shown in the workflow diagram.
 Once the stimuli have been submitted, the recording devices shutdown procedure
 starts.
@@ -403,18 +405,18 @@ The first device to be stopped is \wf{AG}, followed by \wf{LG}, \wf{US} and
 
 \input{include/linguometer/fig.workflow.tex}
 It has been said that the workflow and the data-streams diagrams share the 
-same time scale. To stress this relationship, dottet lines and arrows 
+same time scale. To stress this relationship, dotted lines and arrows 
 are used in Figure~\ref{fig:linguometer:architecture:workflow}.
-Each dottet line is used to mark a particular instant in time, pinpointed by a
+Each dotted line is used to mark a particular instant in time, pinpointed by a
 time label.
-The reader shurely noticed that the data-streams diagram shows four different 
+The reader surely noticed that the data-streams diagram shows four different 
 composite bars: \wf{CC-DV}, \wf{US-DV}, \wf{LG-WAV} and \wf{AG-DATA}.
 Each one of those bars provides a simbolic description of the data-streams 
 recorded by the \wf{CC}, \wf{US}, \wf{LG} and \wf{AG} devices respectively.
-In the following paragraph, the Linguometer recording mechanism is discussed
+In the following paragraphs, the Linguometer recording mechanism is discussed
 considering what happens instant by instant, and linking the data-streams
 diagram to the Linguometer block diagram, thus linking the temporal level with
-the connection level:\\
+the connection level.
 
 % ---------------------------------------------------------------------------- %
 \tstart{CC} - The \sig{CC} camcorder is the first recording device to be
@@ -452,7 +454,7 @@ and its replicas are shown in the \wf{CC-DV}, \wf{LG-WAV} and \wf{AG-Speech}
 streams\footnote{For the sake of simplicity, the different replicas are shown
 with identical symbols. In reality, the replicas are not identical 
 (they differ since different microphones and devices are used in the 
-acquisition process), albeit their waveforms are very similar.}.
+acquisition process), although their waveforms are very similar.}.
 The latter component is the digitized version of the segmentation signals
 generated by the \emph{lmwords} stimuli presentation program
 (\sig{LMT1-SP}).
@@ -464,19 +466,19 @@ articulograph control software (\sig{AG control}) records the amplitudes of the
 sensors and the speech signal synchronously, after the \sig{AGSYNC} signal is
 detected.
 The \wf{US-DV} stream is the core of the hardware synchronization mechanism. 
-In fact, the ultrasonograpic video stream is recorded synchronously with the
+In fact, the ultrasonographic video stream is recorded synchronously with the
 articulograph synchronization signal.
 As a result, finding the \emph{AG sweep start/stop} signals in \wf{US-Sync} 
-allows to align the ultrasonograpic video stream to the articulographic 
+allows the alignment of the ultrasonographic video stream to the articulographic 
 data.
 Once the \sig{AG} and the \sig{US} data-streams are synchronized, it is possible
-to align the \wf{CC-Video} and the \wf{LG-EGG} streams simply aligning
+to align the \wf{CC-Video} and the \wf{LG-EGG} streams simply by aligning
 \wf{CC-SpeechL} (or \wf{CC-SpeechR}) and \wf{LG-Speech} to
 \wf{US-Speech}.\\
 
 % ---------------------------------------------------------------------------- %
 \tstart{LG} - The \sig{LG} laryngograph is started. 
-The \sig{PC1} control pc acquires the \wf{LG-WAV} stereo stream. 
+The \sig{PC1} control PC acquires the \wf{LG-WAV} stereo stream. 
 \wf{LG-Speech} corresponds to a digitiez version of the \sig{AM1}
 signal sensed via the \sig{M1} microphone.
 On the other hand, \wf{LG-EGG} is the digitized version of the signal acquired
@@ -505,12 +507,12 @@ the \wf{US-Speech} tracks.
 The segmentation signals that identifty the beginning (and the end) of a batch
 of stimuli, are used in post-processing to align and segment the dataset.
 Since the \emph{Word start}, the \emph{Word stop} and the \emph{Word batch stop}
-signals follow exacly the same route here discussed for \emph{Word batch
+signals follow exactly the same route here discussed for \emph{Word batch
 stop}, similar descriptions are omitted in the following paragraphs.\\
 
 % ---------------------------------------------------------------------------- %
 \tstarti{WD}{0} - An experimenter, pressing a key on the \sig{PC0} computer, 
-generates the  \emph{Word start} segmentation signal and displays a stimuli 
+generates the  \emph{Word start} segmentation signal and displays a stimulus
 on the LCD screen (in this case \emph{Word 0}).
 The per-word segmentation signals play an important role in post-processing,
 mainly for segmentation and alignment.
@@ -524,7 +526,7 @@ marks the word as pronounced correctly or uncorrecly, generates the
 \emph{word stop}
 segmentation signal and finally moves to the next stimuli.
 The interval of time between \tstopi{WD}{0} and \tstarti{WD}{1} is not handled
-by the experimenter nor it varies, but is coded inside
+by the experimenter, but is coded inside
 \emph{lmwords}\footnote{The interval between two words lasts 750 ms and is
 used in post processing to verify if the acquired audio signals are affected by 
 drift.}.\\
@@ -556,7 +558,7 @@ crucial role in the Linguometer synchronization mechanism.
 In fact, the \wf{US-DV} stream contains enough information to align the sagittal
 reconstruction of tongue motion recorded by the means of ultrasonography with 
 the kinesthetic information derived from the articulographic investigation.
-To sum up, ultrasonograpic and speech data are synchronized in hardware
+To sum up, ultrasonographic and speech data are synchronized in hardware
 (\wf{US-Video} and \wf{US-Speech}).
 The amplitudes recorded with the articulograph, from which the kinesthetic
 informations are derived, are synchronized with the \wf{US-Video}/\wf{US-Speech}
@@ -567,13 +569,13 @@ phono-articulatory information, such as the laryngographic data and the facial
 expressions data.
 As a matter of fact, it was not possible to route the segmentation and the
 synchronization signals on the camcorder and the laryngograph, since those
-devices required to use a stand-alone microphone\footnote{The microProcessor by 
+devices required the use of a stand-alone microphone\footnote{The microProcessor by 
 Laryngograph Ltd can acquire a
 further stereo audio signal at line level, although the sampling rate of the
 Lx/Gx signals decreases from 16kHz to 12kHz~(Xinghui Hu, Laryngograph Ltd.
 Private communication).}.
 The \wf{LG-WAV} and the \wf{CC-DV} signals are initially segmented and
-then each word is aligned, by the means of cross-correlation, with the words 
+then each word is aligned, by means of cross-correlation, with the words 
 extracted from the \wf{US-Speech} stream. The alignment/segmentation process
 is better described in Section~\ref{ch:results}.
 % ---------------------------------------------------------------------------- %
