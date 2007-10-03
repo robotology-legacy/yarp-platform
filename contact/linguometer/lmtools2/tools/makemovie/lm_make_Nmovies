@@ -54,6 +54,6 @@ for my $usdv_file (@usdv_files) {
 	$wdtxt_file =~ s/_us//g;
 	$wdtxt_file =~ s/dv/txt/g;
 
-	system("lm_makeonemovie $usdv_file $ccdv_file $uswav_file $agpos_file $wdtxt_file $dir_trg");
+	system("./lm_make_1movie $usdv_file $ccdv_file $uswav_file $agpos_file $wdtxt_file $dir_trg");
 	
 }

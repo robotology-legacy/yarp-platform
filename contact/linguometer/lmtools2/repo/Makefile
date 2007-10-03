@@ -18,7 +18,7 @@ cleantemp:
 prepare:	
 	@echo "Preparing data for segment identification"
 	@$(CMD_NICE) lm_prepare
-	@$(CMD_NICE) lm_mergepos
+	@$(CMD_NICE) lm_mergepos pos
 
 collect:
 	@echo "Collecting data"
