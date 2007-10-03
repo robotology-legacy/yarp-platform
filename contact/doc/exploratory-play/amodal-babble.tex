@@ -26,22 +26,60 @@ an amodal connection between the arm and vision.
 
 \label{sect:motor-babble}
 
-We have previously investigated methods for learning certain motor
-skills, such as visually-guided reaching.  As part of the CONTACT
-project, UGDIST is considering whether there are mechanisms for
-learning such skills that are applicable to both speech and
+
+
+In \citeasnoun{fitzpatrick2007shared}, we identified three basic scenarios in
+which a robot's body can be recruited in solving perceptual tasks:
+
+\liststyleLiii
+\begin{enumerate}
+\item \textstyleEmphasis{direct exploration}: the body in this case is
+the interface to extract information about the objects. For example in
+\citep{natale04learning} haptic information was employed to distinguish objects
+with different shapes, a task that would be much more difficult if
+performed visually. In
+\citep{torres-jara05tapping} the robot learned to recognize a few objects by using
+the sound they generate upon contact with the fingers. 
+\item \textstyleEmphasis{controlled exploration}: use the body to
+perform actions to simplify perception. The robot can deliberately
+generate redundant information by performing periodic actions in the
+environment. The robot can also initiate actions and wait for the
+appearance of consequences
+\citep{fitzpatrick03grounding}. 
+\item \textstyleEmphasis{the body as a reference frame}: during action
+the hand is the place where important events are most likely to occur.
+The ability to direct the attention of the robot towards the hand is
+particularly helpful during learning; in
+\citep{natale05exploring} we show how this ability allows the robot to learn a
+visual model of the objects it manages to grasp by simply inspecting
+the hand when touch is detected on the palm. 
+%
+In similar situations the same behavior could allow the robot to
+direct the gaze to the hand if something unexpected touches
+it. Eye-hand coordination seems thus important to establish a link
+between different sensory channels like touch and vision.
+\end{enumerate}
+
+
+
+As part of the CONTACT project, we have been experimented with scenario (2),
+controlling exploration.  In particular, we are looking for mechanisms for
+learning that are applicable to both speech and
 manipulation.
 %
-This work revisits themes already examined, but under a more general
-framework.
+This work revisits themes already examined in prior work, but under a
+more general framework.
 
 Figure~\ref{fig:amodal-module-vision} shows a crude but general system
-for learning certain motor-sensor mappings.  We assume that the
-learning problem will be posed as follows: given a collection of motor
-groups and sensor groups, and a particular feature derived from the
-sensed data, find a configuration of the motor groups such that local
+for learning motor-sensor mappings, applied to the problem of hand-eye
+coordination for concreteness.  We assume that the learning problem
+can be posed as follows: given a collection of motor groups and sensor
+groups, and a particular feature derived from the sensed data, the
+task is to find a configuration of the motor groups such that local
 changes in that configuration lead to systematic changes in the
-derived feature.
+derived feature.  This would correspond, for example, to moving 
+a head and arm such that the one is looking at the other, as opposed to
+the arm being out of view behind the body or off to the side.
 
 More formally, suppose we have motor control variables
 $m=(m_1,m_2,...,m_N)$ and sensor variables $s=(s_1,s_2,...,s_n)$.
@@ -79,14 +117,15 @@ sense, we have discovered a configuration of $m$ which could
 be useful as a starting point for exploring the local mapping
 from motors ($m$) to sensors ($s$) or between sets of motors.
 We call this a ``resonance.''
-In the abstract, this discovery is similar to the 
+In the abstract, this event is similar to the 
 infant's ``discovery'' of its hand in its field of view.
-Figures~\ref{fig:amodal-module-vision} and \ref{fig:find-arm}.
+Figures~\ref{fig:amodal-module-vision} and \ref{fig:find-arm}
 show an analogous experiment for a robot, where a configuration
-of the arm and head that brings the arm into view is discovered.
+of the arm and head
+is discovered that brings the arm into view.
 
 Since $f$ is computed based on sensor input, we should
-expect to occasionally be mislead.  Therefore, rather 
+expect to occasionally be misled.  Therefore, rather 
 than stopping once we find a good value of $m$, we use
 a stochastic search method.  
 %
@@ -98,7 +137,8 @@ of the population.
 %
 A configuration that consistently results in resonance therefore quickly 
 propagates to the entire population.
-
+%
+This is the evolution being shown in Figure~\ref{fig:find-arm}.
 
 \begin{figure}[p]
 \centerline{\includegraphics[width=\textwidth]{images/find-arm}}
@@ -128,7 +168,7 @@ its arm more often than not.
 
 
 We would like to stress that developing a general purpose learning
-mechanism of this kind for a robot does not mean be believe the robot
+mechanism of this kind for a robot does not mean we believe the robot
 should start off its developmental process as a ``tabula rasa.''  In
 fact, there may well be just as much or more information involved in
 specifying how to explore (expressing the motor groups to use, their
@@ -145,7 +185,7 @@ relying on parameters supplied for a particular instantiation
 of a robot body.
 
 As a side benefit, our robot should not be completely stumped if
-expected to control its arm seem via a mirror or other distortion.
+expected to control its arm as seen via a mirror or other distortion.
 Any transformation that is spatially smooth should be manageable;
 however delays introduced in perception would be as disastrous for our
 system as they are for humans.
@@ -178,4 +218,5 @@ of motor space.
 %% the robot.
 
 %% For Year 3, online behaviors would be useful.
+
 
