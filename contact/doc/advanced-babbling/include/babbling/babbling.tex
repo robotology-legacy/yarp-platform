@@ -1,5 +1,7 @@
 \section{Babbling and phonetic imitation on the iCub}
 
+\label{sect:babbling}
+
 IST has continued the development of the architecture for speech
 development. The role of the architecture is to allow the robot to
 simultaneously develop speech perception and production, and learn how
@@ -36,23 +38,23 @@ sound signal into 30 ms frames with 50\% overlap. For each frame 12
 Mel frequency cepstral coefficients (MFCC) are calculated for each
 frame. The visual sensor unit takes images from a video stream and,
 given that it can see the subject that is talking, calculates the
-openess of the mouth. The Mel coefficients and the openess of the
+openness of the mouth. The Mel coefficients and the openness of the
 mouth are normalized and sent to the sensor-motor map.
 
 The sensor-motor map contains two separate artificial neural networks
-that maps the respecitve sensor output from the auditory and visual
+that maps the respective sensor output from the auditory and visual
 sensor to the robots motor representation, i.e. the six parameters in
-Maedas model. The sound-motor map is the more complex of the two maps
+Maeda's model. The sound-motor map is the more complex of the two maps
 and uses a neural network with 20 hidden neurons, while the
 vision-motor map only uses a single neuron. The outputs from the two
 maps are then weighted together. The weight is currently set by hand.
 
 The speech recognition unit consists of a cluster and a
 classifier. The cluster contains motor positions for each of the
-phonemes that the robot has leart. The classifier simply measures the
+phonemes that the robot has learned. The classifier simply measures the
 distance between a given motor position and each position that has
 been stored in the cluster and classify the position as the nearest
-neighboor.
+neighbor.
  
 \subsection{Babbling and imitation}
 The robot uses a combination of babbling and imitation to learn how to
@@ -61,8 +63,8 @@ children develop their speech. The babbling is important to create an
 initial map between the produced sound and the robots motor positions
 of the robot's vocal tract. However, to be able to map speech from a
 human speaker the robot has to interact with a caregiver. This is done
-by having the caregiver immitating the robot. To be able to learn
-phonemes we do the opposite and let the robot immitade the caregiver.
+by having the caregiver imitating the robot. To be able to learn
+phonemes we do the opposite and let the robot imitate the caregiver.
 
 The babbling behavior is realised by the position generator by taking
 a pair of either existing positions in the motor cluster (given that
@@ -83,10 +85,10 @@ able to map not only the synthesized speech, but also the voice of the
 caregiver, back to the motor positions. In the same time it can also
 learn its vision-motor map by mapping the calculated mouth opening of
 the human and comparing it with its own motor parameters. By having
-several caregivers immitating the robot we are able to gain some
+several caregivers imitating the robot we are able to gain some
 amount of speaker invariance.
 
-Finally we let the robot immitate the caregiver. If the caregiver is
+Finally we let the robot imitate the caregiver. If the caregiver is
 happy with the given response he or she gives positive feedback to the
 robot which causes the robot to store the motor positions in the motor
 cluster. These positions can later be used to drive further babbling
@@ -105,7 +107,7 @@ features.
 Using the described method of babbling and imitation the iCub has been
 able to learn a number of portuguese vowels and a few consonants. The
 vocal tract positions used by the robot to produce those phonemes
-resemples the positions used by a human speaker. The positions used to
+resembles the positions used by a human speaker. The positions used to
 pronounce nine portuguese vowels are shown in Figure~\ref{fig:babbling:positions}, and the
 positions used to pronounce the consonants /b/, /d/ and /g/ are shown
 in Figure~\ref{fig:babbling:cardinal}.
@@ -118,7 +120,7 @@ speakers were used as a training set and the vowels from the other
 seven were used as test data. After learning the maps using random
 babbling the recognition rate for the vowels in the test set was as
 low as 17.5\%. After having the seven humans in the training data
-immitating the robot, but only using the auditory information, the
+imitating the robot, but only using the auditory information, the
 recognition rate reached 57.7\%. Finally by using both auditory and
 visual data during training and testing, the recognition rate got up
 to 63.3\%.
@@ -131,7 +133,7 @@ to 63.3\%.
   Portuguese vowels. In the center we show the positions of the vowels
   in the International Phonetic Alphabet (IPA). The vertical axis in
   the IPA corresponds to the vertical position of the tongue and the
-  horisontal axis to the front-back position when the vowel is
+  horizontal axis to the front-back position when the vowel is
   pronounced by a human speaker. For the simulated articulator
   positions used by the robot the upper line corresponds to the soft
   palate and the lower line to the tongue. There is a good correlation
@@ -148,4 +150,3 @@ to 63.3\%.
 \end{figure}
 
 
-\endinput

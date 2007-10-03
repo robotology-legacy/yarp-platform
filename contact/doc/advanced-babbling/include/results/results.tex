@@ -125,21 +125,24 @@ in future, to the whole research community.
 % ---------------------------------------------------------------------------- %
 \subsection{An example of the collected data}
 % ---------------------------------------------------------------------------- %
-Figures~\ref{fig:results:uovo:aln} and~\ref{fig:results:giallo:aln} show the
-diagnostic plots produced by \emph{LMTools2} as a support to the final
-validation task.
-The two figures illustrate the speech and the EGG signals before and after the
-final alignment procedure. As an example, the author choose to use the /uovo/
-and the /giallo/ Italian words recorded during the first experiment from a 23
+%Figures~\ref{fig:results:uovo:aln} and~\ref{fig:results:giallo:aln} show the
+%diagnostic plots produced by \emph{LMTools2} as a support to the final
+%validation task.
+%The two figures illustrate the speech and the EGG signals before and after the
+%final alignment procedure. As an example, the author choose to use 
+We show the Italian words  /uovo/
+and  /giallo/  recorded during the first experiment from a 23
 years old female subject (Table~\ref{tab:experiments:subjects}).
 
 \input{include/results/fig.complex-uovo.tex}
 \input{include/results/fig.complex-giallo.tex}
 \input{include/results/fig.complex-mesh.tex}
-The Cartesian coordinates of trajectories acquired from the twelve sensors 
-during the pronunciation of /uovo/ and /giallo/ are shown, from a temporal
-perspective, in Figure~\ref{fig:results:trajectories}.
-Similarly, Figures~\ref{fig:results:uovo:complex}
+%
+%The Cartesian coordinates of trajectories acquired from the twelve sensors 
+%during the pronunciation of /uovo/ and /giallo/ are shown, from a temporal
+%perspective, in Figure~\ref{fig:results:trajectories}.
+%
+Figures~\ref{fig:results:uovo:complex}
 and~\ref{fig:results:giallo:complex} show the projections onto the sagittal, 
 the axial and the coronal plane of the sensors positioned sagittally onto the 
 tongue dorsum and of the sensors taped to the glasses to track head movements.
@@ -163,8 +166,11 @@ ultrasound system, the author used the seeking capabilities of the
 \emph{LMTools2} C++ library combined with the final alignment results.
 The onset of speech has been initially detected in the \wf{US-Speech} main 
 speech signal recorded during the pronunciation of /uovo/ and /giallo/, using
-the finely aligned data packets (the speech signals used for this example are
-shown in Figures~\ref{fig:results:uovo:aln} and~\ref{fig:results:giallo:aln}).
+the finely aligned data packets.
+%
+% (the speech signals used for this example are
+%shown in Figures~\ref{fig:results:uovo:aln} and~\ref{fig:results:giallo:aln}).
+%
 Once the onset of speech was detected in the~\wf{US-Speech} signal, that
 time instant was marked on the aligned \wf{CC-Speech} signal.
 %A similar procedure has been followed to calculate the duration of the speech
