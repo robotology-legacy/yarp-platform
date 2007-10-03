@@ -1,4 +1,4 @@
-function main2t(experiment)
+function lm_isd4hc_run(experiment)
 
 opt_plot = 0;
 AG = lmProfile();
@@ -260,7 +260,7 @@ if(0)
 	ylabel('ISD [mm]');
 	legend('ISD 10-11', 'ISD 10-12', 'ISD 11-12', 'ISD 6-11', 'ISD 6-12', 'ISD 6-10');
 else	
-	mtSimpleFig(1);
+	mtSimpleFig(experiment);
 	subplot(1, 2, 1);
 	xdom = [0:1:8];
 	hold on;
