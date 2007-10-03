@@ -33,6 +33,12 @@ happy:
 deb:
 	sudo apt-get install tipa texlive-latex-extra texlive-humanities texlive-fonts-extra
 
+final:
+	make bounce
+	make  $(MAIN).pdf
+	cp  $(MAIN).pdf $(HOME)/d0104-advanced-babbling.pdf
+
+
 ############################################################################
 ############################################################################
 ############################################################################
