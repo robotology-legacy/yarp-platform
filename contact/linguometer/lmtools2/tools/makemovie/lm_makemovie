@@ -88,6 +88,7 @@ for my $usdv_file (@usdv_files) {
 	my $cmd_ccdv2png = "mplayer " . $ccdv_file . " -vo png -ao null " . $cmd_redirect;
 	
 	print "[lm_makemovie] Cleaning\n";
+	system("rm -f *.png");
 	system("rm -f $us_dir/*");
 	system("rm -f $cc_dir/*");
 	system("rm -f $ag_dir/*");

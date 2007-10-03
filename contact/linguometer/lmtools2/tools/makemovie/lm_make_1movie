@@ -67,7 +67,12 @@ my $wd_num = sprintf("%.4d", @wdtxt_vals[5]);
 my $ag_title = "$wd_exp/$wd_seq/$wd_num ($wd_txt)";
 
 my $cmd_redirect = "1>/dev/null 2>/dev/null";
-my $cmd_usdv2png = "mplayer " . $usdv_file . " -vo png -ao null " . $cmd_redirect;
+if(1) {
+	my $cmd_usdv2png = "mplayer " . $usdv_file . " -vo png -ao null " . $cmd_redirect;
+} else {
+	# Just use it on clango! lmtools2 requires old version of ffmpeg (both bin and lib!)
+	my $cmd_usdv2png = "ffmpeg -i " . $usdv_file . " -vcodec png %8d.png " . $cmd_redirect;
+}
 my $cmd_ccdv2png = "mplayer " . $ccdv_file . " -vo png -ao null " . $cmd_redirect;
 
 print "[lm_makeonemovie] Cleaning\n";
