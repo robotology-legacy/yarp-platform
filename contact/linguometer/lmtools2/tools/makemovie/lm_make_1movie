@@ -74,10 +74,11 @@ if (-e $trg_avi_hq) {
 	print "[lm_makeonemovie] File exists ($trg_avi_hq)!\n";
 } else {
 	my $cmd_redirect = "1>/dev/null 2>/dev/null";
-	my $cmd_usdv2png = "mplayer " . $usdv_file . " -vo png -ao null " . $cmd_redirect;
+	my $cmd_renice   = "nice -n 17";
+	my $cmd_usdv2png = "$cmd_renice mplayer " . $usdv_file . " -vo png -ao null " . $cmd_redirect;
 	# Just use it on clango! lmtools2 requires old version of ffmpeg (both bin and lib!)
 	#my $cmd_usdv2png = "ffmpeg -i " . $usdv_file . " -vcodec png %8d.png " . $cmd_redirect;
-	my $cmd_ccdv2png = "mplayer " . $ccdv_file . " -vo png -ao null " . $cmd_redirect;
+	my $cmd_ccdv2png = "$cmd_renice mplayer " . $ccdv_file . " -vo png -ao null " . $cmd_redirect;
 
 	print "[lm_makeonemovie] Cleaning\n";
 	system("rm -f $us_dir/*");
@@ -97,7 +98,7 @@ if (-e $trg_avi_hq) {
 	system("cd $cc_dir; ctk_lmcc");
 
 	print "[lm_makeonemovie] AG-POS --> PNG\n";
-	my $cmd_agpos2png = "matlab -nosplash -nojvm -r \"lmAG2Frames(\'$agpos_file\', \'$ag_dir\', \'$ag_title\'); quit\"";
+	my $cmd_agpos2png = "$cmd_renice matlab -nosplash -nojvm -r \"lmAG2Frames(\'$agpos_file\', \'$ag_dir\', \'$ag_title\'); quit\"";
 
 	system($cmd_agpos2png);
 		
@@ -111,25 +112,25 @@ if (-e $trg_avi_hq) {
 		
 		print "[lm_makeonemovie] Current frames: [AG, US, CC]->$image\n";
 		if($opt_giampi) {
-			system("convert -quality 100 -geometry x424 $us_dir/$image $us_dir/$image");
-			system("convert -quality 100 -geometry x424 $cc_dir/$image $cc_dir/$image");
-			system("convert -transparent black $ag_dir/$image $ag_dir/$image");
-			system("composite -compose src-over $ag_dir/$image $us_dir/$image $us_dir/$image");
+			system("$cmd_renice convert -quality 100 -geometry x424 $us_dir/$image $us_dir/$image");
+			system("$cmd_renice convert -quality 100 -geometry x424 $cc_dir/$image $cc_dir/$image");
+			system("$cmd_renice convert -transparent black $ag_dir/$image $ag_dir/$image");
+			system("$cmd_renice composite -compose src-over $ag_dir/$image $us_dir/$image $us_dir/$image");
 			my $cmd_argv = "$cc_dir/$image $us_dir/$image $vor_dir/$image";
-			system("montage -tile 2x -background black -geometry +0+0 $cmd_argv");
-			system("convert -geometry 793x424 $vor_dir/$image $vor_dir/$image");
-			system("convert $vor_dir/$image $vof_dir/$frame");
+			system("$cmd_renice montage -tile 2x -background black -geometry +0+0 $cmd_argv");
+			system("$cmd_renice convert -geometry 793x424 $vor_dir/$image $vor_dir/$image");
+			system("$cmd_renice convert $vor_dir/$image $vof_dir/$frame");
 		} else {
-			system("convert -quality 100 -geometry x424 $us_dir/$image $us_dir/$image");
-			system("convert -quality 100 -geometry x424 $cc_dir/$image $cc_dir/$image");
+			system("$cmd_renice convert -quality 100 -geometry x424 $us_dir/$image $us_dir/$image");
+			system("$cmd_renice convert -quality 100 -geometry x424 $cc_dir/$image $cc_dir/$image");
 			my $cmd_argv = "$cc_dir/$image $us_dir/$image $ag_dir/$image $vor_dir/$image";
-			system("montage -tile 3x -background black -geometry +0+0 $cmd_argv");
-			system("convert -geometry 1352x424 $vor_dir/$image $vor_dir/$image");
-			system("convert $vor_dir/$image $vof_dir/$frame");
+			system("$cmd_renice montage -tile 3x -background black -geometry +0+0 $cmd_argv");
+			system("$cmd_renice convert -geometry 1352x424 $vor_dir/$image $vor_dir/$image");
+			system("$cmd_renice convert $vor_dir/$image $vof_dir/$frame");
 		}
 	}
 	print "[lm_makeonemovie] Finally encoding HQ movie\n";
-	my $cmd_encoder = "mencoder \"mf://$vof_dir/*.jpg\" -mf fps=25 -o ";
+	my $cmd_encoder = "$cmd_renice mencoder \"mf://$vof_dir/*.jpg\" -mf fps=25 -o ";
 	my $cmd_argv_hq = "-ovc lavc -lavcopts vcodec=msmpeg4v2:vbitrate=16000 -oac pcm -audiofile";
 	my $cmd_argv_uq = "-ovc lavc -oac pcm -audiofile";
 	system("$cmd_encoder $trg_avi_hq $cmd_argv_hq $uswav_file");

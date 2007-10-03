@@ -21,3 +21,6 @@ exp9:
 	./lm_make_Nmovies $(EXP_BASE)0009/ $(MVI_DIR)
 test:
 	./run_test.sh
+clean:
+	for i in ; do rm $i; done
+	for i in ; do rm $i; done
