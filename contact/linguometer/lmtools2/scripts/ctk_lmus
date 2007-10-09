@@ -15,16 +15,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+F1="-gravity West -chop 130x0"
+F2="-gravity East -chop 95x0"
+F3="-gravity South -chop 0x140"
+F4="-gravity North -chop 0x60"
+F5="-geometry x520"
 for image in `ls -1 *.png`; do
-	#convert $image -gravity West -chop 200x0 $image
-	#convert $image -gravity East -chop 200x0 $image
-	#convert $image -gravity South -chop 0x140 $image
-	#convert $image -gravity North -chop 0x90 $image
-	
 	echo "[ctk_lmus] Processing $image"
-	convert $image -gravity West -chop 130x0 $image
-	convert $image -gravity East -chop 95x0 $image
-	convert $image -gravity South -chop 0x140 $image
-	convert $image -gravity North -chop 0x60 $image
-	convert $image -geometry x520 $image
+	#convert $image -gravity West -chop 130x0 $image
+	#convert $image -gravity East -chop 95x0 $image
+	#convert $image -gravity South -chop 0x140 $image
+	#convert $image -gravity North -chop 0x60 $image
+	#convert $image -geometry x520 $image
+	convert $image $F1 $F2 $F3 $F4 $F5 $image
 done

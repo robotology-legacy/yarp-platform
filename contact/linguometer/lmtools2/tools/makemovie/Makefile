@@ -1,5 +1,7 @@
-EXP_BASE="/home/michele/ContactCache/exp_"
-MVI_DIR="/home/michele/ContactCache/Distribute/"
+#EXP_BASE="/home/michele/ContactCache/exp_"
+#MVI_DIR="/home/michele/ContactCache/Distribute/"
+EXP_BASE="/mnt/contact_cache/exp_"
+MVI_DIR="/mnt/contact_cache/Distribute/"
 
 all:
 

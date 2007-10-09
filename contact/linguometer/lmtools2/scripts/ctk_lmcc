@@ -18,6 +18,7 @@
 for image in `ls -1 *.png`; do
 	echo "[ctk_lmcc] Processing $image"
 
-	mogrify -rotate '90>' $image
-	mogrify -geometry 398x720! $image 
+	#mogrify -rotate '90>' $image
+	#mogrify -geometry 398x720! $image
+	mogrify -rotate '90>' -geometry 398x720! $image
 done

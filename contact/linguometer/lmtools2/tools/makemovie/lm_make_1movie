@@ -77,9 +77,10 @@ if (-e $trg_avi_hq) {
 	#my $cmd_renice   = "nice -n 17";
 	my $cmd_renice   = "nice -n 0";
 	my $cmd_usdv2png = "$cmd_renice mplayer " . $usdv_file . " -vo png -ao null " . $cmd_redirect;
-	# Just use it on clango! lmtools2 requires old version of ffmpeg (both bin and lib!)
-	#my $cmd_usdv2png = "ffmpeg -i " . $usdv_file . " -vcodec png %8d.png " . $cmd_redirect;
 	my $cmd_ccdv2png = "$cmd_renice mplayer " . $ccdv_file . " -vo png -ao null " . $cmd_redirect;
+	# Just on clango! lmtools2 requires old version of ffmpeg (both bin and lib!)
+	#my $cmd_usdv2png = "ffmpeg -i " . $usdv_file . " -vcodec png %8d.png " . $cmd_redirect;
+	#my $cmd_ccdv2png = "ffmpeg -i " . $ccdv_file . " -vcodec png %8d.png " . $cmd_redirect;
 
 	print "[lm_makeonemovie] Cleaning\n";
 	system("rm -f $us_dir/*");
@@ -108,8 +109,9 @@ if (-e $trg_avi_hq) {
 	for my $image (@agimg_files) {
 		chomp($image);
 		my $frame = $image;
-		$frame  =~ s/png/jpg/g;
-
+		$frame =~ s/png/jpg/g;
+		my $image_bmp = $image;
+		$image_bmp =~ s/png/bmp/g;
 		
 		print "[lm_makeonemovie] Current frames: [AG, US, CC]->$image\n";
 		if($opt_giampi) {
@@ -122,12 +124,12 @@ if (-e $trg_avi_hq) {
 			system("$cmd_renice convert -geometry 793x424 $vor_dir/$image $vor_dir/$image");
 			system("$cmd_renice convert $vor_dir/$image $vof_dir/$frame");
 		} else {
-			system("$cmd_renice convert -quality 100 -geometry x424 $us_dir/$image $us_dir/$image");
-			system("$cmd_renice convert -quality 100 -geometry x424 $cc_dir/$image $cc_dir/$image");
-			my $cmd_argv = "$cc_dir/$image $us_dir/$image $ag_dir/$image $vor_dir/$image";
+			system("$cmd_renice convert -quality 100 -geometry x424 $us_dir/$image $us_dir/$image_bmp");
+			system("$cmd_renice convert -quality 100 -geometry x424 $cc_dir/$image $cc_dir/$image_bmp");
+			my $cmd_argv = "$cc_dir/$image_bmp $us_dir/$image_bmp $ag_dir/$image $vor_dir/$image_bmp";
 			system("$cmd_renice montage -tile 3x -background black -geometry +0+0 $cmd_argv");
-			system("$cmd_renice convert -geometry 1352x424 $vor_dir/$image $vor_dir/$image");
-			system("$cmd_renice convert $vor_dir/$image $vof_dir/$frame");
+			system("$cmd_renice convert -geometry 1352x424 $vor_dir/$image_bmp $vof_dir/$frame");
+			#system("$cmd_renice convert $vor_dir/$image_bmp $vof_dir/$frame");
 		}
 	}
 	print "[lm_makeonemovie] Finally encoding HQ movie\n";
