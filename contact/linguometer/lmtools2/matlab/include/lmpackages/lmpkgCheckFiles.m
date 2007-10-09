@@ -14,23 +14,16 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-function lmpkgRepackProxy(path)
+function [result_b result_v] = lmpkgCheckFiles (file_v)
 
-num  = 0;
-num_ul = 100;
-file = sprintf('%s/wd_%.4d.mat', path, num);
+result_v = {};
+result_b = 1;
 
-while (1)
-	file = sprintf('%s/wd_%.4d.mat', path, num);
-	if (exist(file, 'file'))
-		printf('[lmpkgRepackProxy] Re-Packing %s\n', file);
-		lmpkgRepack(file);
-		num = num + 1;
-	elseif (num < num_ul)
-		printf('[lmpkgRepackProxy] File %s does not exist... But I am feeling Luky (TM) since %d <= %d.\n', file, num, num_ul);
-		num = num + 1;
-	else
-		break;
-	end
+for fn = 1:length(file_v)
+	result_v{fn} = exist(file_v{fn}, 'file');
+	printf('[lmpkgCheckFiles] File %s, status %d\n', file_v{fn}, result_v{fn});
 end
-exit;
+
+for r = 1:length(result_v)
+	result_b = result_b & result_v{r};
+end

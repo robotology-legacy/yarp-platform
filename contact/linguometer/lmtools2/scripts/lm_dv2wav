@@ -43,5 +43,10 @@ if [ -e "$FIN" ]; then
 		rm -f $FOUT;
 	fi
 	ffmpeg -i $FIN -vn -acodec pcm_s16le -ar 48000 -ac 2 $FOUT
+	echo -e "Error: ffmpeg failed! Missing \$FOUT \n";
+	if [ -e "$FIN" ]; then
+		mplayer $FIN -vo null -ao pcm:fast:file=$FOUT
+	fi
+
 fi
 

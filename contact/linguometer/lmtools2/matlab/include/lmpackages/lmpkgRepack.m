@@ -14,12 +14,40 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-function retval=lmpkgRepack(matfile)
+function lmpkgRepack(matfile)
 
 cmd_stdo = '1>/dev/null  2>/dev/null';
 
 printf('[lmpkgRepack] Loading %s\n', matfile);
 data = load(matfile);
+
+% Output files 
+printf('[lmpkgRepack] Ready to export to ALN folders\n');
+faln_us_wav = sprintf('aln_%.4d/wd_%.4d_us.wav', data.misc.seq, data.misc.num);
+faln_us_dv  = sprintf('aln_%.4d/wd_%.4d_us.dv',  data.misc.seq, data.misc.num);
+faln_us_fea = sprintf('aln_%.4d/wd_%.4d_us.ff',  data.misc.seq, data.misc.num);
+
+faln_cc_wav = sprintf('aln_%.4d/wd_%.4d_cc.wav', data.misc.seq, data.misc.num);
+faln_cc_fea = sprintf('aln_%.4d/wd_%.4d_cc.ff',  data.misc.seq, data.misc.num);
+faln_cc_dv  = sprintf('aln_%.4d/wd_%.4d_cc.dv',  data.misc.seq, data.misc.num);
+
+faln_ag_wav = sprintf('aln_%.4d/wd_%.4d_ag.wav', data.misc.seq, data.misc.num);
+faln_ag_pos = sprintf('aln_%.4d/wd_%.4d_ag.pos', data.misc.seq, data.misc.num);
+faln_ag_amp = sprintf('aln_%.4d/wd_%.4d_ag.amp', data.misc.seq, data.misc.num);
+
+faln_us_v   = {faln_us_wav faln_us_dv faln_us_fea};
+faln_cc_v   = {faln_cc_wav faln_cc_dv faln_cc_fea};
+faln_ag_v 	= {faln_ag_wav faln_ag_pos faln_ag_amp};
+
+fcheck_us   = lmpkgCheckFiles(faln_us_v);
+fcheck_cc   = lmpkgCheckFiles(faln_cc_v);
+fcheck_ag   = lmpkgCheckFiles(faln_ag_v);
+
+
+if (fcheck_us && fcheck_cc && fcheck_ag)
+	printf('[lmpkgRepack] ALN result exist, skipping current DIST file (%s)!\n', matfile);
+	return
+end
 
 
 %function test = lmpkgComputeSlowOffset (dataptr, datasr, rawsr, idxcol)
@@ -127,21 +155,8 @@ if(data.misc.status.LG)
 	raw.zapd.LG.spc = raw.cropd.LG.spc(raw.zap.LG_spc.s0:raw.zap.LG_spc.s1, :);
 	raw.zapd.LG.egg = raw.cropd.LG.egg(raw.zap.LG_egg.s0:raw.zap.LG_egg.s1, :);
 end
-retval = raw;
 
-% Writing result
-printf('[lmpkgRepack] Ready to export to ALN folders\n');
-faln_us_wav  = sprintf('aln_%.4d/wd_%.4d_us.wav', data.misc.seq, data.misc.num);
-faln_us_dv   = sprintf('aln_%.4d/wd_%.4d_us.dv',  data.misc.seq, data.misc.num);
-faln_us_fea  = sprintf('aln_%.4d/wd_%.4d_us.ff', data.misc.seq, data.misc.num);
-
-faln_cc_wav  = sprintf('aln_%.4d/wd_%.4d_cc.wav', data.misc.seq, data.misc.num);
-faln_cc_fea  = sprintf('aln_%.4d/wd_%.4d_cc.ff', data.misc.seq, data.misc.num);
-faln_cc_dv   = sprintf('aln_%.4d/wd_%.4d_cc.dv',  data.misc.seq, data.misc.num);
-
-faln_ag_wav  = sprintf('aln_%.4d/wd_%.4d_ag.wav', data.misc.seq, data.misc.num);
-faln_ag_pos  = sprintf('aln_%.4d/wd_%.4d_ag.pos', data.misc.seq, data.misc.num);
-faln_ag_amp  = sprintf('aln_%.4d/wd_%.4d_ag.amp', data.misc.seq, data.misc.num);
+%here
 
 if(data.misc.status.LG)
 	faln_lg_wav  = sprintf('aln_%.4d/wd_%.4d_lg.wav', data.misc.seq, data.misc.num);
@@ -198,6 +213,9 @@ faln_cc_dv 	= sprintf('aln_%.4d/wd_%.4d_cc.dv', data.misc.seq, data.misc.num);
 fout_us 	= 'cache/tmp_audio_us.wav';
 fout_cc 	= 'cache/tmp_audio_cc.wav';
 fout_off 	= sprintf('aln_%.4d/wd_%.4d_cc.off', data.misc.seq, data.misc.num);
+
+printf('       %s --> %s\n', faln_us_dv, fout_us);
+printf('       %s --> %s\n', faln_cc_dv, fout_cc);
 
 system(sprintf('lm_dv2wav %s %s 1>/dev/null 2>/dev/null', faln_us_dv, fout_us));
 system(sprintf('lm_dv2wav %s %s 1>/dev/null 2>/dev/null', faln_cc_dv, fout_cc));
