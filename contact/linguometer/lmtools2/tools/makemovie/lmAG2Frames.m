@@ -60,7 +60,10 @@ if(opt_ag)
 	dofs    = [1:6:72];
 
 	mtSimpleFig(1);
-	frame = 1; %delay compensation!!!
+	% Important!
+	% Delay compensation code goes here!
+	% /Important!
+	frame = 1; 
 	for sample = 1:ag_len
 		
 		clf;
