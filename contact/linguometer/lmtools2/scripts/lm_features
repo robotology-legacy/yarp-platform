@@ -75,14 +75,15 @@ foreach $folder_seq (@folders_seq) {
 	my $t_idx_seq = int($idx_seq);
 	
 	#print "$folder_seq ($idx_seq)\n";
-
 	##############################################
 	# Get faked parameters                       #
 	##############################################
 	my $cfg_cc = "cache/wd_" . $idx_seq . "_cc_sequence.dd";
-	my @values_cc = mImportFile($cfg_cc);
-	
 	my $cfg_us = "cache/wd_" . $idx_seq . "_us_sequence.dd";
+	my $sta_cc = -e $cfg_cc;
+	my $sta_us = -e $cfg_us;
+	next if ($sta_us ne "1" || $sta_cc ne "1");
+	my @values_cc = mImportFile($cfg_cc);
 	my @values_us = mImportFile($cfg_us);
 	
 	##############################################

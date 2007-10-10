@@ -3,3 +3,10 @@
 #   Documentation for lmtools2    #
 #                                 #
 ###################################
+
+# lmtools2 path
+export LMT2_ROOT="/home/michele/Links/lmtools2"
+export PATH="$LMT2_ROOT/bin:$LMT2_ROOT/scripts:${PATH}"
+export LMT2_CACHE="/mnt/contact_cache/"
+export LMT2_DATA="/mnt/contact_data/"
+export LMT2_RELEASE="/mnt/contact_release/"

@@ -16,8 +16,17 @@
 
 function lmLogCC(file_log, file_img, seq_num);
 
+if (exist(file_log, 'file') <= 0)
+	return;
+end
+
 mtSimpleFig(1);
-log = importdata(file_log, '/');
+try 
+	log = importdata(file_log, '/');
+catch
+	printf('[lmLogLG] File empty or corrupt.\n');
+	return;
+end	
 plot(log(:,1), log(:,2)/1000, 'r');
 grid on;
 %axis tight;
@@ -31,4 +40,3 @@ xlabel('Word Number (WD)');
 ylabel('Correction (kilo-samples)');
 
 mtExport(1, file_img, '', 'png', 80);
-
