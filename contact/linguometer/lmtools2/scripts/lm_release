@@ -18,5 +18,5 @@
 EXP=$1;
 if [ "$EXP" == "" ]; then
 	echo "lm_relase 1";
-	rsync -av --progress /mnt/contact_cache/exp_000${EXP}/aln_* /mnt/contact_release/exp_000${EXP}/
 fi
+rsync -av --progress /mnt/contact_cache/exp_000${EXP}/aln_* /mnt/contact_release/exp_000${EXP}/
