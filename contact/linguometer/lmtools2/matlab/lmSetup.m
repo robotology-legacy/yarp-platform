@@ -28,6 +28,7 @@ if (isunix())
 	path(path,[path_pwd '/include/rastamat']);
 	path(path,[path_pwd '/include/tapadm/']);
 	path(path,[path_pwd '/include/voicebox']);
+	path(path,[path_pwd '/include/fastica']);
 	warning('on');
 else
 	warning('off');
@@ -42,6 +43,7 @@ else
 	path(path,[path_pwd '\include\rastamat']);
 	path(path,[path_pwd '\include\tapadm\']);
 	path(path,[path_pwd '\include\voicebox']);
+	path(path,[path_pwd '\include\fastica']);
 	warning('on');
 end
 savepath
